@@ -1,16 +1,22 @@
-// const jwt = require("jsonwebtoken");
+// middleware/authMiddleware.js
+const { verifyToken } = require("../utils/token");
 
-// module.exports = (req, res, next) => {
-//   const token = req.headers["authorization"]?.split(" ")[1];
-//   if (!token) {
-//     return res.status(401).json({ success: false, message: "No token provided" });
-//   }
+const authMiddleware = (req, res, next) => {
+  const authHeader = req.headers["authorization"];
 
-//   try {
-//     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-//     req.user = decoded; // gắn thông tin user vào request
-//     next();
-//   } catch (err) {
-//     res.status(403).json({ success: false, message: "Invalid token" });
-//   }
-// };
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    return res.status(401).json({ message: "No token provided" });
+  }
+
+  const token = authHeader.split(" ")[1];
+  const decoded = verifyToken(token);
+
+  if (!decoded) {
+    return res.status(401).json({ message: "Invalid or expired token" });
+  }
+
+  req.user = decoded; // { id, email, role }
+  next();
+};
+
+module.exports = authMiddleware;

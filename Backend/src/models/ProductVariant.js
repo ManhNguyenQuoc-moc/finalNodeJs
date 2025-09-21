@@ -8,6 +8,10 @@ const productVariantSchema = new mongoose.Schema(
     sku: { type: String, unique: true },
     price: Number,
     stock_quantity: Number,
+    image: {
+      url: String,
+      is_primary: Boolean,
+    },
   },
   { timestamps: true }
 );
