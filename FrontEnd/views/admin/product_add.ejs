@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <%- include('../partials/head_dashboard') %>
+</head>
+<body>
+
+<div class="wrapper">
+    <div class="sidebar" data-color="purple" data-image="/mixishop/images/sidebar-5.jpg">
+        <div class="sidebar-wrapper">
+            <div class="logo">
+                <a href="http://www.creative-tim.com" class="simple-text">MIXISHOP</a>
+            </div>
+
+            <ul class="nav">
+                <li>
+                    <a href="/admin">
+                        <i class="pe-7s-graph"></i>
+                        <p>Trang chủ</p>
+                    </a>
+                </li>
+                <li>
+                    <a href="/admin/categogy">
+                        <i class="pe-7s-note2"></i>
+                        <p>Danh sách nhóm sản phẩm</p>
+                    </a>
+                </li>
+                <li class="active">
+                    <a href="/admin/products">
+                        <i class="pe-7s-note2"></i>
+                        <p>Danh sách sản phẩm</p>
+                    </a>
+                </li>
+                <li>
+                    <a href="/admin/order-list">
+                        <i class="pe-7s-note2"></i>
+                        <p>Danh sách đơn hàng</p>
+                    </a>
+                </li>
+                <li>
+                    <a href="/admin/order-pending">
+                        <i class="pe-7s-note2"></i>
+                        <p>Danh sách đơn hàng chờ phê duyệt</p>
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="main-panel">
+        <nav class="navbar navbar-default navbar-fixed">
+            <div class="container-fluid">
+                <div class="navbar-header">
+                    <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navigation-example-2">
+                        <span class="sr-only">Toggle navigation</span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                    </button>
+                    <a class="navbar-brand" href="#">Thêm Sản Phẩm</a>
+                </div>
+                <div class="collapse navbar-collapse">
+                    <ul class="nav navbar-nav navbar-right">
+                        <li>
+                            <a href="/logout" onclick="return confirm('Bạn có chắc chắn muốn đăng xuất?');">
+                                <p>Đăng xuất</p>
+                            </a>
+                        </li>
+                        <li class="separator hidden-lg hidden-md"></li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+
+        <div class="content">
+            <div class="container-fluid">
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="card">
+                            <div class="header">
+                                <h4 class="title">Thêm Sản Phẩm</h4>
+                                <p class="category">Chào mừng bạn đã quay lại</p>
+                            </div>
+                            <div class="content">
+                                <form role="form" id="addProductForm" action="/admin/addProducts" method="post" enctype="multipart/form-data">
+                                    <div class="box-body">
+                                        <div class="form-group">
+                                            <label for="productName">Tên sản phẩm</label>
+                                            <input type="text" class="form-control" id="productName" name="name" placeholder="Nhập tên sản phẩm" required>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="description">Mô tả</label>
+                                            <textarea class="form-control" id="description" name="description" rows="3" placeholder="Nhập mô tả"></textarea>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="price">Giá</label>
+                                            <input type="number" class="form-control" id="price" name="price" placeholder="Nhập giá" required>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="status">Chọn loại</label>
+                                            <select class="form-control" id="status" name="statusId" required>
+                                                <option value="" disabled selected>Chọn loại</option>
+                                                <% productStatuses.forEach(status => { %>
+                                                    <option value="<%= status.id %>"><%= status.statusName %></option>
+                                                <% }) %>
+                                            </select>
+                                        </div>
+
+                                        <div class="form-group">
+                                            <label for="category">Chọn danh mục</label>
+                                            <select class="form-control" id="category" name="categoryId" required>
+                                                <option value="" disabled selected>Chọn danh mục</option>
+                                                <% categories.forEach(cat => { %>
+                                                    <option value="<%= cat.id %>"><%= cat.name %></option>
+                                                <% }) %>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="box-footer">
+                                        <button type="submit" class="btn btn-primary">Thêm mới</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- Core JS Files -->
+<script src="/mixishop/admin/js/jquery.3.2.1.min.js"></script>
+<script src="/mixishop/admin/js/bootstrap.min.js"></script>
+<script src="/mixishop/admin/js/chartist.min.js"></script>
+<script src="/mixishop/admin/js/bootstrap-notify.js"></script>
+<script src="/mixishop/admin/js/light-bootstrap-dashboard.js"></script>
+<script src="/mixishop/admin/js/demo.js"></script>
+
+<script>
+    let formChanged = false;
+
+    document.querySelectorAll('#addProductForm input, #addProductForm textarea, #addProductForm select').forEach((element) => {
+        element.addEventListener('change', () => {
+            formChanged = true;
+        });
+    });
+
+    document.querySelectorAll('.nav a').forEach((link) => {
+        link.addEventListener('click', (event) => {
+            if (formChanged) {
+                const confirmLeave = confirm("Bạn có chắc chắn muốn rời khỏi trang này mà không lưu thay đổi?");
+                if (!confirmLeave) {
+                    event.preventDefault();
+                }
+            }
+        });
+    });
+</script>
+
+</body>
+</html>

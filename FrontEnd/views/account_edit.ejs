@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html dir="ltr" lang="zxx">
+
+<head>
+  <%- include('partials/head') %>
+</head>
+
+<body>
+  <%- include('partials/icons') %>
+
+  <!-- Mobile Header -->
+
+  <!-- Header Type 1 -->
+  <%- include('partials/header', { headerType: 'header' }) %>
+
+  <main>
+    <div class="mb-4 pb-4"></div>
+    <section class="my-account container">
+      <h2 class="page-title">Thay đổi mật khẩu</h2>
+      <div class="row">
+        <div class="col-lg-3">
+          <ul class="account-nav">
+            <li>
+              <a href="/my-account" class="menu-link menu-link_us-s">Tổng quan</a>
+            </li>
+            <li>
+              <a href="/account-orders" class="menu-link menu-link_us-s">Đơn hàng</a>
+            </li>
+            <li>
+              <a href="/account-edit" class="menu-link menu-link_us-s menu-link_active">Quản lý tài khoản</a>
+            </li>
+            <li>
+              <a href="/logout" class="menu-link menu-link_us-s">Logout</a>
+            </li>
+          </ul>
+        </div>
+
+        <div class="col-lg-9">
+          <div class="page-content my-account__edit">
+            <div class="my-account__edit-form">
+              <!-- Form for changing password -->
+              <form name="account_edit_form" class="needs-validation" action="/change-password" method="POST" novalidate>
+                <div class="row">
+                  <div class="col-md-12">
+                    <div class="my-3">
+                      <h5 class="text-uppercase mb-0">Đổi mật khẩu</h5>
+                    </div>
+                  </div>
+
+                  <div class="col-md-12">
+                    <div class="form-floating my-3">
+                      <input type="password" class="form-control" id="account_current_password" name="currentPassword" placeholder="Current password" required>
+                      <label for="account_current_password">Mật khẩu hiện tại</label>
+                    </div>
+                  </div>
+
+                  <div class="col-md-12">
+                    <div class="form-floating my-3">
+                      <input type="password" class="form-control" id="account_new_password" name="newPassword" placeholder="New password" required>
+                      <label for="account_new_password">Mật khẩu mới</label>
+                    </div>
+                  </div>
+
+                  <div class="col-md-12">
+                    <div class="form-floating my-3">
+                      <input type="password" class="form-control" id="account_confirm_password" name="confirmPassword" placeholder="Confirm new password" required>
+                      <label for="account_confirm_password">Nhập lại mật khẩu</label>
+                      <div class="invalid-feedback">Mật khẩu xác nhận không khớp!</div>
+                    </div>
+                  </div>
+
+                  <div class="col-md-12">
+                    <div class="my-3">
+                      <button class="btn btn-primary" type="submit">Thay đổi</button>
+                    </div>
+                  </div>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div class="mb-5 pb-xl-5"></div>
+
+  <%- include('partials/footer') %>
+    <%- include('partials/login_form') %>
+    <%- include('partials/cart_drawer') %>
+    <%- include('partials/quick_view') %>
+    <%- include('partials/sitemap') %>
+
+  <!-- Go To Top -->
+  <div id="scrollTop" class="visually-hidden end-0"></div>
+
+  <!-- Page Overlay -->
+  <div class="page-overlay"></div><!-- /.page-overlay -->
+
+  <!-- External JavaScripts -->
+  <script src="/mixishop/js/plugins/jquery.min.js"></script>
+  <script src="/mixishop/js/plugins/bootstrap.bundle.min.js"></script>
+  <script src="/mixishop/js/plugins/bootstrap-slider.min.js"></script>
+  <script src="/mixishop/js/plugins/swiper.min.js"></script>
+  <script src="/mixishop/js/plugins/countdown.js"></script>
+  <script src="/mixishop/js/plugins/jquery.fancybox.js"></script>
+
+  <!-- Footer Scripts -->
+  <script src="/mixishop/js/theme.js"></script>
+
+  <script>
+    <% if (error) { %>
+      alert('<%= error %>');
+    <% } %>
+    <% if (success) { %>
+      alert('<%= success %>');
+    <% } %>
+
+    // Client-side form validation
+    (function () {
+      'use strict';
+      var forms = document.querySelectorAll('.needs-validation');
+      Array.prototype.slice.call(forms).forEach(function (form) {
+        form.addEventListener('submit', function (event) {
+          var newPassword = form.querySelector('#account_new_password').value;
+          var confirmPassword = form.querySelector('#account_confirm_password').value;
+          var confirmPasswordInput = form.querySelector('#account_confirm_password');
+          
+          if (newPassword !== confirmPassword) {
+            confirmPasswordInput.setCustomValidity('Passwords do not match!');
+            confirmPasswordInput.classList.add('is-invalid');
+          } else {
+            confirmPasswordInput.setCustomValidity('');
+            confirmPasswordInput.classList.remove('is-invalid');
+          }
+          
+          if (!form.checkValidity()) {
+            event.preventDefault();
+            event.stopPropagation();
+          }
+          form.classList.add('was-validated');
+        }, false);
+      });
+    })();
+  </script>
+</body>
+</html>

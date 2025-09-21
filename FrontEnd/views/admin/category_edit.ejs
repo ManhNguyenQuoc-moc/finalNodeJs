@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="en">
+<head><%- include('../partials/head_dashboard') %></head>
+<body>
+
+<div class="wrapper">
+    <div class="sidebar" data-color="purple" data-image="/mixishop/images/sidebar-5.jpg">
+
+        <!--   you can change the color of the sidebar using: data-color="blue | azure | green | orange | red | purple" -->
+
+        <div class="sidebar-wrapper">
+            <div class="logo">
+                <a href="https://www.creative-tim.com" class="simple-text">
+                    MIXISHOP
+                </a>
+            </div>
+
+            <ul class="nav">
+                <li>
+                    <a href="/admin">
+                        <i class="pe-7s-graph"></i>
+                        <p>Trang chủ</p>
+                    </a>
+                </li>
+                <li class="active">
+                    <a href="/admin/categogy">
+                        <i class="pe-7s-note2"></i>
+                        <p>Danh sách nhóm sản phẩm</p>
+                    </a>
+                </li>
+
+                <li>
+                    <a href="/admin/products">
+                        <i class="pe-7s-note2"></i>
+                        <p>Danh sách sản phẩm</p>
+                    </a>
+                </li>
+
+                <li>
+                    <a href="/admin/order-list">
+                        <i class="pe-7s-note2"></i>
+                        <p>Danh sách đơn hàng</p>
+                    </a>
+                </li>
+
+                <li>
+                    <a href="/admin/order-pending">
+                        <i class="pe-7s-note2"></i>
+                        <p>Danh sách đơn hàng chờ phê duyệt</p>
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="main-panel">
+        <nav class="navbar navbar-default navbar-fixed">
+            <div class="container-fluid">
+                <div class="navbar-header">
+                    <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navigation-example-2">
+                        <span class="sr-only">Toggle navigation</span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                    </button>
+                    <a class="navbar-brand" href="#">Danh Sách Nhóm Sản Phẩm</a>
+                </div>
+                <div class="collapse navbar-collapse">
+
+                    <ul class="nav navbar-nav navbar-right">
+                        <li>
+                            <a href="/logout" onclick="return confirm('Bạn có chắc chắn muốn đăng xuất?');">
+                                <p>Đăng xuất</p>
+                            </a>
+                        </li>
+                        <li class="separator hidden-lg hidden-md"></li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+
+        <div class="content">
+            <div class="container-fluid">
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="card">
+                            <div class="header">
+                                <h4 class="title">Chỉnh Sửa Nhóm Sản Phẩm</h4>
+                                <p class="category">Chào mừng bạn đã quay lại</p>
+                            </div>
+                            <div class="content">
+                                <form role="form" action="/admin/updateCategory" method="post" onsubmit="return confirm('Bạn có chắc chắn muốn cập nhật thông tin này không?');" enctype="multipart/form-data">
+                                    <div class="box-body">
+                                        <div class="form-group">
+                                            <label for="groupName">Tên nhóm</label>
+                                            <input type="text" class="form-control" id="groupName" name="name" placeholder="Nhập tên nhóm" value="<%= category.name %>" required>
+                                        </div>
+
+                                        <div class="form-group">
+                                            <label for="image">Chọn ảnh</label>
+                                            <input type="file" id="image" name="image" accept="image/*" onchange="previewImage(event)">
+                                            <br>
+                                            <span>Đường dẫn ảnh hiện tại:</span>
+                                            <a href="<%= category.imageUrl %>" target="_blank"><%= category.imageUrl %></a>
+                                        </div>
+
+                                        <div class="form-group">
+                                            <label>Chọn trạng thái</label>
+                                            <div class="radio-buttons">
+                                                <input type="radio" name="status" id="status-show" value="1" <% if (category.status == 1) { %>checked<% } %>>
+                                                <label for="status-show" class="custom-radio">Hiện</label>
+
+                                                <input type="radio" name="status" id="status-hide" value="0" <% if (category.status == 0) { %>checked<% } %>>
+                                                <label for="status-hide" class="custom-radio">Ẩn</label>
+                                            </div>
+
+                                        </div>
+                                        <input type="hidden" name="id" value="<%= category.id %>"/> <!-- ID của category -->
+                                    </div>
+
+                                    <div class="box-footer">
+                                        <button type="submit" class="btn btn-md btn-primary">Cập nhật</button>
+                                    </div>
+                                </form>
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+    </div>
+</div>
+
+<!-- Core JS Files -->
+<script src="/mixishop/admin/js/jquery.3.2.1.min.js" type="text/javascript"></script>
+<script src="/mixishop/admin/js/bootstrap.min.js" type="text/javascript"></script>
+
+<!-- Charts Plugin -->
+<script src="/mixishop/admin/js/chartist.min.js"></script>
+
+<!-- Notifications Plugin -->
+<script src="/mixishop/admin/js/bootstrap-notify.js"></script>
+
+<!-- Google Maps Plugin -->
+<script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?key=YOUR_KEY_HERE"></script>
+
+<!-- Light Bootstrap Table Core javascript and methods for Demo purpose -->
+<script src="/mixishop/admin/js/light-bootstrap-dashboard.js"></script>
+
+<!-- Light Bootstrap Table DEMO methods -->
+<script src="/mixishop/admin/js/demo.js"></script>
+
+<script>
+    function previewImage(event) {
+        const input = event.target;
+        const preview = document.getElementById('preview');
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                preview.src = e.target.result;
+                preview.style.display = 'block';
+            };
+            reader.readAsDataURL(input.files[0]);
+        } else {
+            preview.src = '#';
+            preview.style.display = 'none';
+        }
+    }
+</script>
+
+</body>
+</html>

@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html dir="ltr" lang="zxx">
+
+<!-- Mirrored from uomo-html.flexkitux.com/Demo3/contact.html by HTTrack Website Copier/3.x [XR&CO'2014], Sat, 19 Oct 2024 06:54:35 GMT -->
+<%- include('partials/head') %>
+
+<body>
+  <%- include('partials/header') %>
+
+  <main>
+    <div class="mb-4 pb-4"></div>
+    <section class="contact-us container">
+      <div class="mw-930">
+        <h2 class="page-title">LIÊN HỆ CHÚNG TÔI</h2>
+      </div>
+    </section>
+    
+    <section class="google-map mb-5">
+      <h2 class="d-none">Liên hệ chúng tôi</h2>
+      <div id="map" class="google-map__wrapper"></div>
+    </section>
+
+    <section class="contact-us container">
+      <div class="mw-930">
+        <div class="row mb-5">
+          <div class="col-lg-6">
+            <h3 class="mb-4">Địa chỉ ở Hà Nội</h3>
+            <p class="mb-4">Địa chỉ: Yên Lãng, Hà Nội</p>
+            <p class="mb-4">Mixiishop@gmail.com<br>
+              Số điện thoại: 0822221992</p>
+          </div>
+
+        </div>
+        <div class="contact-us__form">
+          <form name="contact-us-form" class="needs-validation" novalidate>
+            <h3 class="mb-5">LIÊN HỆ CHÚNG TÔI</h3>
+            <div class="form-floating my-4">
+              <input type="text" class="form-control" id="contact_us_name" placeholder="Họ và tên *" required>
+              <label for="contact_us_name">Họ và tên *</label>
+            </div>
+            <div class="form-floating my-4">
+              <input type="email" class="form-control" id="contact_us_email" placeholder="Địa chỉ email *" required>
+              <label for="contact_us_name">Địa chỉ email *</label>
+            </div>
+            <div class="my-4">
+              <textarea class="form-control form-control_gray" placeholder="Tin nhắn của bạn" cols="30" rows="8" required></textarea>
+            </div>
+            <div class="my-4">
+              <button type="submit" class="btn btn-primary">Gửi</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div class="mb-5 pb-xl-5"></div>
+  
+    <%- include('partials/footer') %>
+    <%- include('partials/icons') %>
+    <%- include('partials/login_form') %>
+    <%- include('partials/cart_drawer') %>
+    <%- include('partials/quick_view') %>
+    <%- include('partials/sitemap') %>
+  <!-- Go To Top -->
+  <div id="scrollTop" class="visually-hidden end-0"></div>
+
+  <!-- Page Overlay -->
+  <div class="page-overlay"></div><!-- /.page-overlay -->
+
+ <!-- External JavaScripts -->
+  <script src="/mixishop/js/plugins/jquery.min.js"></script>
+  <script src="/mixishop/js/plugins/bootstrap.bundle.min.js"></script>
+  <script src="/mixishop/js/plugins/bootstrap-slider.min.js"></script>
+
+  <script src="/mixishop/js/plugins/swiper.min.js"></script>
+  <script src="/mixishop/js/plugins/countdown.js"></script>
+  <script src="/mixishop/js/plugins/jquery.fancybox.js"></script>
+
+  
+  <!-- GOOGLEMAP -->
+  <!-- prettier-ignore -->
+  <script>
+    (g => {
+      var h, a, k, p = "The Google Maps JavaScript API", c = "google", l = "importLibrary", q = "__ib__", m = document, b = window;
+      b = b[c] || (b[c] = {});
+      var d = b.maps || (b.maps = {}), r = new Set(), e = new URLSearchParams();
+
+      u = () => h || (h = new Promise(async (f, n) => {
+        await (a = m.createElement("script"));
+        e.set("libraries", [...r] + "");
+        for (k in g) e.set(k.replace(/[A-Z]/g, t => "_" + t[0].toLowerCase()), g[k]);
+        e.set("callback", c + ".maps." + q);
+        a.src = `https://maps.${c}apis.com/maps/api/js?` + e;
+        d[q] = f;
+        a.onerror = () => h = n(Error(p + " could not load."));
+        a.nonce = m.querySelector("script[nonce]")?.nonce || "";
+        m.head.append(a);
+      }));
+
+      if (d[l]) {
+        console.warn(p + " only loads once. Ignoring:", g);
+      } else {
+        d[l] = (f, ...n) => r.add(f) && u().then(() => d[l](f, ...n));
+      }
+    })({
+      key: "AIzaSyAnKJxI0i5KGFgD3QTSg_aXbQk_Ze2kNAw",
+      v: "beta"
+    });
+  </script>
+
+  <script src="/mixishop/js/googlemap-setting.js"></script>
+
+
+  <!-- Footer Scripts -->
+  <script src="/mixishop/js/theme.js"></script>
+
+
+</body>
+
+<!-- Mirrored from uomo-html.flexkitux.com/Demo3/contact.html by HTTrack Website Copier/3.x [XR&CO'2014], Sat, 19 Oct 2024 06:54:35 GMT -->
+</html>

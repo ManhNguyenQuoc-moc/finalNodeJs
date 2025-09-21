@@ -1,0 +1,813 @@
+<!DOCTYPE html>
+<!-- Mirrored from uomo-html.flexkitux.com/Demo3/shop3.html by HTTrack Website Copier/3.x [XR&CO'2014], Sat, 19 Oct 2024 06:53:45 GMT -->
+ <style>
+  /* === Search compact & longer (ghi đè) === */
+.toolbar-left{display:flex;align-items:center;gap:12px;flex-wrap:nowrap}
+
+/* rộng hơn một chút: dài hơn, nhưng không tràn */
+.search-inline{
+  width: clamp(360px, 45vw, 560px);  /* dài vừa đủ, không bị quá khổ */
+  max-width: 100%;
+}
+
+
+
+
+/* viên thuốc thấp hơn, gọn hơn */
+.search-pill{
+  border-radius: 999px;
+  border: 1px solid #ddd;
+  overflow: hidden;
+  background: #fff;
+}
+.search-pill .input-group-text{
+  padding: 4px 8px;
+  font-size: 14px;
+  color: #6c757d;
+}
+.search-pill .form-control{
+  padding: 6px 10px;
+  height: 34px;
+  font-size: 14px;
+  border: 0;
+  box-shadow: none;
+}
+.search-pill .btn-primary{
+  border-radius: 999px;
+  padding: 0 16px;
+  font-size: 14px;
+  height: 34px;
+  line-height: 34px;
+}
+.search-pill .btn-clear{ border:0; background:transparent; font-size:18px; line-height:1; padding:0 8px; color:#8c8c8c }
+.search-pill .btn-clear:hover{ color:#555 }
+
+.breadcrumb{ margin-bottom:0 }
+
+@media (max-width:991.98px){
+  .toolbar-left{ flex-wrap:wrap }
+  .search-inline{ width:100% }
+}
+
+
+  .line-clamp-5 {
+    display: -webkit-box;
+    -webkit-line-clamp: 5;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .rating-stars .on { color:#ffc107; }
+  .rating-stars .off { color:#c7c7c7; }
+</style>
+
+<%- include('partials/head') %>
+
+<body>
+    <%- include('partials/header') %>
+
+    <main>
+    <section class="shop-main container d-flex pt-4 pt-xl-5">
+      <div class="shop-sidebar side-sticky bg-body" id="shopFilter">
+        <div class="aside-header d-flex d-lg-none align-items-center">
+          <h3 class="text-uppercase fs-6 mb-0">Lọc theo</h3>
+          <button class="btn-close-lg js-close-aside btn-close-aside ms-auto"></button>
+        </div>
+
+        <div class="pt-4 pt-lg-0"></div>
+
+        <div class="accordion" id="categories-list">
+          <div class="accordion-item mb-4 pb-3">
+            <h5 class="accordion-header" id="accordion-heading-11">
+              <button class="accordion-button p-0 border-0 fs-5 text-uppercase" type="button" data-bs-toggle="collapse" data-bs-target="#accordion-filter-1" aria-expanded="true" aria-controls="accordion-filter-1">
+                Đồ Hiệu Mixi
+                <svg class="accordion-button__icon type2" viewBox="0 0 10 6" xmlns="http://www.w3.org/2000/svg">
+                  <g aria-hidden="true" stroke="none" fill-rule="evenodd">
+                    <path d="M5.35668 0.159286C5.16235 -0.053094 4.83769 -0.0530941 4.64287 0.159286L0.147611 5.05963C-0.0492049 5.27473 -0.049205 5.62357 0.147611 5.83813C0.344427 6.05323 0.664108 6.05323 0.860924 5.83813L5 1.32706L9.13858 5.83867C9.33589 6.05378 9.65507 6.05378 9.85239 5.83867C10.0492 5.62357 10.0492 5.27473 9.85239 5.06018L5.35668 0.159286Z"/>
+                  </g>
+                </svg>
+              </button>
+            </h5>
+            <div id="accordion-filter-1" class="accordion-collapse collapse show border-0" aria-labelledby="accordion-heading-11" data-bs-parent="#categories-list">
+              <div class="accordion-body px-0 pb-0 pt-3">
+                <ul class="list list-inline mb-0">
+                  <% categories.forEach(category => { %>
+                    <li class="list-item">
+                      <a href="/category/<%= category._id %>" class="menu-link py-1"><%= category.name %></a>
+                    </li>
+                  <% }) %>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="accordion" id="brand-filters">
+          <div class="accordion-item mb-4 pb-3">
+            <h5 class="accordion-header" id="accordion-heading-brand">
+              <button class="accordion-button p-0 border-0 fs-5 text-uppercase" type="button"
+                      data-bs-toggle="collapse" data-bs-target="#accordion-filter-brand"
+                      aria-expanded="true" aria-controls="accordion-filter-brand">
+                Thương hiệu
+                <svg class="accordion-button__icon type2" viewBox="0 0 10 6" xmlns="http://www.w3.org/2000/svg">
+                  <g aria-hidden="true" stroke="none" fill-rule="evenodd">
+                    <path d="M5.35668 0.159286C5.16235 -0.053094 4.83769 -0.0530941 4.64287 0.159286L0.147611 5.05963C-0.0492049 5.27473 -0.049205 5.62357 0.147611 5.83813C0.344427 6.05323 0.664108 6.05323 0.860924 5.83813L5 1.32706L9.13858 5.83867C9.33589 6.05378 9.65507 6.05378 9.85239 5.83867C10.0492 5.62357 10.0492 5.27473 9.85239 5.06018L5.35668 0.159286Z"/>
+                  </g>
+                </svg>
+              </button>
+            </h5>
+
+            <div id="accordion-filter-brand" class="accordion-collapse collapse show border-0" data-bs-parent="#brand-filters">
+            <div class="accordion-body px-0 pb-0">
+              <ul class="list-unstyled mb-0">
+                <% 
+                  // brands: có thể là ['Mixi','DenimCo',...] hoặc [{name:'Mixi'},...]
+                  const picked = new Set((brand || '').split(',').filter(Boolean));
+                  (brands || []).forEach(br => {
+                    const b = (typeof br === 'string') ? br : (br.name || '');
+                    if (!b) return;
+                %>
+                  <li class="mb-2">
+                    <label class="d-flex align-items-center gap-2">
+                      <input 
+                        type="checkbox"
+                        class="form-check-input js-brand"
+                        value="<%= b %>"
+                        <%= picked.has(b) ? 'checked' : '' %>
+                      >
+                      <span><%= b %></span>
+                    </label>
+                  </li>
+                <% }) %>
+              </ul>
+            </div>
+          </div>
+
+          </div>
+        </div>
+
+
+        <div class="accordion" id="color-filters">
+          <div class="accordion-item mb-4 pb-3">
+            <h5 class="accordion-header" id="accordion-heading-1">
+              <button class="accordion-button p-0 border-0 fs-5 text-uppercase" type="button" data-bs-toggle="collapse" data-bs-target="#accordion-filter-2" aria-expanded="true" aria-controls="accordion-filter-2">
+                Màu sắc
+                <svg class="accordion-button__icon type2" viewBox="0 0 10 6" xmlns="http://www.w3.org/2000/svg">
+                  <g aria-hidden="true" stroke="none" fill-rule="evenodd">
+                    <path d="M5.35668 0.159286C5.16235 -0.053094 4.83769 -0.0530941 4.64287 0.159286L0.147611 5.05963C-0.0492049 5.27473 -0.049205 5.62357 0.147611 5.83813C0.344427 6.05323 0.664108 6.05323 0.860924 5.83813L5 1.32706L9.13858 5.83867C9.33589 6.05378 9.65507 6.05378 9.85239 5.83867C10.0492 5.62357 10.0492 5.27473 9.85239 5.06018L5.35668 0.159286Z"/>
+                  </g>
+                </svg>
+              </button>
+            </h5>
+            <div id="accordion-filter-2" class="accordion-collapse collapse show border-0" aria-labelledby="accordion-heading-1" data-bs-parent="#color-filters">
+              <div class="accordion-body px-0 pb-0">
+                <div class="d-flex flex-wrap">
+                  <div class="color-swatch text-center me-3 mb-3">
+                    <a href="#" class="swatch-color js-filter" style="color: #FF0000" data-color="Red"></a>
+                    <div class="color-name">Đỏ</div>
+                  </div>
+                  <div class="color-swatch text-center me-3 mb-3">
+                    <a href="#" class="swatch-color js-filter" style="color: #0000FF" data-color="Blue"></a>
+                    <div class="color-name">Xanh</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="accordion" id="rating-filters">
+          <div class="accordion-item mb-4 pb-3">
+            <h5 class="accordion-header" id="accordion-heading-rating">
+              <button class="accordion-button p-0 border-0 fs-5 text-uppercase" type="button"
+                      data-bs-toggle="collapse" data-bs-target="#accordion-filter-rating"
+                      aria-expanded="true" aria-controls="accordion-filter-rating">
+                Đánh giá
+                <svg class="accordion-button__icon type2" viewBox="0 0 10 6" xmlns="http://www.w3.org/2000/svg">
+                  <g aria-hidden="true" stroke="none" fill-rule="evenodd">
+                    <path d="M5.35668 0.159286C5.16235 -0.053094 4.83769 -0.0530941 4.64287 0.159286L0.147611 5.05963C-0.0492049 5.27473 -0.049205 5.62357 0.147611 5.83813C0.344427 6.05323 0.664108 6.05323 0.860924 5.83813L5 1.32706L9.13858 5.83867C9.33589 6.05378 9.65507 6.05378 9.85239 5.83867C10.0492 5.62357 10.0492 5.27473 9.85239 5.06018L5.35668 0.159286Z"/>
+                  </g>
+                </svg>
+              </button>
+            </h5>
+
+            <div id="accordion-filter-rating" class="accordion-collapse collapse show border-0" data-bs-parent="#rating-filters">
+              <ul class="list-unstyled mb-0">
+                <% const r = parseInt(rating || '0', 10); %>
+                <% [5,4,3,2,1].forEach(st => { %>
+                <li class="mb-2">
+                  <label class="d-flex align-items-center gap-2">
+                    <input type="radio" name="rating" class="form-check-input js-rating" value="<%= st %>" <%= r===st ? 'checked' : '' %> >
+                    <span>
+                      <% for(let i=1;i<=5;i++){ %>
+                        <span class="<%= i<=st ? 'text-warning' : 'text-muted' %>">★</span>
+                      <% } %>
+                      <small class="text-muted">từ <%= st %> sao</small>
+                    </span>
+                  </label>
+                </li>
+                <% }) %>
+                <li><button class="btn btn-sm btn-outline-secondary mt-1" id="clearRating">Xóa đánh giá</button></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+
+        <div class="accordion" id="price-filters">
+          <div class="accordion-item mb-4">
+            <h5 class="accordion-header mb-2" id="accordion-heading-price">
+              <button class="accordion-button p-0 border-0 fs-5 text-uppercase" type="button"
+                      data-bs-toggle="collapse" data-bs-target="#accordion-filter-price"
+                      aria-expanded="true" aria-controls="accordion-filter-price">
+                Mức giá
+                <svg class="accordion-button__icon type2" viewBox="0 0 10 6">
+                  <path d="M5.35668 0.159286C5.16235 -0.053094 4.83769 -0.0530941 4.64287 0.159286L0.147611 5.05963C-0.0492049 5.27473-0.049205 5.62357 0.147611 5.83813C0.344427 6.05323 0.664108 6.05323 0.860924 5.83813L5 1.32706L9.13858 5.83867C9.33589 6.05378 9.65507 6.05378 9.85239 5.83867C10.0492 5.62357 10.0492 5.27473 9.85239 5.06018L5.35668 0.159286Z"/>
+                </svg>
+              </button>
+            </h5>
+
+            <div id="accordion-filter-price" class="accordion-collapse collapse show border-0">
+              <!-- Ô nhập -->
+              <div class="d-flex align-items-center gap-2">
+                <input type="number" min="0" class="form-control" id="minPrice" placeholder="Từ"
+                      value="<%= (price_range && price_range.split(',')[0]) || '' %>">
+                <span class="text-muted">—</span>
+                <input type="number" min="0" class="form-control" id="maxPrice" placeholder="Đến"
+                      value="<%= (price_range && price_range.split(',')[1]) || '' %>">
+              </div>
+              <div class="d-flex gap-2 mt-2">
+                <button class="btn btn-sm btn-primary" id="applyPrice">Áp dụng</button>
+                <button class="btn btn-sm btn-outline-secondary" id="clearPrice">Xóa</button>
+              </div>
+
+              <!-- Quick range đổi thành checkbox -->
+              <ul class="mt-3 list-unstyled">
+                <li>
+                  <label class="d-flex align-items-center gap-2">
+                    <input type="checkbox" class="form-check-input js-quick-price" data-min="" data-max="">
+                    <span>Tất cả</span>
+                  </label>
+                </li>
+                <li>
+                  <label class="d-flex align-items-center gap-2">
+                    <input type="checkbox" class="form-check-input js-quick-price" data-min="0" data-max="100000">
+                    <span>Dưới 1 trăm</span>
+                  </label>
+                </li>
+                <li>
+                  <label class="d-flex align-items-center gap-2">
+                    <input type="checkbox" class="form-check-input js-quick-price" data-min="100000" data-max="200000">
+                    <span>1 trăm - 2 trăm</span>
+                  </label>
+                </li>
+                <li>
+                  <label class="d-flex align-items-center gap-2">
+                    <input type="checkbox" class="form-check-input js-quick-price" data-min="200000" data-max="500000">
+                    <span>2 trăm - 5 trăm</span>
+                  </label>
+                </li>
+                <li>
+                  <label class="d-flex align-items-center gap-2">
+                    <input type="checkbox" class="form-check-input js-quick-price" data-min="500000" data-max="">
+                    <span>Trên 5 trăm</span>
+                  </label>
+                </li>
+              </ul>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+      <div class="shop-list flex-grow-1">
+        <div class="swiper-container js-swiper-slider slideshow slideshow_small slideshow_split"
+             data-settings='{
+                "autoplay": {
+                  "delay": 5000
+                },
+                "slidesPerView": 1,
+                "effect": "fade",
+                "loop": true,
+                "pagination": {
+                  "el": ".slideshow-pagination",
+                  "type": "bullets",
+                  "clickable": true
+                }
+              }'>
+          <div class="swiper-wrapper">
+            <div class="swiper-slide">
+              <div class="slide-split h-100 d-block d-md-flex overflow-hidden">
+                <div class="slide-split_text position-relative d-flex align-items-center" style="background-color: #d9c8c7;">
+                  <div class="slideshow-text container p-3 p-xl-5">
+                    <h2 class="text-uppercase section-title fw-normal mb-3 animate animate_fade animate_btt animate_delay-2">Women's <br><strong>ACCESSORIES</strong></h2>
+                    <p class="mb-0 animate animate_fade animate_btt animate_delay-5">Accessories are the best way to update your look. Add a title edge with new styles and new colors, or go for timeless pieces.</p>
+                  </div>
+                </div>
+                <div class="slide-split_media position-relative">
+                  <div class="slideshow-bg" style="background-color: #d9c8c7;">
+                    <img loading="lazy" src="/mixishop/images/shop/banner_list1.jpg" width="630" height="450" alt="Women's accessories" class="slideshow-bg__img object-fit-cover">
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="swiper-slide">
+              <div class="slide-split h-100 d-block d-md-flex overflow-hidden">
+                <div class="slide-split_text position-relative d-flex align-items-center" style="background-color: #aac6e0;">
+                  <div class="slideshow-text container p-3 p-xl-5">
+                    <h2 class="text-uppercase section-title fw-normal mb-3 animate animate_fade animate_btt animate_delay-2">Choose <br><strong>Your Best Suits</strong></h2>
+                    <p class="mb-0 animate animate_fade animate_btt animate_delay-5">Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
+                  </div>
+                </div>
+                <div class="slide-split_media position-relative">
+                  <div class="slideshow-bg" style="background-color: #aac6e0;">
+                    <img loading="lazy" src="/mixishop/images/shop/banner_list2.jpg" width="630" height="450" alt="Women's accessories" class="slideshow-bg__img object-fit-cover">
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="swiper-slide">
+              <div class="slide-split h-100 d-block d-md-flex overflow-hidden">
+                <div class="slide-split_text position-relative d-flex align-items-center" style="background-color: #d4d2d0;">
+                  <div class="slideshow-text container p-3 p-xl-5">
+                    <h2 class="text-uppercase section-title fw-normal mb-3 animate animate_fade animate_btt animate_delay-2">World's <br><strong>Leading Quality</strong></h2>
+                    <p class="mb-0 animate animate_fade animate_btt animate_delay-5">Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
+                  </div>
+                </div>
+                <div class="slide-split_media position-relative">
+                  <div class="slideshow-bg" style="background-color: #d4d2d0;">
+                    <img loading="lazy" src="/mixishop/images/shop/banner_list3.jpg" width="630" height="450" alt="Women's accessories" class="slideshow-bg__img object-fit-cover">
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="container p-3 p-xl-5">
+            <div class="slideshow-pagination d-flex align-items-center position-absolute bottom-0 mb-4 pb-xl-2"></div>
+          </div>
+        </div>
+
+        <div class="mb-3 pb-2 pb-xl-3"></div>
+
+        <div class="d-flex justify-content-between mb-4 pb-md-2">
+          <div class="toolbar-left">
+
+          <!-- Breadcrumb -->
+          <div class="breadcrumb mb-0 d-none d-md-flex align-items-center">
+            <a href="#" class="menu-link menu-link_us-s text-uppercase fw-medium">Danh mục</a>
+            <span class="breadcrumb-separator menu-link fw-medium ps-1 pe-1">/</span>
+            <a href="#" class="menu-link menu-link_us-s text-uppercase fw-medium"><%= selectedCategoryName %></a>
+          </div>
+
+          <!-- Search nằm ngay sau breadcrumb -->
+          <form class="search-inline" method="GET" action="/category/<%= selectedCategoryId || 'alls' %>">
+            <!-- giữ tham số khác -->
+            <input type="hidden" name="sort"        value="<%= sort || '' %>">
+            <input type="hidden" name="price_range" value="<%= price_range || '' %>">
+            <input type="hidden" name="brand"       value="<%= brand || '' %>">
+            <input type="hidden" name="rating"      value="<%= rating || '' %>">
+            <input type="hidden" name="color"       value="<%= color || '' %>">
+            <input type="hidden" name="pageNo"      value="1">
+
+            <div class="input-group search-pill">
+              <span class="input-group-text border-0 bg-transparent">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                  <path d="M21 21l-4.2-4.2M10.8 18a7.2 7.2 0 1 1 0-14.4 7.2 7.2 0 0 1 0 14.4z"
+                        stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </span>
+              <input
+                type="text"
+                name="q"
+                class="form-control border-0"
+                placeholder="Tìm sản phẩm..."
+                value="<%= q || '' %>"
+                aria-label="Tìm sản phẩm"
+              />
+              <% if (q && q.trim() !== '') { %>
+                <button class="btn btn-clear" type="button" id="btnClearKeyword" title="Xóa tìm kiếm">×</button>
+              <% } %>
+              <button class="btn btn-primary px-4" type="submit">Tìm</button>
+            </div>
+          </form>
+        </div>
+
+          <form method="GET" action="/category/<%= selectedCategoryId || 'alls' %>">
+            <div class="shop-acs d-flex align-items-center justify-content-between justify-content-md-end flex-grow-1">
+              <select class="shop-acs__select form-select w-auto border-0 py-0 order-1 order-md-0" aria-label="Sort Items" name="sort" onchange="this.form.submit();">
+                <option <%= sort == null ? 'selected' : '' %> value="">Mặc định</option>
+                <option <%= sort === 'a_z' ? 'selected' : '' %> value="a_z">Tên A-Z</option>
+                <option <%= sort === 'z_a' ? 'selected' : '' %> value="z_a">Tên Z-A</option>
+                <option <%= sort === 'price_low_to_high' ? 'selected' : '' %> value="price_low_to_high">Giá tăng dần</option>
+                <option <%= sort === 'price_high_to_low' ? 'selected' : '' %> value="price_high_to_low">Giá giảm dần</option>
+              </select>
+
+              <div class="shop-asc__seprator mx-3 bg-light d-none d-md-block order-md-0"></div>
+
+              <div class="col-size align-items-center order-1 d-none d-lg-flex">
+                <span class="text-uppercase fw-medium me-2"></span>
+                <button class="btn-link fw-medium me-2 js-cols-size" data-target="products-grid" data-cols="2">2</button>
+                <button class="btn-link fw-medium me-2 js-cols-size" data-target="products-grid" data-cols="3">3</button>
+                <button class="btn-link fw-medium js-cols-size" data-target="products-grid" data-cols="4">4</button>
+              </div>
+
+              <div class="shop-filter d-flex align-items-center order-0 order-md-3 d-lg-none">
+                <button class="btn-link btn-link_f d-flex align-items-center ps-0 js-open-aside" data-aside="shopFilter">
+                  <svg class="d-inline-block align-middle me-2" width="14" height="10" viewBox="0 0 14 10" fill="none" xmlns="http://www.w3.org/2000/svg"><use href="/images/sprite.svg#icon_filter" /></svg>
+                  <span class="text-uppercase fw-medium d-inline-block align-middle">Lọc</span>
+                </button>
+              </div>
+            </div>
+          </form>
+        </div>
+
+        
+
+        <div class="products-grid row row-cols-2 row-cols-md-4" id="products-grid">
+          <% products.content.forEach(product => { %>
+            <div class="product-card-wrapper">
+              <div class="product-card mb-3 mb-md-4 mb-xxl-5">
+                <div class="pc__img-wrapper">
+                  <div class="swiper-container background-img js-swiper-slider" data-settings='{"resizeObserver": true}'>
+                    <div class="swiper-wrapper">
+                      <div class="swiper-slide">
+                        <a href="/product_detail/<%= product._id %>">
+                          <img loading="lazy"
+                               src="<%= product.colors && product.colors.length > 0 ? product.colors[0].imageUrls[0] : '/images/default.png' %>"
+                               width="258" height="313"
+                               alt="<%= product.name %>"
+                               class="pc__img">
+                          <img loading="lazy"
+                               src="<%= product.colors && product.colors.length > 0 && product.colors[0].imageUrls.length > 1 ? product.colors[0].imageUrls[1] : (product.colors && product.colors.length > 0 ? product.colors[0].imageUrls[0] : '/images/default.png') %>"
+                               width="258" height="313"
+                               alt="<%= product.name %>"
+                               class="pc__img pc__img-second">
+
+                          <% 
+                            let statusFrame = '';
+                            if (product.productStatus?.statusName === 'Bán chạy') {
+                              statusFrame = '/mixishop/images/frame_banchay.png';
+                            } else if (product.productStatus?.statusName === 'Trending') {
+                              statusFrame = '/mixishop/images/frame_trending.png';
+                            } else {
+                              statusFrame = '/mixishop/images/frame_new.png';
+                            }
+                          %>
+                          <img class="category-banner__frame"
+                              src="<%= statusFrame %>"
+                              alt="<%= product.productStatus?.statusName || 'New' %> Frame">
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+                  <a href="/add-to-cart/<%= product.id %>"
+                     class="pc__atc btn anim_appear-bottom position-absolute border-0 fw-medium"
+                     data-aside="cartDrawer"
+                     title="Thêm vào giỏ hàng">
+                    Thêm giỏ hàng
+                  </a>
+                </div>
+                <div class="d-flex align-items-center mt-1 custom-swatch-container">
+                  <% if (product.colors && product.colors.length > 0) { %>
+                    <% product.colors.forEach(productColor => { %>
+                      <a href="#" 
+                         class="swatch-color custom-swatch-color"
+                         style="background-image: url('<%= productColor.imageUrls && productColor.imageUrls.length > 0 ? productColor.imageUrls[0] : '' %>'); background-size: cover;"
+                         data-images="<%= productColor.imageUrls && productColor.imageUrls.length > 0 ? productColor.imageUrls.join(',') : '' %>"
+                         onclick="changeColor(this); return false;"
+                         title="<%= productColor.color %>"></a>
+                    <% }) %>
+                  <% } %>
+                </div>
+
+                <div class="pc__info position-relative">
+                  <p class="pc__category"><%= product.category_id?.name %></p>
+
+                  <h6 class="pc__title">
+                    <a href="/product_detail/<%= product._id %>"><%= product.name %></a>
+                  </h6>
+
+                  <p class="small text-muted mb-1 line-clamp-5"><%= product.short_description || '' %></p>
+
+                  <div class="rating-stars d-flex align-items-center mb-2">
+                    <% const _avg = Math.round(product.avg_rating || 0); %>
+                    <% for (let i=1;i<=5;i++){ %>
+                      <span class="<%= i<=_avg ? 'on' : 'off' %>">★</span>
+                    <% } %>
+                    <small class="ms-2 text-muted">(<%= product.rating_count || 0 %> đánh giá)</small>
+                  </div>
+
+                  <div class="product-card__price d-flex">
+                    <span class="money price" style="color: blue;">
+                      <%= product.price.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) %>
+                    </span>
+                  </div>
+
+                  <button class="pc__btn-wl position-absolute top-0 end-0 bg-transparent border-0 js-add-wishlist" title="Thêm vào danh sách yêu thích">
+                    <svg width="16" height="16" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><use href="/images/sprite.svg#icon_heart" /></svg>
+                  </button>
+                </div>
+
+              </div>
+            </div>
+          <% }) %>
+        </div>
+
+        <%
+  const totalPages  = Math.max((products && products.totalPages) || 1, 1);
+  const currentPage = ((products && products.number) || 0) + 1;
+  const hasPrev     = !!(products && products.hasPrevious);
+  const hasNext     = !!(products && products.hasNext);
+
+  const qs = (page) =>
+    `pageNo=${page}`
+    + `&sort=${encodeURIComponent(sort || '')}`
+    + `&price_range=${encodeURIComponent(price_range || '')}`
+    + `&brand=${encodeURIComponent(brand || '')}`
+    + `&rating=${encodeURIComponent(rating || '')}`
+    + `&color=${encodeURIComponent(color || '')}`
+    + `&q=${encodeURIComponent(q || '')}`;
+
+  const baseUrl = `/category/${selectedCategoryId || 'alls'}`;
+%>
+
+<nav class="shop-pages d-flex justify-content-between mt-3" aria-label="Phân trang">
+  <!-- Prev -->
+  <a href="<%= hasPrev ? (baseUrl + '?' + qs(currentPage - 1)) : '#' %>"
+     class="btn-link d-inline-flex align-items-center <%= hasPrev ? '' : 'disabled' %>"
+     aria-disabled="<%= hasPrev ? 'false' : 'true' %>"
+     style="opacity:<%= hasPrev ? 1 : 0.5 %>; pointer-events:<%= hasPrev ? 'auto' : 'none' %>;">
+    <svg class="me-1" width="7" height="11" viewBox="0 0 7 11" xmlns="http://www.w3.org/2000/svg">
+      <use href="/images/sprite.svg#icon_prev_sm" />
+    </svg>
+    <span class="fw-medium">TRƯỚC</span>
+  </a>
+
+  <!-- Pages -->
+  <ul class="pagination mb-0">
+    <% for (let i = 1; i <= totalPages; i++) { %>
+      <li class="page-item">
+        <a href="<%= baseUrl + '?' + qs(i) %>"
+           class="btn-link px-1 mx-2 <%= currentPage === i ? 'btn-link_active' : '' %>"><%= i %></a>
+      </li>
+    <% } %>
+  </ul>
+
+  <!-- Next -->
+  <a href="<%= hasNext ? (baseUrl + '?' + qs(currentPage + 1)) : '#' %>"
+     class="btn-link d-inline-flex align-items-center <%= hasNext ? '' : 'disabled' %>"
+     aria-disabled="<%= hasNext ? 'false' : 'true' %>"
+     style="opacity:<%= hasNext ? 1 : 0.5 %>; pointer-events:<%= hasNext ? 'auto' : 'none' %>;">
+    <span class="fw-medium me-1">TIẾP</span>
+    <svg width="7" height="11" viewBox="0 0 7 11" xmlns="http://www.w3.org/2000/svg">
+      <use href="/images/sprite.svg#icon_next_sm" />
+    </svg>
+  </a>
+</nav>
+
+      </div>
+    </section>
+  </main>
+
+    <div class="mb-5 pb-xl-5"></div>
+
+    <%- include('partials/footer') %>
+    <%- include('partials/icons') %>
+    <%- include('partials/login_form') %>
+    <%- include('partials/cart_drawer') %>
+    <%- include('partials/quick_view') %>
+    <%- include('partials/sitemap') %>
+    <!-- Go To Top -->
+    <div id="scrollTop" class="visually-hidden end-0"></div>
+
+    <!-- Page Overlay -->
+    <div class="page-overlay"></div><!-- /.page-overlay -->
+
+
+    <!-- External JavaScripts -->
+    <script src="/mixishop/js/plugins/jquery.min.js"></script>
+    <script src="/mixishop/js/plugins/bootstrap.bundle.min.js"></script>
+    <script src="/mixishop/js/plugins/bootstrap-slider.min.js"></script>
+
+    <script src="/mixishop/js/plugins/swiper.min.js"></script>
+    <script src="/mixishop/js/plugins/countdown.js"></script>
+
+    <!-- Footer Scripts -->
+    <script src="/mixishop/js/theme.js"></script>
+
+    <script>
+      document.querySelectorAll('.js-quick-price').forEach(cb => {
+        cb.addEventListener('change', () => {
+          // bỏ chọn các checkbox khác
+          document.querySelectorAll('.js-quick-price').forEach(other => {
+            if (other !== cb) other.checked = false;
+          });
+          const min = cb.dataset.min || '';
+          const max = cb.dataset.max || '';
+          applyPrice(min, max);
+        });
+      });
+
+        function changeColor(swatch) {
+            const dataImages = swatch.getAttribute('data-images');
+            const images = dataImages ? dataImages.split(',') : [];
+
+            const productCard = swatch.closest('.product-card');
+
+            const firstImage = productCard.querySelector('.pc__img');
+            const secondImage = productCard.querySelector('.pc__img-second');
+
+            if (!firstImage || !secondImage) {
+                console.error('Không tìm thấy phần tử .pc__img hoặc .pc__img-second trong sản phẩm');
+                return;
+            }
+
+            if (images.length > 0) {
+                firstImage.src = images[0];
+                secondImage.src = images.length > 1 ? images[1] : images[0];
+            } else {
+                firstImage.src = 'path/to/default/image.png';
+                secondImage.src = 'path/to/default/image.png';
+            }
+
+            const swatchColors = productCard.querySelectorAll('.swatch-color');
+            swatchColors.forEach(color => color.classList.remove('swatch_active'));
+            swatch.classList.add('swatch_active');
+        }
+    </script>
+
+        <script>
+          (function(){
+            const getURL = () => new URL(window.location.href);
+
+            function setParam(url, key, val){
+              if(!val) url.searchParams.delete(key);
+              else url.searchParams.set(key, val);
+            }
+            function go(url){
+              url.searchParams.set('pageNo','1');
+              window.location.href = url.toString();
+            }
+
+            // --- Brand ---
+            document.querySelectorAll('.js-brand').forEach(cb=>{
+              cb.addEventListener('change', ()=>{
+                const url = getURL();
+                const values = [...document.querySelectorAll('.js-brand:checked')].map(x=>x.value.trim());
+                setParam(url, 'brand', values.join(','));
+                go(url);
+              });
+            });
+
+            // --- Rating ---
+            document.querySelectorAll('.js-rating').forEach(r=>{
+              r.addEventListener('change', ()=>{
+                const url = getURL();
+                setParam(url, 'rating', r.checked ? r.value : '');
+                go(url);
+              });
+            });
+            const btnClearRating = document.getElementById('clearRating');
+            if(btnClearRating){
+              btnClearRating.addEventListener('click', (e)=>{
+                e.preventDefault();
+                const url = getURL();
+                setParam(url, 'rating', '');
+                go(url);
+              });
+            }
+
+            // --- Color ---
+            document.querySelectorAll('.swatch-color.js-filter').forEach(el=>{
+              el.addEventListener('click', (e)=>{
+                e.preventDefault();
+                const url = getURL();
+                setParam(url, 'color', el.dataset.color || '');
+                go(url);
+              });
+            });
+
+            // --- Price ---
+            const minI = document.getElementById('minPrice');
+            const maxI = document.getElementById('maxPrice');
+            function applyPrice(min, max){
+              const url = getURL();
+              if(!min && !max) setParam(url,'price_range','');
+              else setParam(url,'price_range', (min||'')+','+(max||''));
+              go(url);
+            }
+            document.getElementById('applyPrice')?.addEventListener('click', ()=>applyPrice(minI.value,maxI.value));
+            document.getElementById('clearPrice')?.addEventListener('click', ()=>applyPrice('',''));
+            document.querySelectorAll('.js-quick-price').forEach(btn=>{
+              btn.addEventListener('click', ()=> applyPrice(btn.dataset.min, btn.dataset.max));
+            });
+
+            // --- Giữ style active cho color ---
+            const curColor = getURL().searchParams.get('color');
+            if(curColor){
+              document.querySelectorAll('.swatch-color.js-filter').forEach(el=>{
+                el.classList.toggle('swatch_active', el.dataset.color===curColor);
+              });
+            }
+          })();
+
+  (function(){
+    const btn = document.getElementById('btnClearKeyword');
+    if(btn){
+      btn.addEventListener('click', function(){
+        const form = this.closest('form');
+        const input = form.querySelector('input[name="q"]');
+        input.value = '';
+        const page = form.querySelector('input[name="pageNo"]');
+        if(page) page.value = '1';
+        form.submit();
+      });
+    }
+  })();
+
+  (function () {
+    const getURL = () => new URL(window.location.href);
+
+    function applyPrice(min, max) {
+      const url = getURL();
+      if ((!min && !max) || (min === '' && max === '')) {
+        url.searchParams.delete('price_range');
+      } else {
+        url.searchParams.set('price_range', `${min || ''},${max || ''}`);
+      }
+      url.searchParams.set('pageNo', '1');
+      window.location.href = url.toString();
+    }
+
+    // 1) Quick range: chỉ 1 ô được chọn + điều hướng
+    document.querySelectorAll('.js-quick-price').forEach(cb => {
+      cb.addEventListener('change', () => {
+        // bỏ chọn các ô khác
+        document.querySelectorAll('.js-quick-price').forEach(other => {
+          if (other !== cb) other.checked = false;
+        });
+        // chuyển giá trị
+        const min = cb.dataset.min || '';
+        const max = cb.dataset.max || '';
+        applyPrice(min, max);
+      });
+    });
+
+    // 2) Phản chiếu trạng thái checkbox theo URL khi load trang
+    (function reflectQuickPriceFromURL() {
+      const url = getURL();
+      const pr = url.searchParams.get('price_range') || '';
+      const [curMin, curMax] = pr.split(',');
+      // mặc định: nếu không có price_range -> tick "Tất cả"
+      let matched = false;
+      document.querySelectorAll('.js-quick-price').forEach(cb => {
+        const m = cb.dataset.min || '';
+        const x = cb.dataset.max || '';
+        const isMatch =
+          (curMin ?? '') === m &&
+          (curMax ?? '') === x &&
+          pr !== null; // có param hoặc rỗng đều OK
+        if (isMatch && (m !== '' || x !== '')) {
+          cb.checked = true;
+          matched = true;
+        } else {
+          cb.checked = false;
+        }
+      });
+      // nếu không khớp khoảng nào (hoặc rỗng) => tick "Tất cả"
+      if (!matched) {
+        const allCb = document.querySelector('.js-quick-price[data-min=""][data-max=""]');
+        if (allCb) allCb.checked = true;
+      }
+    })();
+
+    // 3) Ô nhập tay: Áp dụng/Xóa -> bỏ tick các checkbox nhanh
+    const minI = document.getElementById('minPrice');
+    const maxI = document.getElementById('maxPrice');
+    const uncheckQuick = () => {
+      document.querySelectorAll('.js-quick-price').forEach(cb => (cb.checked = false));
+    };
+
+    document.getElementById('applyPrice')?.addEventListener('click', () => {
+      uncheckQuick();
+      applyPrice(minI.value, maxI.value);
+    });
+
+    document.getElementById('clearPrice')?.addEventListener('click', () => {
+      minI.value = '';
+      maxI.value = '';
+      // chọn lại "Tất cả" cho dễ nhìn
+      const allCb = document.querySelector('.js-quick-price[data-min=""][data-max=""]');
+      if (allCb) allCb.checked = true;
+      applyPrice('', '');
+    });
+  })();
+
+
+</script>
+
+
+    </body>
+
+<!-- Mirrored from uomo-html.flexkitux.com/Demo3/shop3.html by HTTrack Website Copier/3.x [XR&CO'2014], Sat, 19 Oct 2024 06:53:45 GMT -->
+</html>
