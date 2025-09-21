@@ -1,4 +1,5 @@
 const User = require("../models/User");
+const UserRepository = require("../repositories/userRepository");
 const bcrypt = require("bcryptjs");
 
 exports.createUser = async (req, res) => {
@@ -30,13 +31,11 @@ exports.createUser = async (req, res) => {
   }
 };
 
-
 exports.getUsers = async (req, res) => {
   try {
-    const users = await User.find().select("-password"); 
+    const users = await User.find().select("-password");
     res.json({ success: true, users });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
 };
-

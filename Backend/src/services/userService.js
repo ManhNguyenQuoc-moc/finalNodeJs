@@ -1,20 +1,57 @@
+const { hashPassword, comparePassword } = require("../utils/hash");
+const { generateToken } = require("../utils/token");
+const userRepository = require("../repositories/userRepository");
 
-const userService = require("../services/userService");
+class AuthService {
+  async register(email, password, full_name) {
+    const existingUser = await userRepository.findByEmail(email);
+    if (existingUser) throw new Error("Email already registered");
 
-exports.createUser = async (req, res) => {
-  try {
-    const user = await userService.createUser(req.body);
-    res.status(201).json({ success: true, user });
-  } catch (err) {
-    res.status(400).json({ success: false, message: err.message });
+    const hashedPassword = await hashPassword(password);
+
+    const newUser = await userRepository.create({
+      email,
+      password_hash: hashedPassword,
+      full_name,
+      provider: "local",
+    });
+
+    const token = generateToken({
+      id: newUser._id,
+      email: newUser.email,
+      role: newUser.role,
+    });
+
+    return {
+      message: "User registered successfully",
+      user: {
+        id: newUser._id,
+        email: newUser.email,
+        full_name: newUser.full_name,
+      },
+      token,
+    };
   }
-};
 
-exports.getUsers = async (req, res) => {
-  try {
-    const users = await userService.getAllUsers();
-    res.json({ success: true, users });
-  } catch (err) {
-    res.status(500).json({ success: false, message: err.message });
+  async login(email, password) {
+    const user = await userRepository.findByEmail(email);
+    if (!user) throw new Error("Invalid email or password");
+
+    const isMatch = await comparePassword(password, user.password_hash);
+    if (!isMatch) throw new Error("Invalid email or password");
+
+    const token = generateToken({
+      id: user._id,
+      email: user.email,
+      role: user.role,
+    });
+
+    return {
+      message: "Login successful",
+      user: { id: user._id, email: user.email, full_name: user.full_name },
+      token,
+    };
   }
-};
+}
+
+module.exports = new AuthService();

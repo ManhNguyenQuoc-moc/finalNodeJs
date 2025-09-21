@@ -33,6 +33,11 @@ const orderSchema = new mongoose.Schema(
     final_amount: Number,
     loyalty_points_used: Number,
     loyalty_points_earned: Number,
+    current_status: {
+      type: String,
+      enum: ["pending", "confirmed", "shipping", "delivered", "cancelled"],
+      default: "pending",
+    },
     status_history: [orderStatusSchema],
   },
   { timestamps: true }

@@ -6,6 +6,7 @@ const discountCodeSchema = new mongoose.Schema(
     discount_value: Number,
     usage_limit: Number,
     usage_count: { type: Number, default: 0 },
+    is_active: { type: Boolean, default: true },
   },
   { timestamps: true }
 );

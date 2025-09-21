@@ -1,9 +1,19 @@
-// const jwt = require("jsonwebtoken");
+// utils/token.js
+const jwt = require("jsonwebtoken");
 
-// exports.generateToken = (user) => {
-//   return jwt.sign(
-//     { id: user._id, email: user.email },
-//     process.env.JWT_SECRET,
-//     { expiresIn: "7d" }
-//   );
-// };
+const generateToken = (payload, expiresIn = "7d") => {
+  return jwt.sign(payload, process.env.JWT_SECRET, { expiresIn });
+};
+
+const verifyToken = (token) => {
+  try {
+    return jwt.verify(token, process.env.JWT_SECRET);
+  } catch (err) {
+    return null; // hoặc throw error tùy cách bạn muốn xử lý
+  }
+};
+
+module.exports = {
+  generateToken,
+  verifyToken,
+};
