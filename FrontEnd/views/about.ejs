@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html dir="ltr" lang="zxx">
+
+  <%- include('partials/head') %>
+
+  <body>
+
+    <!-- Mobile Header -->
+
+    <!-- Header Type 1 -->
+
+    <!-- Include mobileHeader cho giao diện mobile -->
+
+    <!-- Include headerV2 cho giao diện desktop -->
+    <div class="d-none d-md-block">
+        <%- include('partials/header') %>
+    </div>
+
+    <main>
+      <div class="mb-4 pb-4"></div>
+
+      <section class="about-us container">
+        <div class="mw-930">
+          <h2 class="page-title">ABOUT UOMO</h2>
+        </div>
+        <div class="about-us__content pb-5 mb-5">
+          <p class="mb-5">
+            <img loading="lazy" class="w-100 h-auto d-block" src="/mixishop/images/about/about-1.jpg" width="1410" height="550" alt="">
+          </p>
+          <div class="mw-930">
+            <h3 class="mb-4">MIXI SHOP</h3>
+            <p class="fs-6 fw-medium mb-4">MixiShop - Thế Giới Mua Sắm Trực Tuyến Đa Dạng Và Tiện Lợi</p>
+            <p class="mb-4">MixiShop là một nền tảng thương mại điện tử hiện đại...</p>
+          </div>
+          <div class="mw-930 d-lg-flex align-items-lg-center">
+            <div class="image-wrapper col-lg-6">
+              <img class="h-auto" loading="lazy" src="/mixishop/images/rambo.jpg" width="450" height="500" alt="">
+            </div>
+            <div class="content-wrapper col-lg-6 px-lg-4">
+              <h5 class="mb-3">Tầm Nhìn Và Sứ Mệnh</h5>
+              <p>MixiShop hướng đến việc trở thành...</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ... giữ nguyên HTML khác, chỉ đổi th:src và th:replace ... -->
+
+    </main>
+
+    <%- include('partials/footer') %>
+    <%- include('partials/icons') %>
+    <%- include('partials/login_form') %>
+    <%- include('partials/cart_drawer') %>
+    <%- include('partials/quick_view') %>
+    <%- include('partials/sitemap') %>
+    
+
+    <!-- Go To Top -->
+    <div id="scrollTop" class="visually-hidden end-0"></div>
+
+    <!-- Page Overlay -->
+    <div class="page-overlay"></div>
+
+    <!-- External JavaScripts -->
+    <script src="/mixishop/js/plugins/jquery.min.js"></script>
+    <script src="/mixishop/js/plugins/bootstrap.bundle.min.js"></script>
+    <script src="/mixishop/js/plugins/bootstrap-slider.min.js"></script>
+    <script src="/mixishop/js/plugins/swiper.min.js"></script>
+    <script src="/mixishop/js/plugins/countdown.js"></script>
+    <script src="/mixishop/js/plugins/jquery.fancybox.js"></script>
+
+    <!-- Footer Scripts -->
+    <script src="/mixishop/js/theme.js"></script>
+  </body>
+</html>

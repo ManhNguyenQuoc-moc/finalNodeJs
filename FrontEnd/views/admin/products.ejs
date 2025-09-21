@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <head><%- include('../partials/head_dashboard') %></head>
+
+</head>
+<body>
+
+<div class="wrapper">
+    <div class="sidebar" data-color="purple" data-image="/mixishop/images/sidebar-5.jpg">
+
+        <div class="sidebar-wrapper">
+            <div class="logo">
+                <a href="http://www.creative-tim.com" class="simple-text">
+                    MIXISHOP
+                </a>
+            </div>
+
+            <ul class="nav">
+                <li>
+                    <a href="/admin">
+                        <i class="pe-7s-graph"></i>
+                        <p>Trang chủ</p>
+                    </a>
+                </li>
+
+                <li>
+                    <a href="/admin/categogy">
+                        <i class="pe-7s-note2"></i>
+                        <p>Danh sách nhóm sản phẩm</p>
+                    </a>
+                </li>
+
+                <li class="active">
+                    <a href="/admin/products">
+                        <i class="pe-7s-note2"></i>
+                        <p>Danh sách sản phẩm</p>
+                    </a>
+                </li>
+
+                <li>
+                    <a href="/admin/order-list">
+                        <i class="pe-7s-note2"></i>
+                        <p>Danh sách đơn hàng</p>
+                    </a>
+                </li>
+
+                <li>
+                    <a href="/admin/order-pending">
+                        <i class="pe-7s-note2"></i>
+                        <p>Danh sách đơn hàng chờ phê duyệt</p>
+                    </a>
+                </li>
+
+            </ul>
+        </div>
+    </div>
+
+    <div class="main-panel">
+        <nav class="navbar navbar-default navbar-fixed">
+            <div class="container-fluid">
+                <div class="navbar-header">
+                    <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navigation-example-2">
+                        <span class="sr-only">Toggle navigation</span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                    </button>
+                    <a class="navbar-brand" href="#">Danh Sách Sản Phẩm</a>
+                </div>
+                <div class="collapse navbar-collapse">
+
+                    <ul class="nav navbar-nav navbar-right">
+
+                        <li>
+                            <a href="/logout" onclick="return confirm('Bạn có chắc chắn muốn đăng xuất?');">
+                                <p>Đăng xuất</p>
+                            </a>
+                        </li>
+                        <li class="separator hidden-lg hidden-md"></li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+
+        <div class="content">
+            <div class="container-fluid">
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="card">
+                            <div class="header d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h4 class="title">Danh Sách Sản Phẩm</h4>
+                                    <p class="category">Chào mừng bạn đã quay lại</p>
+                                </div>
+                                <div class="text-right">
+                                    <a href="/admin/products/addProduct" class="btn btn-primary">Thêm sản phẩm</a>
+                                </div>
+                            </div>
+                            <div class="content table-responsive table-full-width">
+                                <table class="table table-hover table-striped">
+                                    <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Tên sản phẩm</th>
+                                        <th>Mô tả</th>
+                                        <th>Giá</th>
+                                        <th>Trạng thái</th>
+                                        <th>Màu sắc</th>
+                                        <th>Số lượng</th>
+                                        <th>Tùy chọn</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    <% products.forEach(product => { %>
+                                        <tr>
+                                            <td><%= product.id %></td>
+                                            <td><%= product.name %></td>
+                                            <td><%= product.description %></td>
+                                            <td><%= product.formattedPrice %></td>
+                                            <td><%= product.statusName %></td>
+
+                                            <td><a href="/admin/products/color/<%= product.id %>" class="btn btn-danger">Màu sắc</a></td>
+                                            <td><a href="/admin/products/size/<%= product.id %>" class="btn btn-danger">Số lượng</a></td>
+                                            <td>
+                                                <a href="/admin/products/update/<%= product.id %>" class="btn btn-success">Sửa</a>
+                                                <a href="/admin/deleteProduct/<%= product.id %>"
+                                                   class="btn btn-danger"
+                                                   onclick="return confirm('Bạn có chắc chắn muốn xóa sản phẩm này không?');">Xóa</a>
+                                            </td>
+                                        </tr>
+                                    <% }) %>
+                                    </tbody>
+                                </table>
+
+                                <!-- Pagination -->
+                                <div class="pagination" style="display: flex; justify-content: flex-end; margin-top: 20px;">
+                                    <% if (productsData.hasPrevious) { %>
+                                        <a href="/admin/products?pageNo=<%= productsData.number %>" class="btn btn-default" style="color: black; background-color: lightgray;">Trang trước</a>
+                                    <% } %>
+
+                                    <% for (let i = 1; i <= productsData.totalPages; i++) { %>
+                                        <a href="/admin/products?pageNo=<%= i %>" 
+                                           class="<%= i === (productsData.number + 1) ? 'btn btn-primary' : 'btn btn-default' %>" 
+                                           style="color: black; background-color: lightgray; margin: 0 5px;"><%= i %></a>
+                                    <% } %>
+
+                                    <% if (productsData.hasNext) { %>
+                                        <a href="/admin/products?pageNo=<%= productsData.number + 2 %>" class="btn btn-default" style="color: black; background-color: lightgray;">Trang tiếp theo</a>
+                                    <% } %>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+
+</body>
+
+<!-- Core JS Files -->
+<script src="/mixishop/admin/js/jquery.3.2.1.min.js" type="text/javascript"></script>
+<script src="/mixishop/admin/js/bootstrap.min.js" type="text/javascript"></script>
+
+<!-- Charts Plugin -->
+<script src="/mixishop/admin/js/chartist.min.js"></script>
+
+<!-- Notifications Plugin -->
+<script src="/mixishop/admin/js/bootstrap-notify.js"></script>
+
+<!-- Google Maps Plugin -->
+<script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?key=YOUR_KEY_HERE"></script>
+
+<!-- Light Bootstrap Table Core javascript and methods for Demo purpose -->
+<script src="/mixishop/admin/js/light-bootstrap-dashboard.js"></script>
+
+<!-- Light Bootstrap Table DEMO methods -->
+<script src="/mixishop/admin/js/demo.js"></script>
+
+</html>
