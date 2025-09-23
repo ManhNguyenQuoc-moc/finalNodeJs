@@ -16,7 +16,7 @@ exports.createUser = async (req, res) => {
 
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
-
+    
     // Tạo user mới
     const user = new User({
       name,
