@@ -33,5 +33,4 @@ class UserRepository {
     return await User.findByIdAndDelete(id);
   }
 }
-
 module.exports = new UserRepository();

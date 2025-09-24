@@ -2,16 +2,13 @@ const mongoose = require("mongoose");
 
 const productVariantSchema = new mongoose.Schema(
   {
-    product: { type: mongoose.Schema.Types.ObjectId, ref: "Product" },
+    product: { type: mongoose.Schema.Types.ObjectId, ref: "Product" , required: true },
     color: { type: mongoose.Schema.Types.ObjectId, ref: "ProductColor" },
     size: { type: mongoose.Schema.Types.ObjectId, ref: "ProductSize" },
     sku: { type: String, unique: true },
     price: Number,
     stock_quantity: Number,
-    image: {
-      url: String,
-      is_primary: Boolean,
-    },
+    images: [{ url: String, public_id: String, is_primary: Boolean }],
   },
   { timestamps: true }
 );

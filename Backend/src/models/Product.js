@@ -8,7 +8,7 @@ const productSchema = new mongoose.Schema(
     category: { type: mongoose.Schema.Types.ObjectId, ref: "Category" },
     short_description: String,
     long_description: String,
-    images: [{ url: String, is_primary: Boolean }],
+    images: [{ url: String, public_id: String, is_primary: Boolean }],
   },
   { timestamps: true }
 );
