@@ -8,7 +8,7 @@ const productController = require("../controllers/productController");
 router.post("/", upload.any(), productController.createProduct);
 router.get("/", productController.getProducts);          // Lấy danh sách sản phẩm (có filter/pagination)
 // router.get("/:id", productController.getProductbyID);          // Lấy chi tiết 1 sản phẩm
-// router.put("/:id",upload.any(), productController.updateProduct); 
+router.put("/:id",upload.any(), productController.updateProduct); 
 router.put("/variants/:id",upload.any(), productController.addVariant); // Cập nhật sản phẩm
 // router.delete("/:id", productController.deleteProduct);     // Xoá sản phẩm
 

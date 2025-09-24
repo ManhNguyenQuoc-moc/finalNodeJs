@@ -1,16 +1,29 @@
 const cloudinary = require("../config/cloudinary");
 
-async function uploadToCloudinary(files, folder = "products") {
-  const results = [];
-  for (const file of files) {
-    const res = await cloudinary.uploader.upload(file.path, { folder });
-    results.push({ url: res.secure_url, is_primary: false });
-  }
-
-  // Đặt ảnh đầu tiên làm primary
-  if (results.length > 0) results[0].is_primary = true;
-
-  return results;
+/**
+ * Upload 1 file local lên Cloudinary
+ * @param {string} filePath - đường dẫn file local
+ * @param {string} folder - thư mục Cloudinary
+ * @returns {Promise<Object>} - { secure_url, public_id }
+ */
+async function uploadToCloudinary(filePath, folder = "products") {
+  return cloudinary.uploader.upload(filePath, { folder });
 }
 
-module.exports = { uploadToCloudinary };
+/**
+ * Xoá file trên Cloudinary theo public_id
+ */
+async function deleteFromCloudinary(publicId) {
+  if (!publicId) return;
+  try {
+    await cloudinary.uploader.destroy(publicId);
+  } catch (err) {
+    console.error(`Xoá file Cloudinary ${publicId} thất bại`, err);
+    throw err;
+  }
+}
+
+module.exports = {
+  uploadToCloudinary,
+  deleteFromCloudinary,
+};

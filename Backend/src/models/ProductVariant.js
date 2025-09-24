@@ -2,7 +2,7 @@ const mongoose = require("mongoose");
 
 const productVariantSchema = new mongoose.Schema(
   {
-    product: { type: mongoose.Schema.Types.ObjectId, ref: "Product" },
+    product: { type: mongoose.Schema.Types.ObjectId, ref: "Product" , required: true },
     color: { type: mongoose.Schema.Types.ObjectId, ref: "ProductColor" },
     size: { type: mongoose.Schema.Types.ObjectId, ref: "ProductSize" },
     sku: { type: String, unique: true },

@@ -1,7 +1,7 @@
 const colorrepo = require("../repositories/ColorRepository");
 
-class BrandService {
-  async createBrand(data) {
+class ColorService {
+  async createColor(data) {
     return colorrepo.create(data);
   }
 
@@ -9,23 +9,23 @@ class BrandService {
     return colorrepo.findAll();
   }
 
-  async getBrandById(id) {
+  async getColorById(id) {
     const brand = await colorrepo.findById(id);
-    if (!brand) throw new Error("Brand not found");
+    if (!brand) throw new Error("Color not found");
     return brand;
   }
 
-  async updateBrand(id, data) {
+  async updateColor(id, data) {
     const brand = await colorrepo.update(id, data);
-    if (!brand) throw new Error("Brand not found");
+    if (!brand) throw new Error("Color not found");
     return brand;
   }
 
-  async deleteBrand(id) {
+  async deleteColor(id) {
     const brand = await colorrepo.delete(id);
-    if (!brand) throw new Error("Brand not found");
+    if (!brand) throw new Error("Color not found");
     return brand;
   }
 }
 
-module.exports = new BrandService();
+module.exports = new ColorService();

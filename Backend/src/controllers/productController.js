@@ -2,6 +2,7 @@
 
 const productService = require("../services/productService");
 const { AddProductRequest } = require("../DTO/product/input/AddProductRequest");
+const { UpdateProductRequest } = require("../DTO/product/input/UpdateProductRequest");
 exports.createProduct = async (req, res) => {
   try {
     const dto = new AddProductRequest(req.body, req.files);
@@ -84,7 +85,30 @@ exports.getProducts = async (req, res) => {
 // };
 
 
+// -------------------- UPDATE PRODUCT --------------------
+exports.updateProduct = async (req, res) => {
+  try {
+    const productId = req.params.id;
 
+    // Tạo DTO từ req.body + req.files
+    const dto = new UpdateProductRequest(req.body, req.files);
+
+    // Call service update
+    const updatedProduct = await productService.updateProduct(productId, dto);
+
+    return res.status(200).json({
+      success: true,
+      message: "Product updated successfully",
+      data: updatedProduct,
+    });
+  } catch (error) {
+    console.error("Update product failed:", error);
+    return res.status(400).json({
+      success: false,
+      message: error.message || "Update product failed",
+    });
+  }
+};
 
 exports.addVariant = async (req, res) => {
   try {

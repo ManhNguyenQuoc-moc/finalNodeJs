@@ -1,5 +1,11 @@
+const { UpdateVariantRequest } = require("./UpdateVariantRequest");
+
 class UpdateProductRequest {
-  constructor(body, files) {
+  /**
+   * @param {object} body - req.body
+   * @param {Array} files - req.files từ multer
+   */
+  constructor(body, files = []) {
     this.name = body.name;
     this.slug = body.slug;
     this.brand = body.brand;
@@ -7,24 +13,35 @@ class UpdateProductRequest {
     this.short_description = body.short_description;
     this.long_description = body.long_description;
 
-    // 1. Hình mới upload (files từ form-data)
-    this.productImages = files?.filter(f => f.fieldname === "productImages") || [];
+    // Product images mới upload
+    this.newProductImages = files.filter(f => f.fieldname === "productImages");
 
-    // 2. Giữ hình cũ (mảng public_id của hình cũ muốn giữ)
-    this.keepImages = body.keepImages ? JSON.parse(body.keepImages) : [];
-
-    // 3. Thay thế hình cũ
-    // Mảng object: [{ oldId, file }]
-    this.replaceImages = [];
-    if (files) {
-      const replaceFiles = files.filter(f => f.fieldname.startsWith("replaceImages"));
-      for (const f of replaceFiles) {
-        // fieldname: replaceImages[0], replaceImages[1]...
-        const index = f.fieldname.match(/\d+/)[0];
-        const oldId = body[`replaceImages[${index}][oldId]`];
-        this.replaceImages.push({ oldId, file: f });
-      }
+    // Xoá ảnh product cũ
+    try {
+      this.imagesToDelete = body.imagesToDelete ? JSON.parse(body.imagesToDelete) : [];
+    } catch (err) {
+      this.imagesToDelete = [];
     }
+
+    // Variants
+    let rawVariants = [];
+    try {
+      if (body.variants) {
+        rawVariants = JSON.parse(body.variants);
+        if (!Array.isArray(rawVariants)) rawVariants = [];
+      }
+    } catch (e) {
+      rawVariants = [];
+    }
+
+    this.variants = rawVariants.map((variant, idx) => {
+      // File variant images mới upload
+      const uploadedFiles = files.filter(
+        f => f.fieldname === `variantImagesMap[${idx}]`
+      );
+      return new UpdateVariantRequest(variant, uploadedFiles);
+    });
   }
 }
+
 module.exports = { UpdateProductRequest };

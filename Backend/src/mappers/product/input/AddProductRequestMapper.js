@@ -1,38 +1,39 @@
-// mappers/AddProductRequestMapper.js
-const { AddProductRequest } = require("../../../DTO/product/input/AddProductRequest");
-const { AddVariantsRequest } = require("../../../DTO/product/input/AddVariantsRequest");
-
+// src/mappers/product/input/AddProductRequestMapper.js
 class AddProductRequestMapper {
-    
-  static toEntity(dto, uploadedProductImages, uploadedVariantImagesMap) {
-    const productEntity = {
-      name: dto.name,
-      slug: dto.slug,
+  static toProductEntity(dto, uploadedProductImages = []) {
+    return {
+      name: dto.name?.trim() || "",
+      slug: dto.slug?.trim() || "",
       brand: dto.brand,
       category: dto.category,
-      short_description: dto.short_description,
-      long_description: dto.long_description,
-      images: uploadedProductImages.map((img, index) => ({
-        url: img.secure_url,
+      short_description: dto.short_description || "",
+      long_description: dto.long_description || "",
+      images: (uploadedProductImages || []).map((img, index) => ({
+        url: img.secure_url || img.url,
         public_id: img.public_id,
         is_primary: index === 0,
       })),
     };
-     // entity cho ProductVariants
-    const variantEntities = dto.variants.map((variant, idx) => ({
-      color_name: variant.color_name,
-      size_name: variant.size_name,
-      sku: variant.sku,
-      price: variant.price,
-      stock_quantity: variant.stock_quantity,
-      images: (uploadedVariantImagesMap[idx] || []).map((img, i) => ({
-        url: img.secure_url,
-        public_id: img.public_id,
-        is_primary: i === 0,
-      })),
-    }));
+  }
 
-    return { productEntity, variantEntities };
+  static toVariantEntities(variantsDto = [], uploadedVariantImagesMap = [], productId) {
+    if (!productId) throw new Error("productId is required for variants"); // debug
+    return (variantsDto || []).map((variant, idx) => {
+      const uploadedImages = uploadedVariantImagesMap[idx] || [];
+      return {
+        product: productId,
+        color: variant.color,
+        size: variant.size,
+        sku: variant.sku,
+        price: Number(variant.price) || 0,
+        stock_quantity: Number(variant.stock_quantity) || 0,
+        images: uploadedImages.map((img, i) => ({
+          url: img.secure_url || img.url,
+          public_id: img.public_id,
+          is_primary: i === 0,
+        })),
+      };
+    });
   }
 }
 

@@ -1,292 +1,437 @@
-const mongoose = require("mongoose");
-const fs = require("fs").promises;
-const { uploadToCloudinary } = require("../utils/cloudinary");
-const productRepo = require("../repositories/ProductRepository");
-const {ProductCreateOutputDTO} = require("../DTO/product/input/AddProductRequest");
-const Brand = require("../BrandService");
-const Color = require("../ColorService");
-const Size = require("../ColorService");
-const Category = require("../CategoryService");
+// src/services/productService.js
+const productRepo = require("../repositories/productRepository");
+const BrandService = require("./BrandService");
+const CategoryService = require("./CategoryService");
+const ColorService = require("./ColorService");
+const SizeService = require("./SizeService");
 
-// -------------------- HELPER --------------------
-async function safeUnlink(file) {
-  if (file?.path) await fs.unlink(file.path).catch(() => {});
-}
+const { uploadFiles, deleteFiles } = require("../utils/fileHandler");
+const { handleTransaction } = require("../utils/transaction");
 
-async function requireImages(images, folder, context = "unknown") {
-  if (!images || images.length === 0) throw new Error(`${context} is missing images`);
-
-  const filesToDelete = images.filter(f => f.path);
-
-  try {
-    const uploaded = await uploadToCloudinary(images, folder);
-
-    // Xóa file local ngay sau khi upload thành công
-    for (const file of filesToDelete) await safeUnlink(file);
-
-    return uploaded;
-  } catch (err) {
-    // Đảm bảo xóa file local nếu upload lỗi
-    for (const file of filesToDelete) await safeUnlink(file);
-    throw err;
-  }
-}
-
-// async function getOrCreateColor(color_name, color_code, session) {
-//   let color = await productRepo.findColorByName(color_name);
-//   if (!color) color = await productRepo.createColor({ color_name, color_code }, session);
-//   return color;
-// }
-
-// async function getOrCreateSize(size_name, size_order, session) {
-//   let size = await productRepo.findSizeByName(size_name);
-//   if (!size) size = await productRepo.createSize({ size_name, size_order }, session);
-//   return size;
-// }
-
-// -------------------- HANDLE TRANSACTION --------------------
-async function handleTransaction(dto, taskFn) {
-  const session = await mongoose.startSession();
-  session.startTransaction();
-
-  // Lưu tất cả file local để xóa khi bất kỳ lỗi nào xảy ra
-  const filesToDelete = [
-    ...(dto.productImages || []).filter(f => f.path),
-    ...((dto.variants || []).flatMap(v => (v.uploadedFiles || []).filter(f => f.path))),
-  ];
-
-  try {
-    const result = await taskFn(session);
-    await session.commitTransaction();
-    session.endSession();
-
-    // Xóa file local còn lại (nếu chưa xóa)
-    for (const file of filesToDelete) await safeUnlink(file);
-    return result;
-  } catch (err) {
-    await session.abortTransaction();
-    session.endSession();
-
-    // Xóa file local khi lỗi
-    for (const file of filesToDelete) await safeUnlink(file);
-    throw err;
-  }
-}
+const { toAddProductResponse } = require("../mappers/product/output/AddProductResponseMapper");
+const AddProductRequestMapper = require("../mappers/product/input/AddProductRequestMapper");
 
 // -------------------- CREATE PRODUCT --------------------
 async function createProduct(dto) {
-  // dto {
-  //   this.name = body.name;
-  //   this.slug = body.slug;
-  //   this.brand = body.brand;
-  //   this.category = body.category;
-  //   this.short_description = body.short_description;
-  //   this.long_description = body.long_description;
-  //   // this.productImages = files.filter(f => f.fieldname === "productImages");
-  //   this.productImages[];
-  //   this.variant[];
-  // }
-  
-  return handleTransaction(dto, async (session) => {
-    // 1. Check brand & category
-    const brand = await Brand.getBrandById(dto.brand);
+  return handleTransaction(async (session) => {
+    console.log("Creating product with DTO:", dto);
+
+    // 1️Upload images trước
+    const uploadedProductImages = await uploadFiles(dto.productImages, "products", "Product");
+
+    const uploadedVariantImagesMap = [];
+    for (const variant of dto.variants || []) {
+      const uploaded = await uploadFiles(variant.uploadedFiles, "variants", `Variant ${variant.sku}`);
+      uploadedVariantImagesMap.push(uploaded);
+    }
+
+    // 2️Validate brand & category
+    const brand = await BrandService.getBrandById(dto.brand);
     if (!brand) throw new Error("Brand not found");
 
-    const category = await Category.getCategoryById(dto.category);
+    const category = await CategoryService.getCategoryById(dto.category);
     if (!category) throw new Error("Category not found");
-    // 2. Check slug unique
-    const existingProduct = await productRepo.findOne({ slug: dto.slug });
-    if (existingProduct) throw new Error("Product already exists with this slug");
-    // Xử lý ảnh sản phẩm và ảnh Variant 
-    // 3. Upload product images local
-    const productImages = await requireImages(dto.productImages, "products", "Product")
-    // Thêm Map DTO sang entity
-    // 4. Create product
-    const createdProduct = await productRepo.createProduct(
-      {
-        name: dto.name,
-        slug: dto.slug,
-        brand: dto.brand,
-        category: dto.category,
-        short_description: dto.short_description,
-        long_description: dto.long_description,
-        images: productImages,
-      },
-      session
+
+    // 3️Check slug unique
+    const existing = await productRepo.findOne({ slug: dto.slug });
+    if (existing) throw new Error("Product already exists with this slug");
+
+    // 4️Map DTO → Product entity
+    const productEntity = AddProductRequestMapper.toProductEntity(dto, uploadedProductImages);
+
+    // 5️Save Product với session
+    const createdProduct = await productRepo.createProduct(productEntity, session);
+
+    // 6️Map DTO → Variant entities
+    const variantEntities = AddProductRequestMapper.toVariantEntities(
+      dto.variants,
+      uploadedVariantImagesMap,
+      createdProduct._id
     );
 
-    // 5. Create variants
-    for (const variantDto of dto.variants || []) {
-      await addVariant(createdProduct._id, variantDto, session);
+    // 7️Save Variants, validate color & size
+    const savedVariants = [];
+    for (const variantEntity of variantEntities) {
+      const color = await ColorService.getColorById(variantEntity.color);
+      if (!color) throw new Error(`Color not found: ${variantEntity.color}`);
+
+      const size = await SizeService.getSizeById(variantEntity.size);
+      if (!size) throw new Error(`Size not found: ${variantEntity.size}`);
+
+      console.log("Variant ready to save:", variantEntity);
+      const savedVariant = await productRepo.createVariant(variantEntity, session);
+      savedVariants.push(savedVariant);
     }
 
-    const savedVariants = await productRepo.findVariantsByProduct(createdProduct._id);
-    return new ProductCreateOutputDTO(createdProduct, savedVariants);
+    console.log("Created product:", createdProduct);
+    console.log("With variants:", savedVariants);
+
+    // 8️ Response DTO
+    return toAddProductResponse(createdProduct, savedVariants);
   });
 }
 
-// -------------------- VARIANT --------------------
-async function addVariant(productId, variantDto, sessionOverride = null) {
-  const taskFn = async (session) => {
-    session = sessionOverride || session;
+// -------------------- ADD VARIANT --------------------
+async function addVariant(productId, dto) {
+  return handleTransaction(async (session) => {
+    const product = await productRepo.findById(productId);
+    if (!product) throw new Error("Product not found");
 
-    const color = await getOrCreateColor(variantDto.color_name, variantDto.color_code, session);
-    const size = await getOrCreateSize(variantDto.size_name, variantDto.size_order, session);
+    const uploadedVariantImages = await uploadFiles(dto.uploadedFiles, "variants", `Variant ${dto.sku}`);
 
-    const images = await requireImages(variantDto.uploadedFiles, "variants", `Variant ${variantDto.sku}`);
+    const color = await ColorService.getColorById(dto.color);
+    if (!color) throw new Error(`Color not found: ${dto.color}`);
 
-    return productRepo.createVariant(
-      {
-        product: productId,
-        color: color._id,
-        size: size._id,
-        sku: variantDto.sku,
-        price: variantDto.price,
-        stock_quantity: variantDto.stock_quantity,
-        images,
-      },
-      session
-    );
-  };
+    const size = await SizeService.getSizeById(dto.size);
+    if (!size) throw new Error(`Size not found: ${dto.size}`);
 
-  if (sessionOverride) return taskFn(sessionOverride);
-  return handleTransaction({ productImages: [], variants: [variantDto] }, taskFn);
+    const variantEntity = {
+      product: product._id,
+      color: dto.color,
+      size: dto.size,
+      sku: dto.sku,
+      price: dto.price,
+      stock_quantity: dto.stock_quantity,
+      images: uploadedVariantImages,
+    };
+
+    return await productRepo.createVariant(variantEntity, session);
+  });
 }
+// async function updateProduct(productId, dto) {
+//   return handleTransaction(async (session) => {
+//     // 1️⃣ Lấy product cũ
+//     const product = await productRepo.findById(productId);
+//     if (!product) throw new Error("Product not found");
 
-// -------------------- PRODUCT CRUD --------------------
-async function getProductById(productId) {
-  const product = await productRepo.findById(productId);
-  if (!product) throw new Error("Product not found");
-  const variants = await productRepo.findVariantsByProduct(productId);
-  return new ProductCreateOutputDTO(product, variants);
-}
+//     // 2️⃣ Validate brand & category nếu có thay đổi
+//     if (dto.brand) {
+//       const brand = await BrandService.getBrandById(dto.brand);
+//       if (!brand) throw new Error("Brand not found");
+//     }
+//     if (dto.category) {
+//       const category = await CategoryService.getCategoryById(dto.category);
+//       if (!category) throw new Error("Category not found");
+//     }
 
-async function getProducts(filter = {}, options = {}) {
-  return productRepo.findAll(filter, options);
-}
+//     // 3️⃣ Upload ảnh product mới
+//     const uploadedProductImages = await uploadFiles(dto.productImages || [], "products", "Product");
+//     if (uploadedProductImages.length) {
+//       // Xoá ảnh cũ được yêu cầu
+//       const imagesToDelete = dto.imagesToDelete || [];
+//       await deleteFiles(imagesToDelete);
+//       product.images = product.images.filter(img => !imagesToDelete.includes(img.public_id));
+//       product.images.push(...uploadedProductImages);
 
+//       // Đảm bảo ảnh primary
+//       product.images.forEach((img, idx) => img.is_primary = idx === 0);
+//     }
+
+//     // 4️⃣ Update thông tin product
+//     const productUpdateData = AddProductRequestMapper.toProductEntity(dto, []);
+//     Object.assign(product, productUpdateData);
+//     const updatedProduct = await product.save({ session });
+
+//     // 5️⃣ Update variants
+//     const savedVariants = [];
+//     for (let i = 0; i < (dto.variants || []).length; i++) {
+//       const v = dto.variants[i];
+
+//       // Nếu variant đã có _id thì update, không có thì create
+//       let variantEntity;
+//       if (v.id) {
+//         const variant = await productRepo.findVariantById(v.id);
+//         if (!variant) throw new Error(`Variant not found: ${v.id}`);
+
+//         // Upload ảnh mới
+//         const uploadedVariantImages = await uploadFiles(v.uploadedFiles || [], "variants", `Variant ${v.sku}`);
+//         const imagesToDelete = v.imagesToDelete || [];
+//         await deleteFiles(imagesToDelete);
+//         variant.images = variant.images.filter(img => !imagesToDelete.includes(img.public_id));
+//         variant.images.push(...uploadedVariantImages);
+
+//         if (uploadedVariantImages.length) {
+//           variant.images.forEach((img, idx) => img.is_primary = idx === 0);
+//         }
+
+//         // Validate color & size
+//         if (v.color) {
+//           const color = await ColorService.getColorById(v.color);
+//           if (!color) throw new Error(`Color not found: ${v.color}`);
+//         }
+//         if (v.size) {
+//           const size = await SizeService.getSizeById(v.size);
+//           if (!size) throw new Error(`Size not found: ${v.size}`);
+//         }
+
+//         Object.assign(variant, v);
+//         variantEntity = await variant.save({ session });
+//       } else {
+//         // Create variant mới
+//         variantEntity = AddProductRequestMapper.toVariantEntities([v], [[]], updatedProduct._id)[0];
+
+//         // Validate color & size
+//         const color = await ColorService.getColorById(variantEntity.color);
+//         if (!color) throw new Error(`Color not found: ${variantEntity.color}`);
+//         const size = await SizeService.getSizeById(variantEntity.size);
+//         if (!size) throw new Error(`Size not found: ${variantEntity.size}`);
+
+//         variantEntity = await productRepo.createVariant(variantEntity, session);
+//       }
+
+//       savedVariants.push(variantEntity);
+//     }
+//     return toAddProductResponse(updatedProduct, savedVariants);
+//   });
+// }
+// async function updateProduct(productId, dto) {
+//   return handleTransaction(async (session) => {
+//     // 1️⃣ Lấy product
+//     const product = await productRepo.findById(productId);
+//     if (!product) throw new Error("Product not found");
+
+//     // 2️⃣ Update basic fields
+//     if (dto.name) product.name = dto.name;
+//     if (dto.slug) product.slug = dto.slug;
+//     if (dto.short_description) product.short_description = dto.short_description;
+//     if (dto.long_description) product.long_description = dto.long_description;
+
+//     if (dto.brand) {
+//       const brand = await BrandService.getBrandById(dto.brand);
+//       if (!brand) throw new Error("Brand not found");
+//       product.brand = dto.brand;
+//     }
+
+//     if (dto.category) {
+//       const category = await CategoryService.getCategoryById(dto.category);
+//       if (!category) throw new Error("Category not found");
+//       product.category = dto.category;
+//     }
+
+//     // 3 Handle product images
+//     // Xoá ảnh cũ
+//     if (dto.imagesToDelete?.length) {
+//       await deleteFiles(dto.imagesToDelete);
+//       product.images = product.images.filter(
+//         (img) => !dto.imagesToDelete.includes(img.public_id)
+//       );
+//     }
+
+//     // Upload ảnh mới
+//     const uploadedProductImages = await uploadFiles(dto.newProductImages || [], "products", "Product");
+//     if (uploadedProductImages.length) {
+//       product.images = product.images.concat(uploadedProductImages);
+//     }
+
+//     // Update product trong DB
+//     const updatedProduct = await productRepo.updateProduct(productId, product, session);
+
+//     // 4 Handle variants
+//     for (const variantDto of dto.variants || []) {
+//       if (variantDto.id) {
+//         // Update variant cũ
+//         const variant = await productRepo.findVariantById(variantDto.id);
+//         if (!variant) throw new Error(`Variant not found: ${variantDto.id}`);
+
+//         if (variantDto.sku) variant.sku = variantDto.sku;
+//         if (variantDto.price != null) variant.price = variantDto.price;
+//         if (variantDto.stock_quantity != null) variant.stock_quantity = variantDto.stock_quantity;
+
+//         if (variantDto.color) {
+//           const color = await ColorService.getColorById(variantDto.color);
+//           if (!color) throw new Error(`Color not found: ${variantDto.color}`);
+//           variant.color = variantDto.color;
+//         }
+
+//         if (variantDto.size) {
+//           const size = await SizeService.getSizeById(variantDto.size);
+//           if (!size) throw new Error(`Size not found: ${variantDto.size}`);
+//           variant.size = variantDto.size;
+//         }
+
+//         // Xoá ảnh cũ
+//         if (variantDto.imagesToDelete?.length) {
+//           await deleteFiles(variantDto.imagesToDelete);
+//           variant.images = variant.images.filter(
+//             (img) => !variantDto.imagesToDelete.includes(img.public_id)
+//           );
+//         }
+
+//         // Upload ảnh mới
+//         const uploadedVariantImages = await uploadFiles(variantDto.newImages || [], "variants", `Variant ${variant.sku}`);
+//         variant.images = variant.images.concat(uploadedVariantImages);
+
+//         await productRepo.updateVariant(variant._id, variant, session);
+//       } else {
+//         // Tạo variant mới
+//         const newVariantImages = await uploadFiles(variantDto.newImages || [], "variants", `Variant ${variantDto.sku}`);
+//         const newVariant = {
+//           product: product._id,
+//           sku: variantDto.sku,
+//           price: variantDto.price,
+//           stock_quantity: variantDto.stock_quantity,
+//           color: variantDto.color,
+//           size: variantDto.size,
+//           images: newVariantImages,
+//         };
+
+//         await productRepo.createVariant(newVariant, session);
+//       }
+//     }
+
+//     // 5 Lấy variants mới nhất để trả về response
+//     const variants = await productRepo.findVariantsByProduct(product._id, session);
+//     return toAddProductResponse(updatedProduct, variants);
+//   });
+// }
 async function updateProduct(productId, dto) {
   return handleTransaction(async (session) => {
-    // 1. Update thông tin cơ bản
-    const updatedProduct = await productRepo.updateProduct(
-      productId,
-      {
-        name: dto.name,
-        slug: dto.slug,
-        brand: dto.brand,
-        category: dto.category,
-        short_description: dto.short_description,
-        long_description: dto.long_description,
-      },
-      session
-    );
+    // 1️⃣ Lấy product
+    const product = await productRepo.findById(productId);
+    if (!product) throw new Error("Product not found");
 
-    // 2. Xử lý hình ảnh
-    let finalImages = [];
-
-    // 2.1 Giữ lại hình cũ
-    if (dto.keepImages?.length) {
-      finalImages.push(...updatedProduct.images.filter(img => dto.keepImages.includes(img.public_id)));
+    // 2️⃣ Upload tất cả ảnh mới trước (product + variant)
+    const uploadedProductImages = await uploadFiles(dto.newProductImages || [], "products", "Product");
+    const uploadedVariantsMap = [];
+    for (const variantDto of dto.variants || []) {
+      const uploadedVariantImages = await uploadFiles(variantDto.newImages || [], "variants", `Variant ${variantDto.sku}`);
+      uploadedVariantsMap.push(uploadedVariantImages);
     }
 
-    // 2.2 Thay thế hình cũ
-    if (dto.replaceImages?.length) {
-      for (const item of dto.replaceImages) {
-        const oldImgIndex = updatedProduct.images.findIndex(img => img.public_id === item.oldId);
-        if (oldImgIndex !== -1) {
-          await deleteFromCloudinary(item.oldId); // xóa hình cũ trên Cloudinary
-          const uploaded = await requireImages([item.file], "products", "Product");
-          finalImages.push(uploaded[0]);
+    // 3️⃣ Update basic product fields
+    if (dto.name) product.name = dto.name;
+    if (dto.slug) product.slug = dto.slug;
+    if (dto.short_description) product.short_description = dto.short_description;
+    if (dto.long_description) product.long_description = dto.long_description;
+
+    if (dto.brand) {
+      const brand = await BrandService.getBrandById(dto.brand);
+      if (!brand) throw new Error("Brand not found");
+      product.brand = dto.brand;
+    }
+
+    if (dto.category) {
+      const category = await CategoryService.getCategoryById(dto.category);
+      if (!category) throw new Error("Category not found");
+      product.category = dto.category;
+    }
+
+    // 4️⃣ Xóa ảnh cũ product
+    if (dto.imagesToDelete?.length) {
+      await deleteFiles(dto.imagesToDelete);
+      product.images = product.images.filter(
+        (img) => !dto.imagesToDelete.includes(img.public_id)
+      );
+    }
+
+    // 5️⃣ Thêm ảnh mới đã upload
+    if (uploadedProductImages.length) {
+      product.images = product.images.concat(uploadedProductImages);
+    }
+
+    // 6️⃣ Update product trong DB
+    const updatedProduct = await productRepo.updateProduct(productId, product, session);
+
+    // 7️⃣ Handle variants
+    for (let i = 0; i < (dto.variants || []).length; i++) {
+      const variantDto = dto.variants[i];
+      const uploadedVariantImages = uploadedVariantsMap[i] || [];
+
+      if (variantDto.id) {
+        // Update variant cũ
+        const variant = await productRepo.findVariantById(variantDto.id);
+        if (!variant) throw new Error(`Variant not found: ${variantDto.id}`);
+
+        if (variantDto.sku) variant.sku = variantDto.sku;
+        if (variantDto.price != null) variant.price = variantDto.price;
+        if (variantDto.stock_quantity != null) variant.stock_quantity = variantDto.stock_quantity;
+
+        if (variantDto.color) {
+          const color = await ColorService.getColorById(variantDto.color);
+          if (!color) throw new Error(`Color not found: ${variantDto.color}`);
+          variant.color = variantDto.color;
         }
+
+        if (variantDto.size) {
+          const size = await SizeService.getSizeById(variantDto.size);
+          if (!size) throw new Error(`Size not found: ${variantDto.size}`);
+          variant.size = variantDto.size;
+        }
+
+        // Xoá ảnh cũ
+        if (variantDto.imagesToDelete?.length) {
+          await deleteFiles(variantDto.imagesToDelete);
+          variant.images = variant.images.filter(
+            (img) => !variantDto.imagesToDelete.includes(img.public_id)
+          );
+        }
+
+        // Thêm ảnh mới đã upload
+        variant.images = variant.images.concat(uploadedVariantImages);
+
+        await productRepo.updateVariant(variant._id, variant, session);
+      } else {
+        // Tạo variant mới
+        const newVariant = {
+          product: product._id,
+          sku: variantDto.sku,
+          price: variantDto.price,
+          stock_quantity: variantDto.stock_quantity,
+          color: variantDto.color,
+          size: variantDto.size,
+          images: uploadedVariantImages,
+        };
+
+        await productRepo.createVariant(newVariant, session);
       }
     }
 
-    // 2.3 Thêm hình mới
-    if (dto.productImages?.length) {
-      const uploadedNew = await requireImages(dto.productImages, "products", "Product");
-      finalImages.push(...uploadedNew);
-    }
+    // 8️⃣ Lấy variants mới nhất để trả về response
+    const variants = await productRepo.findVariantsByProduct(product._id, session);
 
-    // 2.4 Cập nhật product.images
-    updatedProduct.images = finalImages;
-    await updatedProduct.save({ session });
-
-    // 3. Trả về DTO
-    const variants = await productRepo.findVariantsByProduct(productId);
-    return new ProductCreateOutputDTO(updatedProduct, variants);
+    return toAddProductResponse(updatedProduct, variants);
   });
 }
 
-
+// -------------------- DELETE PRODUCT --------------------
 async function deleteProduct(productId) {
-  return productRepo.deleteProduct(productId);
+  return handleTransaction(async (session) => {
+    const product = await productRepo.findById(productId);
+    if (!product) throw new Error("Product not found");
+
+    // Xoá product images trên Cloudinary
+    await deleteFiles((product.images || []).map(img => img.public_id));
+
+    // Xoá variants + images
+    const variants = await productRepo.findVariantsByProduct(product._id);
+    for (const variant of variants) {
+      await deleteFiles((variant.images || []).map(img => img.public_id));
+      await productRepo.deleteVariant(variant._id, session);
+    }
+
+    await productRepo.deleteProduct(product._id, session);
+
+    return { success: true, message: "Product deleted successfully" };
+  });
 }
 
-async function updateVariant(variantId, dto) {
-  return productRepo.updateVariant(variantId, dto);
-}
-
+// -------------------- DELETE VARIANT --------------------
 async function deleteVariant(variantId) {
-  return productRepo.deleteVariant(variantId);
-}
+  return handleTransaction(async (session) => {
+    const variant = await productRepo.findVariantById(variantId);
+    if (!variant) throw new Error("Variant not found");
 
-// -------------------- UPDATE PRODUCT + VARIANTS --------------------
-async function updateProductWithVariants(productId, dto) {
-  return handleTransaction(dto, async (session) => {
-    const updatedProduct = await productRepo.updateProduct(
-      productId,
-      {
-        name: dto.name,
-        slug: dto.slug,
-        brand: dto.brand,
-        category: dto.category,
-        short_description: dto.short_description,
-        long_description: dto.long_description,
-      },
-      session
-    );
+    await deleteFiles((variant.images || []).map(img => img.public_id));
+    await productRepo.deleteVariant(variant._id, session);
 
-    if (dto.productImages?.length) {
-      updatedProduct.images = await requireImages(dto.productImages, "products", "Product");
-      await updatedProduct.save({ session });
-    }
-
-    const existingVariants = await productRepo.findVariantsByProduct(productId);
-    const existingIds = existingVariants.map(v => v._id.toString());
-    const sentIds = dto.variants.map(v => v._id).filter(Boolean);
-
-    for (const variant of dto.variants || []) {
-      if (variant._id && existingIds.includes(variant._id)) {
-        let updateData = { sku: variant.sku, price: variant.price, stock_quantity: variant.stock_quantity };
-        if (variant.color_name) updateData.color = (await getOrCreateColor(variant.color_name, variant.color_code, session))._id;
-        if (variant.size_name) updateData.size = (await getOrCreateSize(variant.size_name, variant.size_order, session))._id;
-        if (variant.uploadedFiles?.length) updateData.images = await requireImages(variant.uploadedFiles, "variants", `Variant ${variant.sku}`);
-        await productRepo.updateVariant(variant._id, updateData, session);
-      } else {
-        await addVariant(productId, variant, session);
-      }
-    }
-
-    // Xóa variants không còn trong DTO
-    for (const existing of existingVariants) {
-      if (!sentIds.includes(existing._id.toString())) {
-        await productRepo.deleteVariant(existing._id, session);
-      }
-    }
-
-    const savedVariants = await productRepo.findVariantsByProduct(productId);
-    return new ProductCreateOutputDTO(updatedProduct, savedVariants);
+    return { success: true, message: "Variant deleted successfully" };
   });
 }
 
 module.exports = {
   createProduct,
-  getProductById,
-  getProducts,
-  updateProduct,
-  deleteProduct,
   addVariant,
-  updateVariant,
+  deleteProduct,
   deleteVariant,
-  updateProductWithVariants,
+  updateProduct,
 };
