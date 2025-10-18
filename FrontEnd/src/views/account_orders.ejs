@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <%- include('partials/head') %>
+  <link rel="stylesheet" href="/mixishop/css/account.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+</head>
+<body>
+  <%- include('partials/icons') %>
+  <%- include('partials/header') %>
+
+  <main class="container my-4">
+    <div class="row">
+      <!-- Sidebar -->
+      <div class="col-lg-3 mb-4">
+        <%- include('account/_sidebar', { activeAccountTab: 'orders' }) %>
+      </div>
+
+      <!-- Content -->
+      <div class="col-lg-9">
+        <div class="account-card p-3 p-md-4 bg-white rounded-3 shadow-sm">
+          <div class="d-flex flex-wrap align-items-center gap-2 justify-content-between mb-3">
+            <!-- Tabs trạng thái -->
+            <div class="order-tabs nav gap-1">
+              <% const tabs = [
+                {key:'all',       label:'Tất cả',        icon:'bi-ui-checks-grid'},
+                {key:'pending',   label:'Chờ xác nhận',  icon:'bi-hourglass-split'},
+                {key:'confirmed', label:'Đã xác nhận',   icon:'bi-check2-circle'},
+                {key:'shipping',  label:'Đang giao',     icon:'bi-truck'},
+                {key:'delivered', label:'Đã giao',       icon:'bi-box-seam'},
+                {key:'cancelled', label:'Đã hủy',        icon:'bi-x-circle'}
+              ]; %>
+              <% tabs.forEach(t => { %>
+                <a class="btn btn-sm <%= (status||'all')===t.key ? 'btn-dark' : 'btn-outline-secondary' %> btn-pill"
+                   href="/account/orders?<%= t.key==='all' ? '' : 'status='+t.key %>">
+                  <i class="bi <%= t.icon %> me-1"></i><%= t.label %>
+                </a>
+              <% }) %>
+            </div>
+          </div>
+
+          <% if (!orders || !orders.length) { %>
+            <div class="text-center text-secondary py-5">
+              <i class="bi bi-bag-x fs-2 d-block mb-2"></i>
+              Không có đơn hàng nào ở trạng thái này.
+            </div>
+          <% } else { %>
+            <div class="vstack gap-3">
+              <% // helper badge theo trạng thái %>
+              <% function statusView(s) {
+                   const map = {
+                     pending:   {text:'Chờ xác nhận', klass:'badge-soft-warning', icon:'bi-hourglass-split'},
+                     confirmed: {text:'Đã xác nhận',  klass:'badge-soft-primary', icon:'bi-check2-circle'},
+                     shipping:  {text:'Đang giao',     klass:'badge-soft-info',    icon:'bi-truck'},
+                     delivered: {text:'Đã giao',       klass:'badge-soft-success', icon:'bi-box-seam'},
+                     cancelled: {text:'Đã hủy',        klass:'badge-soft-danger',  icon:'bi-x-circle'}
+                   };
+                   return map[s] || map.pending;
+                 } %>
+
+              <% orders.forEach(o => { const sv = statusView(o.current_status); %>
+                <div class="order-card border rounded-3">
+                  <!-- header -->
+                  <div class="order-card__header d-flex flex-wrap justify-content-between align-items-center p-3">
+                    <div class="d-flex flex-column">
+                      <div class="fw-semibold">Mã đơn: <span class="text-mono"><%= o._id %></span></div>
+                      <div class="small text-secondary">
+                        Tạo lúc: <%= new Date(o.createdAt).toLocaleString('vi-VN') %>
+                      </div>
+                      <% if (o.address) { %>
+                        <div class="small">
+                          Giao đến: <%= o.address.address_line %>
+                        </div>
+                      <% } %>
+                    </div>
+                    <div class="text-end">
+                      <span class="badge <%= sv.klass %>"><i class="bi <%= sv.icon %> me-1"></i><%= sv.text %></span>
+                      <div class="mt-2 fw-semibold">Tổng: <%= formatPrice(o.final_amount || o.total_amount) %></div>
+                      <a class="btn btn-sm btn-outline-dark mt-2 btn-pill" href="/orders/<%= o._id %>">
+                        Xem chi tiết
+                      </a>
+                    </div>
+                  </div>
+
+                  <!-- items -->
+                  <div class="p-3 pt-0">
+                    <div class="small text-secondary mb-2">Sản phẩm</div>
+                    <div class="table-responsive">
+                      <table class="table align-middle mb-0">
+                        <thead class="table-light">
+                          <tr>
+                            <th class="text-nowrap">SKU</th>
+                            <th class="text-nowrap">Số lượng</th>
+                            <th class="text-nowrap">Giá</th>
+                            <th class="text-nowrap">Thành tiền</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <% (o.items || []).forEach(it => { %>
+                            <tr>
+                              <td class="text-mono"><%= it.product_variant_sku %></td>
+                              <td>x<%= it.quantity %></td>
+                              <td><%= formatPrice(it.price_at_purchase) %></td>
+                              <td class="fw-semibold"><%= formatPrice((it.price_at_purchase||0) * (it.quantity||0)) %></td>
+                            </tr>
+                          <% }) %>
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+
+                  <!-- footer -->
+                  <div class="order-card__footer d-flex flex-wrap justify-content-between align-items-center p-3 border-top">
+                    <div class="small text-secondary">
+                      Cập nhật gần nhất:
+                      <%= new Date(o.updatedAt).toLocaleString('vi-VN') %>
+                    </div>
+                    <div class="d-flex gap-2">
+                      <% if (o.current_status==='pending' || o.current_status==='confirmed') { %>
+                        <!-- ví dụ nút hỗ trợ -->
+                        <a href="/orders/<%= o._id %>" class="btn btn-outline-secondary btn-sm btn-pill">
+                          <i class="bi bi-chat-dots me-1"></i> Liên hệ hỗ trợ
+                        </a>
+                      <% } %>
+                      <a href="/orders/<%= o._id %>" class="btn btn-dark btn-sm btn-pill">
+                        Chi tiết
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              <% }) %>
+            </div>
+          <% } %>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <%- include('partials/footer') %>
+  <%- include('partials/cart_drawer') %>
+  <%- include('partials/quick_view') %>
+  <script src="/mixishop/js/plugins/bootstrap.bundle.min.js"></script>
+  <script src="/mixishop/js/plugins/jquery.min.js"></script>
+  <script src="/mixishop/js/theme.js"></script>
+</body>
+</html>

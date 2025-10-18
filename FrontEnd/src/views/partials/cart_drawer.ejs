@@ -1,0 +1,322 @@
+<!-- views/partials/cart_drawer.ejs -->
+<style>
+  /* ===== Cart Drawer (scoped by #cartDrawer) ===== */
+  #cartDrawer {
+    max-width: 440px;
+    background: #fff;
+    border-left: 1px solid #eef2f7;
+    box-shadow: -8px 0 24px rgba(16,24,40,.08);
+  }
+  #cartDrawer .aside-header {
+    position: sticky; top: 0; z-index: 2;
+    padding: 14px 16px; background: #fff;
+    border-bottom: 1px solid #eef2f7;
+  }
+  #cartDrawer .cdr-badge {
+    display:inline-flex; align-items:center; justify-content:center;
+    min-width: 22px; height: 22px; padding: 0 6px;
+    font-size: 12px; font-weight: 700; color: #fff;
+    background: #111827; border-radius: 999px;
+  }
+  #cartDrawer .cart-drawer-items {
+    padding: 12px 16px 188px; /* chừa chỗ cho footer */
+    overflow: auto;
+  }
+  #cartDrawer .empty {
+    text-align:center; color:#6b7280; padding: 32px 12px;
+    border:1px dashed #e5e7eb; border-radius: 12px; background:#fafafa;
+  }
+
+  /* Item */
+  .cdi { display:flex; gap:12px; padding:12px; border:1px solid #eef2f7;
+         border-radius: 14px; background:#fff; box-shadow: 0 1px 2px rgba(16,24,40,.04); }
+  .cdi + .cdi { margin-top:12px; }
+  .cdi-thumb { width:72px; height:72px; flex:0 0 72px; border-radius: 12px;
+               overflow:hidden; background:#f9fafb; border:1px solid #eef2f7; }
+  .cdi-thumb img { width:100%; height:100%; object-fit:cover; display:block; }
+
+  .cdi-ttl { margin:0 0 4px 0; line-height:1.35; font-size:14px; font-weight:700; color:#111827; }
+  .cdi-ttl a { color:inherit; text-decoration:none; }
+  .cdi-ttl a:hover { text-decoration:underline; }
+
+  .cdi-meta { display:flex; flex-wrap:wrap; gap:6px 12px; font-size:12px; color:#6b7280; }
+  .cdi-meta b { color:#111827; font-weight:700; }
+
+  /* Hàng điều khiển số lượng + đơn giá (đơn giá đặt bên phải qty) */
+  .cdi-row { margin-top:10px; display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; }
+  .cdi-qty { display:flex; align-items:center; border:1px solid #e5e7eb; border-radius: 10px; overflow:hidden; }
+  .cdi-qty button { width:36px; height:36px; border:0; background:#fafafa; cursor:pointer; }
+  .cdi-qty input { width:58px; height:36px; border:0; text-align:center; outline:none; }
+  .cdi-unit { margin-left:auto; font-size:12px; color:#6b7280; white-space:nowrap; }
+
+  /* === Tổng giá (đẹp hơn) === */
+  .cdi-total {
+    margin-top: 10px;
+    padding: 10px 12px;
+    background: #f9fafb;
+    border: 1px solid #eef2f7;
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    box-shadow: 0 1px 2px rgba(16,24,40,.04);
+  }
+  .cdi-total .label { font-size:12px; color:#6b7280; letter-spacing:.2px; }
+  .cdi-total .price { font-size:18px; line-height:1.1; font-weight:800; color:#111827; }
+
+  .cdi-remove {
+    position:absolute; top:8px; right:8px; width:28px; height:28px;
+    display:inline-flex; align-items:center; justify-content:center;
+    border-radius:8px; border:1px solid #e5e7eb; background:#fff; cursor:pointer;
+  }
+  .cdi-remove:hover { background:#f9fafb; }
+
+  /* Footer */
+  .cdr-footer {
+    background:#fff; border-top:1px solid #eef2f7;
+    padding: 14px 16px 16px; box-shadow: 0 -6px 16px rgba(16,24,40,.06);
+  }
+  .cdr-coupon { display:flex; gap:8px; margin-bottom:10px; }
+  .cdr-coupon input {
+    flex:1; height:42px; border-radius: 10px; border:1px solid #e5e7eb; padding:0 12px;
+  }
+  .cdr-coupon .btn-apply {
+    height:42px; border-radius: 10px; font-weight:700; padding:0 14px;
+    background:#111827; color:#fff; border:1px solid #111827;
+  }
+  .cdr-row { display:flex; align-items:center; justify-content:space-between; font-weight:700; color:#111827; }
+  .cdr-actions .btn { height:44px; border-radius:12px; font-weight:700; width:100%; }
+  .cdr-actions .btn-outline { background:#f3f4f6; border-color:#e5e7eb; color:#111827; }
+  .cdr-actions .btn-primary { background:#111827; border-color:#111827; color:#fff; }
+  .cdr-actions .btn + .btn { margin-top:8px; }
+  @media (max-width: 480px){
+    #cartDrawer { max-width: 100vw; }
+    #cartDrawer .cart-drawer-items { padding-bottom: 210px; }
+    .cdi-total { padding:8px 10px; }
+    .cdi-total .price { font-size:16px; }
+  }
+
+  /* === ONLY ADD: đảm bảo vùng items cuộn được theo chiều cao màn hình ===
+     Không chỉnh sửa rule cũ nào; chỉ bổ sung max-height cho .cart-drawer-items */
+  #cartDrawer .cart-drawer-items{
+    /* 56px ~ chiều cao header, 188px ~ khoảng chừa footer bạn đang dùng */
+    max-height: calc(100vh - 56px - 188px);
+  }
+
+  /* Tuỳ chọn: scrollbar gọn gàng hơn cho vùng items (cũng chỉ áp vào items) */
+  #cartDrawer .cart-drawer-items::-webkit-scrollbar{ width:8px; }
+  #cartDrawer .cart-drawer-items::-webkit-scrollbar-thumb{
+    background:#e5e7eb; border-radius:999px;
+  }
+</style>
+
+<%
+  // ===== Normalize cart lines for drawer (support both middleware & getRenderData shapes) =====
+  const raw = (typeof carts !== 'undefined' && Array.isArray(carts)) ? carts : [];
+  const normalized = raw.map((c, idx) => {
+    const fromA = c && c.productColor && c.productColor.product;
+
+    const idIdx   = (typeof c.id !== 'undefined') ? c.id : idx;
+    const pid     = fromA ? (c.productColor.product.id || c.productColor.product._id) : (c.productId || c.product_id || '');
+    const name    = fromA ? (c.productColor.product.name) : (c.productName || c.name_snapshot || 'Sản phẩm');
+    const brand   = c.brand_name_snapshot || c.brand || '';
+    const typ     = c.category_name_snapshot || c.type || '';
+    const color   = fromA ? (c.productColor.color || '—') : (c.color_name_snapshot || '—');
+    const size    = fromA ? ((c.productSize && (c.productSize.size || c.productSize.name)) || '—') : (c.size_name_snapshot || '—');
+    const img     = fromA ? ((c.productColor.imageUrls && c.productColor.imageUrls[0]) || '/images/default.png')
+                          : (c.img_snapshot || '/images/default.png');
+    const qty     = Number(c.quantity || c.qty || 1);
+    const unit    = Number(fromA ? (c.productColor.product.price) : (c.unitPrice || c.price_at_time || 0));
+    const line    = unit * qty;
+
+    return {
+      idx: idIdx,
+      pid, name, brand, typ, color, size, qty, unit, line,
+      img,
+      url: pid ? `/product_detail/${pid}` : '#'
+    };
+  });
+
+  const drawerCount = normalized.length;
+  const drawerTotal = normalized.reduce((s, it)=> s + it.line, 0);
+  function vnd(n){ try { return Number(n||0).toLocaleString('vi-VN') + 'đ'; } catch(e){ return (n||0)+'đ'; } }
+%>
+
+<div class="aside aside_right overflow-hidden cart-drawer" id="cartDrawer" role="dialog" aria-label="Giỏ hàng">
+  <!-- Header -->
+  <div class="aside-header d-flex align-items-center">
+    <h3 class="text-uppercase fs-6 mb-0 d-flex align-items-center gap-2">
+      <svg class="me-1" width="20" height="20" aria-hidden="true">
+        <use href="/images/sprite.svg#icon_cart"></use>
+      </svg>
+      GIỎ HÀNG
+      <span class="cdr-badge js-cart-items-count"><%= drawerCount %></span>
+    </h3>
+    <button class="btn-close-lg js-close-aside btn-close-aside ms-auto" aria-label="Đóng giỏ hàng"></button>
+  </div>
+
+  <!-- Items -->
+  <div class="cart-drawer-items">
+    <% if (!drawerCount) { %>
+      <div class="empty">
+        <div class="mb-2" style="font-size:40px; line-height:1;">🛍️</div>
+        <div class="fw-semibold mb-1">Giỏ hàng trống</div>
+        <div class="small">Tiếp tục mua sắm để tìm món bạn thích nhé!</div>
+      </div>
+    <% } %>
+
+    <% normalized.forEach(function(it){ %>
+      <div class="cdi position-relative" id="cdr-item-<%= it.idx %>">
+        <a class="cdi-thumb" href="<%= it.url %>" aria-label="<%= it.name %>">
+          <img loading="lazy" src="<%= it.img %>" alt="<%= it.name %>">
+        </a>
+
+        <div class="flex-grow-1">
+          <h6 class="cdi-ttl"><a href="<%= it.url %>"><%= it.name %></a></h6>
+
+          <div class="cdi-meta">
+            <% if (it.brand) { %><span>Thương hiệu: <b><%= it.brand %></b></span><% } %>
+            <% if (it.typ)   { %><span>Loại: <b><%= it.typ %></b></span><% } %>
+            <span>Màu: <b><%= it.color %></b></span>
+            <span>Size: <b><%= it.size %></b></span>
+          </div>
+
+          <!-- Hàng: Qty + Đơn giá (đơn giá ở bên phải) -->
+          <div class="cdi-row">
+            <div class="cdi-qty">
+              <button type="button" class="js-cdr-dec" data-idx="<%= it.idx %>">−</button>
+              <input id="cdr-qty-<%= it.idx %>" type="number" min="1" value="<%= it.qty %>">
+              <button type="button" class="js-cdr-inc" data-idx="<%= it.idx %>">+</button>
+            </div>
+
+            <div class="cdi-unit">Đơn giá: <b><%= vnd(it.unit) %></b></div>
+          </div>
+
+          <!-- Thanh Tổng giá -->
+          <div class="cdi-total">
+            <span class="label">Tổng giá</span>
+            <div class="price" id="cdr-line-<%= it.idx %>"><%= vnd(it.line) %></div>
+          </div>
+        </div>
+
+        <!-- Remove -->
+        <button class="cdi-remove js-cdr-remove" title="Xoá sản phẩm này" aria-label="Xoá" data-idx="<%= it.idx %>">&times;</button>
+      </div>
+    <% }) %>
+  </div>
+
+  <!-- Footer / Actions -->
+  <div class="cdr-footer position-absolute start-0 bottom-0 w-100">
+    <!-- Coupon -->
+    <form class="cdr-coupon" method="post" action="/cart/apply-coupon">
+      <input type="text" name="coupon" placeholder="Nhập mã giảm giá (VD: MIXI10)" autocomplete="off">
+      <button type="submit" class="btn-apply">Áp dụng</button>
+    </form>
+
+    <!-- Totals -->
+    <div class="cdr-row mb-2">
+      <span>Tổng giá</span>
+      <span id="cdr-subtotal"><%= vnd(drawerTotal) %></span>
+    </div>
+
+    <!-- Actions -->
+    <div class="cdr-actions">
+      <a href="/shop-cart" class="btn btn-outline">Xem giỏ hàng</a>
+      <a href="/shop-cart/checkout" class="btn btn-primary">Thanh toán</a>
+    </div>
+  </div>
+</div>
+
+<script>
+  (function CartDrawer(){
+    const fmt = (n) => (Number(n||0)).toLocaleString('vi-VN') + 'đ';
+    const $subtotal = document.getElementById('cdr-subtotal');
+
+    async function updateQty(idx, qty){
+      try{
+        if (qty < 1) qty = 1;
+        const res = await fetch(`/cart/update/${idx}`, {
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({ quantity: qty })
+        });
+        const data = await res.json();
+        if(!data?.ok) throw new Error(data?.message || 'Cập nhật thất bại');
+
+        // set UI
+        const ip = document.getElementById(`cdr-qty-${idx}`);
+        if (ip) ip.value = qty;
+        const line = document.getElementById(`cdr-line-${idx}`);
+        if (line) line.textContent = fmt(data.lineTotal);
+        if ($subtotal) $subtotal.textContent = fmt(data.totals?.total || 0);
+
+        // also update header badge if exists
+        const badge = document.querySelector('#cartDrawer .js-cart-items-count');
+        if (badge) {
+          const count = document.querySelectorAll('#cartDrawer .cdi').length;
+          badge.textContent = count;
+        }
+      }catch(err){
+        console.error(err);
+        alert('Không cập nhật được số lượng. Vui lòng thử lại!');
+      }
+    }
+
+    async function removeLine(idx){
+      try{
+        const res = await fetch(`/cart/remove/${idx}`, { method:'POST' });
+        const data = await res.json();
+        if(!data?.ok) throw new Error(data?.message || 'Xoá thất bại');
+
+        const row = document.getElementById(`cdr-item-${idx}`);
+        if (row) row.remove();
+
+        if ($subtotal) $subtotal.textContent = fmt(data.totals?.total || 0);
+
+        const badge = document.querySelector('#cartDrawer .js-cart-items-count');
+        if (badge) {
+          const count = document.querySelectorAll('#cartDrawer .cdi').length;
+          badge.textContent = count;
+        }
+
+        if (document.querySelectorAll('#cartDrawer .cdi').length === 0) {
+          const list = document.querySelector('#cartDrawer .cart-drawer-items');
+          const empty = document.createElement('div');
+          empty.className = 'empty';
+          empty.innerHTML = '<div class="mb-2" style="font-size:40px;line-height:1;">🛍️</div><div class="fw-semibold mb-1">Giỏ hàng trống</div><div class="small">Tiếp tục mua sắm để tìm món bạn thích nhé!</div>';
+          list.appendChild(empty);
+        }
+      }catch(err){
+        console.error(err);
+        alert('Không xoá được sản phẩm. Vui lòng thử lại!');
+      }
+    }
+
+    document.addEventListener('click', (e)=>{
+      const dec = e.target.closest('.js-cdr-dec');
+      if (dec){
+        const idx = dec.dataset.idx;
+        const ip = document.getElementById(`cdr-qty-${idx}`);
+        updateQty(idx, parseInt(ip.value || '1',10) - 1);
+        return;
+      }
+      const inc = e.target.closest('.js-cdr-inc');
+      if (inc){
+        const idx = inc.dataset.idx;
+        const ip = document.getElementById(`cdr-qty-${idx}`);
+        updateQty(idx, parseInt(ip.value || '1',10) + 1);
+        return;
+      }
+      const rm = e.target.closest('.js-cdr-remove');
+      if (rm){
+        const idx = rm.dataset.idx;
+        removeLine(idx);
+      }
+    });
+
+    document.querySelectorAll('[id^="cdr-qty-"]').forEach(ip=>{
+      ip.addEventListener('change', ()=>{
+        const idx = ip.id.replace('cdr-qty-','');
+        updateQty(idx, parseInt(ip.value || '1',10));
+      });
+    });
+  })();
+</script>

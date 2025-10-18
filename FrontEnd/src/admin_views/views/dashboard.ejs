@@ -1,0 +1,143 @@
+<% layout('layouts/admin') %>
+<section class="space-y-6" x-data="{tab: '<%= (filters && filters.mode) || 'simple' %>'}">
+  <div class="flex items-center justify-between gap-3">
+    <div class="flex items-center gap-2 bg-white border rounded-xl p-1">
+      <button @click="tab='simple'; $nextTick(()=>window.initCharts())" :class="tab==='simple' ? 'btn-tab-active' : 'btn-tab'">Cơ bản</button>
+      <button @click="tab='advanced'; $nextTick(()=>window.initCharts())" :class="tab==='advanced' ? 'btn-tab-active' : 'btn-tab'">Nâng cao</button>
+    </div>
+    <form action="/admin" method="get" class="flex items-center gap-2">
+      <input type="hidden" name="mode" :value="tab"/>
+      <input type="date" class="input" name="start" value="<%= (filters && filters.start) || '' %>"/>
+      <span class="text-slate-400">→</span>
+      <input type="date" class="input" name="end" value="<%= (filters && filters.end) || '' %>"/>
+      <select class="input" name="granularity">
+        <option value="year" <%= (filters && filters.granularity)==='year'?'selected':'' %>>Năm</option>
+        <option value="quarter" <%= (filters && filters.granularity)==='quarter'?'selected':'' %>>Quý</option>
+        <option value="month" <%= (filters && filters.granularity)==='month'?'selected':'' %>>Tháng</option>
+        <option value="week" <%= (filters && filters.granularity)==='week'?'selected':'' %>>Tuần</option>
+      </select>
+      <button class="btn-primary">Áp dụng</button>
+    </form>
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+    <% (kpis || []).forEach(k => { %>
+    <div class="card group hover:shadow-soft transition">
+      <div class="flex items-center justify-between">
+        <div>
+          <div class="text-sm text-slate-500"><%= k.label %></div>
+          <div class="text-2xl font-semibold mt-1"><%= k.valueDisplay || k.value %></div>
+          <div class="text-xs mt-1">
+            <span class="<%= k.delta >=0 ? 'text-emerald-600' : 'text-rose-600' %> inline-flex items-center gap-1">
+              <i class="lucide <%= k.delta>=0 ? 'lucide-trending-up' : 'lucide-trending-down' %> h-3 w-3"></i>
+              <%= (k.delta>0?'+':'') + k.delta + '%' %> so với kỳ trước
+            </span>
+          </div>
+        </div>
+        <div class="h-10 w-10 rounded-xl bg-brand-100 text-brand-700 grid place-items-center">
+          <i class="lucide lucide-<%= k.icon %>"></i>
+        </div>
+      </div>
+    </div>
+    <% }) %>
+  </div>
+
+  <!-- Tab Cơ bản -->
+  <div x-show="tab==='simple'" x-cloak class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+    <div class="card lg:col-span-2">
+      <h3 class="card-title mb-3">Doanh thu & Lợi nhuận</h3>
+      <div class="chart-wrap"><canvas id="revenueChart"></canvas></div>
+    </div>
+    <div class="card">
+      <h3 class="card-title mb-3">Số đơn theo kỳ</h3>
+      <div class="chart-wrap"><canvas id="ordersChart"></canvas></div>
+    </div>
+  </div>
+
+  <!-- Tab Nâng cao -->
+  <div x-show="tab==='advanced'" x-cloak class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+    <div class="card lg:col-span-2">
+      <h3 class="card-title mb-3">So sánh đa chỉ số</h3>
+      <div class="chart-wrap"><canvas id="compareChart"></canvas></div>
+    </div>
+    <div class="card">
+      <h3 class="card-title mb-3">Sản phẩm bán chạy</h3>
+      <ol class="space-y-2">
+        <% (topProducts || []).slice(0,10).forEach((p,i)=>{ %>
+          <li class="flex items-center justify-between">
+            <div class="flex items-center gap-2"><span class="w-6 text-slate-400"><%= i+1 %>.</span><span class="line-clamp-1"><%= p.name %></span></div>
+            <span class="text-sm text-slate-500"><%= p.total_sold %> sp</span>
+          </li>
+        <% }) %>
+      </ol>
+    </div>
+  </div>
+</section>
+
+<script>
+  // dữ liệu từ server
+  const revenue = <%- JSON.stringify((charts && charts.revenue) || {labels:[], revenue:[], profit:[]}) %>;
+  const orders  = <%- JSON.stringify((charts && charts.orders)  || {labels:[], orders:[]}) %>;
+  const compare = <%- JSON.stringify((charts && charts.compare) || {labels:[], revenue:[], profit:[], orders:[]}) %>;
+</script>
+<script>
+  // Cấu hình Chart.js tránh kéo dài vô hạn
+  Chart.defaults.responsive = true;
+  Chart.defaults.maintainAspectRatio = false;     // quan trọng
+  Chart.defaults.resizeDelay = 120;
+
+  // registry lưu instance để destroy trước khi vẽ lại
+  window.__charts = window.__charts || {};
+  function drawChart(id, type, data, options={}){
+    const el = document.getElementById(id);
+    if(!el) return;
+    const ctx = el.getContext('2d');
+    if (window.__charts[id]) {
+      window.__charts[id].destroy();
+      delete window.__charts[id];
+    }
+    window.__charts[id] = new Chart(ctx, {
+      type,
+      data,
+      options: Object.assign({
+        responsive: true,
+        maintainAspectRatio: false,
+        animation: { duration: 250 },
+        plugins: { legend: { display: true } },
+        scales: { x: { ticks: { maxRotation: 0, autoSkip: true } } }
+      }, options)
+    });
+  }
+
+  // khởi tạo (an toàn khi chuyển tab)
+  window.initCharts = function(){
+    if (document.getElementById('revenueChart')) {
+      drawChart('revenueChart','line',{
+        labels: revenue.labels,
+        datasets:[
+          { label:'Doanh thu', data: revenue.revenue, tension:.35 },
+          { label:'Lợi nhuận', data: revenue.profit, tension:.35 }
+        ]
+      });
+    }
+    if (document.getElementById('ordersChart')) {
+      drawChart('ordersChart','bar',{
+        labels: orders.labels,
+        datasets:[ { label:'Số đơn', data: orders.orders } ]
+      }, { scales:{ y:{ beginAtZero:true } }});
+    }
+    if (document.getElementById('compareChart')) {
+      drawChart('compareChart','bar',{
+        labels: compare.labels,
+        datasets:[
+          { label:'Doanh thu', data: compare.revenue },
+          { label:'Lợi nhuận', data: compare.profit },
+          { label:'Số đơn', data: compare.orders }
+        ]
+      }, { scales:{ y:{ beginAtZero:true } }});
+    }
+  };
+
+  // vẽ ngay lần đầu vào trang
+  window.addEventListener('load', window.initCharts);
+</script>

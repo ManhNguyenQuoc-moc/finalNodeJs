@@ -1,0 +1,231 @@
+/* ========== SIDEBAR & CARD ========== */
+.account-sidebar .account-nav a {
+  display: block;
+  padding: .6rem .75rem;
+  border-radius: .6rem;
+  color: #333;
+  text-decoration: none;
+}
+.account-sidebar .account-nav a.active { background: #111; color: #fff; }
+
+.account-card {
+  border: 1px solid #f0f0f0;
+  border-radius: 12px;
+  background: #fff;
+}
+
+/* Voucher card */
+.voucher-card { background: #fff; }
+.voucher-logo {
+  width: 64px; height: 64px;
+  background: #ffe9e3;
+  color: #c93d2b;
+  font-size: 28px;
+}
+
+
+/* Orders */
+.order-card { background:#fff; overflow:hidden; }
+.text-mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace; }
+
+.badge-soft-warning { background:#fff6e6; color:#8a5a00; }
+.badge-soft-primary { background:#eaf2ff; color:#0b57d0; }
+.badge-soft-info    { background:#e9fbff; color:#0b6b7a; }
+.badge-soft-success { background:#eaf9ed; color:#1b6e34; }
+.badge-soft-danger  { background:#ffeaec; color:#9b1c31; }
+
+.order-tabs .btn { font-weight:600; }
+.btn-pill { border-radius:999px; }
+
+
+.btn-pill { border-radius: 999px; }
+
+/* ========== ADDRESS LIST CARD ========== */
+.addr-card{
+  border: 1px solid #ebebeb;
+  border-radius: 14px;
+  padding: 16px 18px;
+  background: #fff;
+  transition: box-shadow .2s ease, transform .2s ease;
+}
+.addr-card:hover{
+  box-shadow: 0 8px 28px rgba(0,0,0,.06);
+  transform: translateY(-1px);
+}
+
+/* ========== MODAL (Địa chỉ) ========== */
+.address-modal .modal-content{
+  border: 0;
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0,0,0,.12);
+}
+.address-modal .modal-title{ font-size: 1.1rem; font-weight: 700; }
+
+.m-field{ margin-bottom: 12px; }
+.m-field .form-label{
+  font-size: .9rem;
+  color: #6b7280;
+  margin-bottom: .35rem;
+}
+
+.m-input{
+  border: 1px solid #ebebeb !important;
+  border-radius: 10px;
+  height: 44px;
+  box-shadow: none !important;
+  background: #fff;
+}
+.m-input:focus{
+  border-color: #000 !important;
+  outline: 0;
+  box-shadow: 0 0 0 3px rgba(0,0,0,.08) !important;
+}
+.address-modal textarea.m-input{
+  height: auto;
+  min-height: 84px;
+}
+
+/* ========== CHIPS (Loại địa chỉ) ========== */
+.m-tags{
+  display: flex;
+  gap: .5rem;
+  flex-wrap: wrap;
+}
+.m-tag{
+  border: 1px solid #e5e7eb;
+  background: #fff;
+  border-radius: 999px;
+  padding: .4rem .9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: .2s;
+  user-select: none;
+}
+.m-tag:hover{ border-color: #bbb; }
+.m-tag.active{
+  color: #fff;
+  background: #000;
+  border-color: #000;
+}
+
+/* ========== MAP PICKER ========== */
+.m-map{
+  position: relative;
+  border: 1px dashed #e5e7eb;
+  border-radius: 12px;
+  padding: 14px;
+  background: #fafafa;
+}
+.m-map__canvas{
+  width: 100%;
+  height: 0;                 /* mặc định ẩn */
+  overflow: hidden;
+  border-radius: 8px;
+  background: #f7f7f7;
+  border: 1px solid #e5e7eb;
+  transition: height .25s ease;
+}
+.m-map__canvas.expanded{ height: 320px; }
+.m-map__canvas.collapsed{ height: 0; }
+
+.m-map__grid{
+  position: absolute;
+  inset: 14px;
+  pointer-events: none;
+  background-image:
+    linear-gradient(transparent 96%, rgba(0,0,0,.03) 100%),
+    linear-gradient(90deg, transparent 96%, rgba(0,0,0,.03) 100%);
+  background-size: 24px 24px;
+  border-radius: 8px;
+}
+.m-map__btn{
+  position: absolute;
+  left: 26px;
+  top: 26px;
+  z-index: 3;
+}
+
+#coordPreview{ line-height: 32px; }
+
+/* ========== PASSWORD CARD (nếu dùng ở trang profile) ========== */
+.password-card .input-eye {
+  background: #fff;
+  border: 1px solid #e9ecef;
+}
+.password-card .input-eye:focus-within {
+  border-color: #000;
+  box-shadow: 0 0 0 .2rem rgba(0,0,0,.05);
+}
+.password-card .form-control {
+  height: 46px;
+  border-radius: 50rem 0 0 50rem !important;
+  background: transparent;
+}
+.password-card .btn-eye {
+  border: 0;
+  border-left: 1px solid #eee;
+  height: 46px;
+  width: 56px;
+  border-radius: 0 50rem 50rem 0;
+  background: transparent;
+}
+.password-card .btn-eye:hover { background: #f7f7f7; }
+
+/* ========== SMALL UTILS ========== */
+.voucher-card{ background: #fff; }
+.btn.btn-dark.rounded-pill { border-radius: 50rem; }
+
+/* --- FIX: canh giữa & đồng bộ chiều cao cho select --- */
+.form-select.m-input {
+  height: 44px !important;
+  padding-top: .5rem !important;
+  padding-bottom: .5rem !important;
+  line-height: 1.25 !important;
+  box-sizing: border-box;
+  appearance: none;        /* tránh style native kéo text lệch */
+  -webkit-appearance: none;
+}
+
+/* trạng thái disabled vẫn giữ đúng chiều cao/padding & màu xám nhẹ */
+.form-select.m-input:disabled {
+  background-color: #f6f6f6 !important;
+  color: #9aa0a6 !important;
+  opacity: 1 !important;
+  cursor: not-allowed;
+  height: 44px !important;
+  padding-top: .5rem !important;
+  padding-bottom: .5rem !important;
+  line-height: 1.25 !important;
+}
+
+/* đồng bộ cho input/textarea mang .m-input để tránh lệch */
+.m-input {
+  height: 44px;
+  padding-top: .5rem;
+  padding-bottom: .5rem;
+  box-sizing: border-box;
+}
+
+/* textarea dùng .m-input thì để auto-height nhưng vẫn cân padding */
+textarea.m-input {
+  height: auto;
+  min-height: 84px;
+  padding-top: .6rem;
+  padding-bottom: .6rem;
+}
+
+/* Ngăn mọi overlay cũ đè lên textarea */
+.m-field { position: relative; }
+#addrLine, #addrLineSearch {
+  position: relative;
+  z-index: 1;
+  background: #fff;
+}
+
+/* Nếu còn class overlay cũ, tắt nó đi */
+.m-field .autocomplete-overlay,
+.m-field .addr-overlay,
+.m-field .pac-container {
+  display: none !important;
+  visibility: hidden !important;
+}

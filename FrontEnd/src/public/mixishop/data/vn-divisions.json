@@ -1,0 +1,96 @@
+[
+  {
+    "code": "01",
+    "name": "Hà Nội",
+    "center": [21.027764, 105.834160],
+    "districts": [
+      {
+        "code": "001",
+        "name": "Ba Đình",
+        "center": [21.033781, 105.814041],
+        "wards": [
+          { "code": "00001", "name": "Phúc Xá", "center": [21.0512, 105.8435] },
+          { "code": "00004", "name": "Trúc Bạch", "center": [21.0453, 105.8422] },
+          { "code": "00006", "name": "Vĩnh Phúc", "center": [21.0412, 105.8061] }
+        ]
+      },
+      {
+        "code": "002",
+        "name": "Hoàn Kiếm",
+        "center": [21.02851, 105.8542],
+        "wards": [
+          { "code": "00009", "name": "Chương Dương", "center": [21.0338, 105.8614] },
+          { "code": "00012", "name": "Hàng Trống", "center": [21.0297, 105.8488] }
+        ]
+      },
+      {
+        "code": "003",
+        "name": "Đống Đa",
+        "center": [21.018, 105.829],
+        "wards": [
+          { "code": "00015", "name": "Cát Linh", "center": [21.0293, 105.8273] },
+          { "code": "00018", "name": "Văn Miếu", "center": [21.0279, 105.8354] }
+        ]
+      }
+    ]
+  },
+  {
+    "code": "79",
+    "name": "TP. Hồ Chí Minh",
+    "center": [10.823099, 106.629664],
+    "districts": [
+      {
+        "code": "760",
+        "name": "Quận 1",
+        "center": [10.775658, 106.700424],
+        "wards": [
+          { "code": "26734", "name": "Bến Nghé", "center": [10.7767, 106.7049] },
+          { "code": "26737", "name": "Bến Thành", "center": [10.7725, 106.6981] }
+        ]
+      },
+      {
+        "code": "769",
+        "name": "Quận 7",
+        "center": [10.737, 106.721],
+        "wards": [
+          { "code": "26773", "name": "Tân Phú", "center": [10.7306, 106.7311] },
+          { "code": "26776", "name": "Tân Kiểng", "center": [10.7481, 106.7078] }
+        ]
+      },
+      {
+        "code": "770",
+        "name": "Quận 8",
+        "center": [10.724, 106.628],
+        "wards": [
+          { "code": "26785", "name": "Phường 1", "center": [10.7371, 106.6272] },
+          { "code": "26788", "name": "Phường 2", "center": [10.7337, 106.6250] }
+        ]
+      }
+    ]
+  },
+  {
+    "code": "48",
+    "name": "Đà Nẵng",
+    "center": [16.054407, 108.202167],
+    "districts": [
+      {
+        "code": "490",
+        "name": "Hải Châu",
+        "center": [16.061, 108.214],
+        "wards": [
+          { "code": "20101", "name": "Thạch Thang", "center": [16.0747, 108.2197] },
+          { "code": "20104", "name": "Hải Châu I", "center": [16.0673, 108.2200] }
+        ]
+      },
+      {
+        "code": "492",
+        "name": "Sơn Trà",
+        "center": [16.096, 108.247],
+        "wards": [
+          { "code": "20119", "name": "An Hải Bắc", "center": [16.0807, 108.2341] },
+          { "code": "20122", "name": "An Hải Tây", "center": [16.0712, 108.2267] }
+        ]
+      }
+    ]
+  }
+]

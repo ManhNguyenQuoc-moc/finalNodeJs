@@ -1,0 +1,53 @@
+<%
+// Guards: nếu không truyền thì đặt mặc định an toàn
+const active = (typeof activeAccountTab !== 'undefined' && activeAccountTab) ? activeAccountTab : '';
+const u = (typeof user !== 'undefined' && user) ? user : {};
+%>
+
+<aside class="account-sidebar">
+  <div class="account-user d-flex align-items-center mb-3">
+    <div class="avatar rounded-circle me-3 overflow-hidden" style="width:56px;height:56px;background:#f5f5f5;">
+      <img
+        src="<%= u.avatar_url || '/mixishop/images/avatars/default.png' %>"
+        alt=""
+        class="w-100 h-100 object-fit-cover">
+    </div>
+    <div>
+      <div class="fw-semibold"><%= u.full_name || u.email || 'Người dùng' %></div>
+      <a class="small text-secondary" href="/account/profile">Sửa Hồ Sơ</a>
+    </div>
+  </div>
+
+  <ul class="list-unstyled account-nav">
+    <li>
+      <a class="<%= active==='profile' ? 'active' : '' %>" href="/account/profile">
+        <i class="bi bi-person"></i> Tài Khoản Của Tôi
+      </a>
+    </li>
+    <li>
+      <a class="<%= active==='addresses' ? 'active' : '' %>" href="/account/addresses">
+        <i class="bi bi-geo-alt"></i> Địa Chỉ
+      </a>
+    </li>
+    <li>
+      <a class="<%= active==='orders' ? 'active' : '' %>" href="/account/orders">
+        <i class="bi bi-bag"></i> Đơn Mua
+      </a>
+    </li>
+    <li>
+      <a class="<%= active==='vouchers' ? 'active' : '' %>" href="/account/vouchers">
+        <i class="bi bi-ticket-perforated"></i> Kho Voucher
+      </a>
+    </li>
+    <li>
+      <a class="<%= active==='points' ? 'active' : '' %>" href="/account/points">
+        <i class="bi bi-coin"></i> Điểm Thưởng
+      </a>
+    </li>
+    <li>
+      <a href="/logout" class="text-danger">
+        <i class="bi bi-box-arrow-right"></i> Đăng xuất
+      </a>
+    </li>
+  </ul>
+</aside>
