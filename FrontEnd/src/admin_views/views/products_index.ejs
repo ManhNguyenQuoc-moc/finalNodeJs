@@ -1,0 +1,82 @@
+<% layout('layouts/admin') %>
+<section class="space-y-6">
+  <div class="flex items-center justify-between gap-3">
+    <h2 class="text-xl font-semibold">Quản lý sản phẩm</h2>
+    <a href="/admin/products/new" class="btn-primary"><i class="lucide lucide-plus mr-2"></i>Thêm sản phẩm</a>
+  </div>
+
+  <form class="card grid grid-cols-1 lg:grid-cols-6 gap-3" method="get">
+    <input class="input lg:col-span-2" name="q" value="<%= (query && query.q) || '' %>" placeholder="Từ khóa / SKU...">
+    <select class="input" name="brand">
+      <option value="">— Thương hiệu —</option>
+      <% (brands||[]).forEach(b=>{ %>
+        <option value="<%= b._id %>" <%= (query && query.brand)===String(b._id)?'selected':'' %>><%= b.name %></option>
+      <% }) %>
+    </select>
+    <select class="input" name="category">
+      <option value="">— Danh mục —</option>
+      <% (categories||[]).forEach(c=>{ %>
+        <option value="<%= c._id %>" <%= (query && query.category)===String(c._id)?'selected':'' %>><%= c.name %></option>
+      <% }) %>
+    </select>
+    <input class="input" type="number" name="min" step="1000" placeholder="Giá từ" value="<%= (query && query.min) || '' %>">
+    <input class="input" type="number" name="max" step="1000" placeholder="đến" value="<%= (query && query.max) || '' %>">
+    <select class="input" name="sort">
+      <option value="">— Sắp xếp —</option>
+      <option value="name_asc"  <%= (query && query.sort)==='name_asc'?'selected':'' %>>Tên A→Z</option>
+      <option value="name_desc" <%= (query && query.sort)==='name_desc'?'selected':'' %>>Tên Z→A</option>
+      <option value="price_asc" <%= (query && query.sort)==='price_asc'?'selected':'' %>>Giá tăng dần</option>
+      <option value="price_desc"<%= (query && query.sort)==='price_desc'?'selected':'' %>>Giá giảm dần</option>
+      <option value="created_desc"<%= (query && query.sort)==='created_desc'?'selected':'' %>>Mới nhất</option>
+    </select>
+    <div class="lg:col-span-6 flex justify-end gap-2">
+      <a href="/admin/products" class="btn ghost">Xóa lọc</a>
+      <button class="btn-primary">Lọc</button>
+    </div>
+  </form>
+
+  <div class="card overflow-x-auto">
+    <table class="w-full text-sm">
+      <thead>
+        <tr class="text-left text-slate-500 uppercase text-[11px]">
+          <th class="p-2">Sản phẩm</th>
+          <th class="p-2">Thương hiệu</th>
+          <th class="p-2">Danh mục</th>
+          <th class="p-2">Trạng thái</th>
+          <th class="p-2">Biến thể</th>
+          <th class="p-2">Giá</th>
+          <th class="p-2">Tồn kho</th>
+          <th class="p-2 w-36"></th>
+        </tr>
+      </thead>
+      <tbody>
+        <% (items||[]).forEach(p=>{ %>
+          <tr class="border-t hover:bg-slate-50/70">
+            <td class="p-2">
+              <div class="flex items-center gap-3">
+                <img src="<%= p.cover || '/placeholder.png' %>" class="h-12 w-12 object-cover rounded-lg border">
+                <div>
+                  <div class="font-medium"><%= p.name %></div>
+                  <div class="text-xs text-slate-500"><%= p.slug %></div>
+                </div>
+              </div>
+            </td>
+            <td class="p-2"><%= p.brand && p.brand.name || '-' %></td>
+            <td class="p-2"><%= p.category && p.category.name || '-' %></td>
+            <td class="p-2"><span class="px-2 py-1 rounded bg-slate-100 text-slate-700 text-xs"><%= (p.productStatus && p.productStatus.statusName) || 'New' %></span></td>
+            <td class="p-2"><%= p.variants_count || 0 %></td>
+            <td class="p-2 font-medium"><%= money(p.price_min || 0) %> - <%= money(p.price_max || 0) %></td>
+            <td class="p-2"><%= p.stock_total || 0 %></td>
+            <td class="p-2 text-right space-x-1">
+              <a class="btn sm" href="/admin/products/<%= p._id %>">Sửa</a>
+              <form action="/admin/products/<%= p._id %>/delete" method="post" class="inline" onsubmit="return confirm('Xóa sản phẩm này?')">
+                <button class="btn sm" type="submit">Xóa</button>
+              </form>
+            </td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+    <%- include('partials/_pagination') %>
+  </div>
+</section>

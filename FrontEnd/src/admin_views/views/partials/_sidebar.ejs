@@ -1,0 +1,30 @@
+<aside :class="['fixed md:static z-40 inset-y-0 left-0 w-72 md:w-64 bg-white border-r shadow-soft transform transition-transform', open ? 'translate-x-0' : '-translate-x-full md:translate-x-0']">
+  <div class="px-4 py-4 border-b flex items-center gap-3">
+    <button class="md:hidden h-9 w-9 grid place-items-center rounded-lg hover:bg-slate-100" @click="open=false">
+      <i class="lucide lucide-x"></i>
+    </button>
+    <div class="h-9 w-9 bg-brand-500 rounded-xl grid place-items-center text-white font-semibold">A</div>
+    <div><div class="font-semibold">Admin</div><div class="text-xs text-slate-500">Console</div></div>
+  </div>
+  <nav class="flex-1 p-3 text-[15px]">
+    <a href="/admin" class="nav-item <%= activePath==='/admin' ? 'active' : '' %>"><i class="lucide lucide-gauge h-4 w-4"></i>Dashboard</a>
+
+    <div class="mt-3 uppercase text-[11px] tracking-wide text-slate-400 px-3">Sản phẩm</div>
+    <a href="/admin/products" class="nav-item <%= activePath.startsWith('/admin/products') ? 'active' : '' %>"><i class="lucide lucide-box h-4 w-4"></i>Sản phẩm</a>
+    <a href="/admin/product-colors" class="nav-item <%= activePath.startsWith('/admin/product-colors') ? 'active' : '' %>"><i class="lucide lucide-palette h-4 w-4"></i>Màu</a>
+    <a href="/admin/product-sizes" class="nav-item <%= activePath.startsWith('/admin/product-sizes') ? 'active' : '' %>"><i class="lucide lucide-ruler h-4 w-4"></i>Size</a>
+    <a href="/admin/product-variants" class="nav-item <%= activePath.startsWith('/admin/product-variants') ? 'active' : '' %>"><i class="lucide lucide-layers h-4 w-4"></i>Biến thể</a>
+    <a href="/admin/brands" class="nav-item <%= activePath.startsWith('/admin/brands') ? 'active' : '' %>"><i class="lucide lucide-badge-check h-4 w-4"></i>Thương hiệu</a>
+    <a href="/admin/categories" class="nav-item <%= activePath.startsWith('/admin/categories') ? 'active' : '' %>"><i class="lucide lucide-folders h-4 w-4"></i>Danh mục</a>
+
+    <div class="mt-3 uppercase text-[11px] tracking-wide text-slate-400 px-3">Vận hành</div>
+    <a href="/admin/orders" class="nav-item <%= activePath.startsWith('/admin/orders') ? 'active' : '' %>"><i class="lucide lucide-receipt h-4 w-4"></i>Đơn hàng</a>
+    <a href="/admin/discounts" class="nav-item <%= activePath.startsWith('/admin/discounts') ? 'active' : '' %>"><i class="lucide lucide-ticket-percent h-4 w-4"></i>Mã giảm giá</a>
+
+    <div class="mt-3 uppercase text-[11px] tracking-wide text-slate-400 px-3">Người dùng</div>
+    <a href="/admin/users" class="nav-item <%= activePath.startsWith('/admin/users') ? 'active' : '' %>"><i class="lucide lucide-users h-4 w-4"></i>Người dùng</a>
+    <a href="/admin/addresses" class="nav-item <%= activePath.startsWith('/admin/addresses') ? 'active' : '' %>"><i class="lucide lucide-map-pin h-4 w-4"></i>Địa chỉ</a>
+    <a href="/admin/reviews" class="nav-item <%= activePath.startsWith('/admin/reviews') ? 'active' : '' %>"><i class="lucide lucide-message-square h-4 w-4"></i>Đánh giá</a>
+    <a href="/admin/wishlists" class="nav-item <%= activePath.startsWith('/admin/wishlists') ? 'active' : '' %>"><i class="lucide lucide-heart h-4 w-4"></i>Wishlist</a>
+  </nav>
+</aside>

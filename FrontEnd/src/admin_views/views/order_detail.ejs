@@ -1,0 +1,52 @@
+<% layout('layouts/admin') %>
+<section class="space-y-6">
+  <div class="flex items-center justify-between"><h2 class="text-xl font-semibold">Chi tiết đơn #<%= order._id %></h2><a href="/admin/orders" class="btn ghost">Quay lại</a></div>
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+    <div class="card lg:col-span-2">
+      <h3 class="card-title mb-3">Sản phẩm</h3>
+      <table class="w-full text-sm">
+        <thead><tr class="text-left text-slate-500 uppercase text-[11px]"><th class="p-2">Sản phẩm</th><th class="p-2">SKU</th><th class="p-2">SL</th><th class="p-2">Giá</th><th class="p-2">Tổng</th></tr></thead>
+        <tbody>
+          <% order.items.forEach(it=>{ %>
+          <tr class="border-t">
+            <td class="p-2"><%= it.name_snapshot || it.product_name || '-' %></td>
+            <td class="p-2"><%= it.product_variant_sku || it.variant_sku %></td>
+            <td class="p-2"><%= it.quantity %></td>
+            <td class="p-2"><%= (it.price_at_purchase || it.price_at_time).toLocaleString('vi-VN',{style:'currency',currency:'VND'}) %></td>
+            <td class="p-2 font-medium"><%= ((it.price_at_purchase||it.price_at_time)*it.quantity).toLocaleString('vi-VN',{style:'currency',currency:'VND'}) %></td>
+          </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+    <div class="card space-y-3">
+      <div><div class="text-sm text-slate-500">Khách hàng</div><div class="font-medium"><%= (order.user && order.user.full_name) || 'Guest' %></div><div class="text-sm text-slate-500"><%= (order.user && order.user.email) || '' %></div></div>
+      <div><div class="text-sm text-slate-500">Địa chỉ</div><div><%= (order.address && order.address.address_line) || '-' %></div></div>
+      <div class="grid grid-cols-2 gap-3">
+        <div class="bg-slate-50 rounded-xl p-3"><div class="text-xs text-slate-500">Tổng tạm tính</div><div class="font-semibold"><%= (order.total_amount||0).toLocaleString('vi-VN',{style:'currency',currency:'VND'}) %></div></div>
+        <div class="bg-slate-50 rounded-xl p-3"><div class="text-xs text-slate-500">Thành tiền</div><div class="font-semibold"><%= (order.final_amount||0).toLocaleString('vi-VN',{style:'currency',currency:'VND'}) %></div></div>
+      </div>
+      <div><div class="text-sm text-slate-500 mb-1">Trạng thái</div><%- include('partials/_statusBadge', {status:order.current_status}) %></div>
+      <form method="post" action="/admin/orders/<%= order._id %>/status" class="flex items-center gap-2">
+        <select class="input flex-1" name="status">
+          <% ['pending','confirmed','shipping','delivered','cancelled'].forEach(s=>{ %>
+            <option value="<%= s %>" <%= order.current_status===s?'selected':'' %>><%= s %></option>
+          <% }) %>
+        </select>
+        <button class="btn-primary">Cập nhật</button>
+      </form>
+    </div>
+  </div>
+  <div class="card">
+    <h3 class="card-title mb-3">Lịch sử trạng thái</h3>
+    <table class="w-full text-sm">
+      <thead><tr class="text-left text-slate-500 uppercase text-[11px]"><th class="p-2">Thời gian</th><th class="p-2">Trạng thái</th></tr></thead>
+      <tbody>
+        <% (order.status_history||[]).slice().reverse().forEach(s=>{ %>
+          <tr class="border-t"><td class="p-2"><%= new Date(s.timestamp).toLocaleString('vi-VN') %></td><td class="p-2"><%- include('partials/_statusBadge', {status:s.status}) %></td></tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+</section>
+    

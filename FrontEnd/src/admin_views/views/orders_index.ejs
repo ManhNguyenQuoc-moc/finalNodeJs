@@ -1,0 +1,25 @@
+<% layout('layouts/admin') %>
+<section class="space-y-6">
+  <div class="flex items-center justify-between"><h2 class="text-xl font-semibold">Đơn hàng</h2></div>
+  <div class="card overflow-x-auto">
+    <table class="w-full text-sm">
+      <thead><tr class="text-left text-slate-500 uppercase text-[11px]">
+        <th class="p-2">Mã đơn</th><th class="p-2">Khách hàng</th><th class="p-2">Ngày đặt</th><th class="p-2">Thành tiền</th><th class="p-2">Mã giảm</th><th class="p-2">Trạng thái</th><th class="p-2 w-20"></th>
+      </tr></thead>
+      <tbody>
+        <% (items||[]).forEach(o=>{ %>
+          <tr class="border-t hover:bg-slate-50/70">
+            <td class="p-2 font-medium"><%= o._id %></td>
+            <td class="p-2"><%= (o.user && o.user.full_name) || 'Guest' %></td>
+            <td class="p-2"><%= new Date(o.createdAt).toLocaleString('vi-VN') %></td>
+            <td class="p-2 font-medium"><%= (o.final_amount||0).toLocaleString('vi-VN',{style:'currency',currency:'VND'}) %></td>
+            <td class="p-2"><%= (o.discount_code && o.discount_code.code) || '—' %></td>
+            <td class="p-2"><%- include('partials/_statusBadge', {status:o.current_status}) %></td>
+            <td class="p-2 text-right"><a class="btn sm" href="/admin/orders/<%= o._id %>">Chi tiết</a></td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+    <%- include('partials/_pagination') %>
+  </div>
+</section>

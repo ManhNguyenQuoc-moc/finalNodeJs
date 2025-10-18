@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title><%= title || "Admin Console" %></title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        container: { center: true, padding: '1rem' },
+        extend: {
+          colors: { brand: { 50:'#fff7ed',100:'#ffedd5',200:'#fed7aa',300:'#fdba74',400:'#fb923c',500:'#f97316',600:'#ea580c',700:'#c2410c',800:'#9a3412',900:'#7c2d12' } },
+          boxShadow: { soft: '0 8px 30px rgba(0,0,0,0.06)' }
+        }
+      }
+    }
+  </script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lucide-static@latest/font/lucide.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <link rel="stylesheet" href="/css/admin.css"/>
+</head>
+<body class="bg-slate-50 text-slate-800">
+  <div class="min-h-screen flex" x-data="{open:false}">
+    <%- include('../partials/_sidebar', { activePath: activePath || '' }) %>
+    <div class="flex-1 flex flex-col">
+      <%- include('../partials/_topbar') %>
+      <main class="p-6 max-w-[1400px] w-full mx-auto">
+        <% if (flash && flash.success) { %>
+          <div class="mb-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 px-4 py-3"><%= flash.success %></div>
+        <% } %>
+        <% if (flash && flash.error) { %>
+          <div class="mb-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 px-4 py-3"><%= flash.error %></div>
+        <% } %>
+        <%- body %>
+      </main>
+      <footer class="mt-auto border-t bg-white/80 backdrop-blur">
+        <div class="max-w-[1400px] mx-auto px-6 py-4 text-sm text-slate-500 flex items-center justify-between">
+          <span>© <%= new Date().getFullYear() %> Admin Console</span>
+          <span class="hidden md:inline">EJS • Tailwind • Chart.js • Alpine</span>
+        </div>
+      </footer>
+    </div>
+  </div>
+  <script src="/js/admin.js"></script>
+</body>
+</html>
+  

@@ -1,0 +1,17 @@
+<% layout('layouts/admin') %>
+<% const it = (typeof item!=='undefined' && item) ? item : null; %>
+<section class="space-y-6">
+  <div class="flex items-center justify-between">
+    <h2 class="text-xl font-semibold"><%= pageHeading %> - <%= it ? 'Chỉnh sửa' : 'Thêm mới' %></h2>
+    <a href="<%= activePath %>" class="btn ghost">Quay lại</a>
+  </div>
+  <form class="card grid grid-cols-1 md:grid-cols-2 gap-4" method="post" action="<%= it ? (actionBase + '/' + (it._id || it.code || it.sku)) : actionBase %>">
+    <% fields.forEach(f=>{ %>
+      <div><label class="label"><%= f %></label><input class="input" name="<%= f %>" value="<%= (it && it[f]) || '' %>"></div>
+    <% }) %>
+    <div class="md:col-span-2 flex justify-end gap-2">
+      <a class="btn ghost" href="<%= activePath %>">Hủy</a>
+      <button class="btn-primary">Lưu</button>
+    </div>
+  </form>
+</section>

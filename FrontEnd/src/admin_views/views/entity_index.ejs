@@ -1,0 +1,30 @@
+<% layout('layouts/admin') %>
+<section class="space-y-6">
+  <div class="flex items-center justify-between">
+    <h2 class="text-xl font-semibold"><%= pageHeading %></h2>
+    <a href="<%= '/admin' + activePath.replace(/\/[^/]*$/, '') + '/new' %>" class="btn-primary"><i class="lucide lucide-plus mr-2"></i>Thêm</a>
+  </div>
+  <div class="card overflow-x-auto">
+    <table class="w-full text-sm">
+      <thead><tr class="text-left text-slate-500 uppercase text-[11px]">
+        <% fields.forEach(f=>{ %><th class="p-2"><%= f %></th><% }) %>
+        <th class="p-2 w-28"></th>
+      </tr></thead>
+      <tbody>
+        <% (items||[]).forEach(it=>{ %>
+          <tr class="border-t hover:bg-slate-50/70">
+            <% fields.forEach(f=>{ %>
+              <td class="p-2"><%= (it[f]!==undefined && it[f]!==null) ? it[f] : (f==='items.length' && it.items ? it.items.length : '—') %></td>
+            <% }) %>
+            <td class="p-2 text-right space-x-1">
+              <a class="btn sm" href="<%= activePath %>/<%= it._id || it.code || it.sku %>">Sửa</a>
+              <form action="<%= activePath %>/<%= it._id || it.code || it.sku %>/delete" method="post" class="inline" onsubmit="return confirm('Xóa mục này?')">
+                <button class="btn sm" type="submit">Xóa</button>
+              </form>
+            </td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+</section>

@@ -35,9 +35,12 @@ class authController {
     try {
       const { email, password } = req.body;
       const result = await authService.login(email, password);
+      res.cookie('uid', result.user.id, { httpOnly: true, sameSite: 'lax' });
       res.json(result);
     } catch (err) {
       res.status(400).json({ message: err.message });
+      const code = /Invalid email or password/i.test(err.message) ? 401 : 400;
+      res.status(code).json({ message: err.message });
     }
   }
 

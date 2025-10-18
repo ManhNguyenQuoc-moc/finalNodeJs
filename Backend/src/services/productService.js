@@ -41,7 +41,7 @@ async function createProduct(dto) {
 
     // 5️Save Product với session
     const createdProduct = await productRepo.createProduct(productEntity, session);
-
+    
     // 6️Map DTO → Variant entities
     const variantEntities = AddProductRequestMapper.toVariantEntities(
       dto.variants,
@@ -428,10 +428,102 @@ async function deleteVariant(variantId) {
   });
 }
 
+// ===== ADD AT BOTTOM OF src/services/productService.js =====
+const { ProductVariant } = require("../models");
+
+/**
+ * Chuẩn hoá danh sách product để FE hiển thị:
+ * - Gom ảnh theo từng màu từ các variants (unique, fallback ảnh product nếu thiếu)
+ * - Trả về mảng colors: [{ color, color_id:{_id,color_name}, color_code, imageUrls[] }]
+ * - Điền short_description/avg_rating/rating_count an toàn
+ * - Nếu product.price null => lấy min price từ variants của product đó
+ */
+async function normalizeProductsColors(products) {
+  if (!Array.isArray(products) || products.length === 0) return [];
+
+  const ids = products.map(p => p?._id).filter(Boolean);
+
+  // lấy variants theo nhóm product và populate color để đọc tên/code
+  const variants = await ProductVariant.find({ product: { $in: ids } })
+    .populate("color")
+    .lean();
+
+  // map: productId -> (colorId -> {color,color_id,color_code,imageUrls[]})
+  const byProduct = new Map();
+
+  for (const v of variants) {
+    const pid = String(v.product);
+    const colorId = v.color?._id ? String(v.color._id) : "no-color";
+    const urls = (v.images || [])
+      .map(im => (typeof im === "string" ? im : im?.url))
+      .filter(Boolean);
+
+    if (!byProduct.has(pid)) byProduct.set(pid, new Map());
+    const byColor = byProduct.get(pid);
+
+    if (!byColor.has(colorId)) {
+      byColor.set(colorId, {
+        color: v.color?.color_name || "Default",
+        color_id: v.color ? { _id: v.color._id, color_name: v.color.color_name } : null,
+        color_code: v.color?.color_code || "",
+        imageUrls: []
+      });
+    }
+
+    byColor.get(colorId).imageUrls.push(...urls);
+  }
+
+  // chuẩn hoá từng product
+  for (const p of products) {
+    const key = String(p?._id || "");
+    const byColor = byProduct.get(key);
+
+    const fallbackImg =
+      (Array.isArray(p?.images) && (p.images[0]?.url || p.images[0])) ||
+      "/images/default.png";
+
+    if (byColor && byColor.size) {
+      const arr = Array.from(byColor.values()).map(c => ({
+        ...c,
+        imageUrls: Array.from(new Set(c.imageUrls)).length
+          ? Array.from(new Set(c.imageUrls))
+          : [fallbackImg],
+      }));
+      p.colors = arr;
+    } else {
+      // không có variant ảnh -> 1 màu mặc định để FE vẫn render swatch
+      p.colors = [{
+        color: "Default",
+        color_id: null,
+        color_code: "",
+        imageUrls: [fallbackImg],
+      }];
+    }
+
+    // các field “an toàn”
+    p.short_description = (p.short_description || p.long_description || "").trim();
+    p.avg_rating = Number((p.avg_rating || 0).toFixed(1));
+    p.rating_count = p.rating_count || 0;
+
+    // nếu chưa có price ở product -> lấy min price từ variants thuộc product đó
+    if (p.price == null) {
+      const mine = variants
+        .filter(v => String(v.product) === key && typeof v.price === "number")
+        .map(v => v.price);
+      if (mine.length) p.price = Math.min(...mine);
+    }
+  }
+
+  return products;
+}
+
+// export thêm hàm này (không làm ảnh hưởng export cũ của bạn)
+
 module.exports = {
   createProduct,
   addVariant,
   deleteProduct,
   deleteVariant,
   updateProduct,
+  normalizeProductsColors,
 };

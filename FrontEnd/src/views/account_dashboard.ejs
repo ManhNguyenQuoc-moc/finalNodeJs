@@ -1,0 +1,72 @@
+  <!DOCTYPE html>
+<html dir="ltr" lang="zxx">
+
+<head>
+  <%- include('partials/head') %>
+</head>
+
+<body>
+  <%- include('partials/icons') %>
+
+  <!-- Mobile Header -->
+
+  <!-- Header Type 1 -->
+  <%- include('partials/header', { headerType: 'header' }) %>
+
+  <main>
+    <div class="mb-4 pb-4"></div>
+    <section class="my-account container">
+      <h2 class="page-title">Quản lý tài khoản</h2>
+      <div class="row">
+        <div class="col-lg-3">
+          <ul class="account-nav">
+            <li>
+              <a href="/my-account" class="menu-link menu-link_us-s menu-link_active">Tổng quan</a>
+            </li>
+            <li>
+              <a href="/account-orders" class="menu-link menu-link_us-s">Đơn hàng</a>
+            </li>
+            <li>
+              <a href="/account-edit" class="menu-link menu-link_us-s">Quản lý tài khoản</a>
+            </li>
+            <li>
+              <a href="/logout" class="menu-link menu-link_us-s">Logout</a>
+            </li>
+          </ul>
+        </div>
+        <div class="col-lg-9">
+          <div class="page-content my-account__dashboard">
+            <p>Xin chào <strong><%= user ? user.name : 'User' %></strong></p>
+            <p>Chào mừng bạn đã đến với MixiShop. Chúc bạn có thật nhiều sức khỏe</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div class="mb-5 pb-xl-5"></div>
+
+    <%- include('partials/footer') %>
+    <%- include('partials/login_form') %>
+    <%- include('partials/cart_drawer') %>
+    <%- include('partials/quick_view') %>
+    <%- include('partials/sitemap') %>
+
+  <!-- Go To Top -->
+  <div id="scrollTop" class="visually-hidden end-0"></div>
+
+  <!-- Page Overlay -->
+  <div class="page-overlay"></div><!-- /.page-overlay -->
+
+  <!-- External JavaScripts -->
+  <script src="/mixishop/js/plugins/jquery.min.js"></script>
+  <script src="/mixishop/js/plugins/bootstrap.bundle.min.js"></script>
+  <script src="/mixishop/js/plugins/bootstrap-slider.min.js"></script>
+  <script src="/mixishop/js/plugins/swiper.min.js"></script>
+  <script src="/mixishop/js/plugins/countdown.js"></script>
+  <script src="/mixishop/js/plugins/jquery.fancybox.js"></script>
+
+  <!-- Footer Scripts -->
+  <script src="/mixishop/js/theme.js"></script>
+</body>
+</html>

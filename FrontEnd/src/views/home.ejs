@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<%- include('partials/head') %>
+
+<body class="gradient-bg">
+<%- include('partials/header') %>
+
+<main>
+  <section class="swiper-container js-swiper-slider swiper-number-pagination slideshow h-xs-25rem"
+           data-settings='{
+        "autoplay": {
+          "delay": 5000
+        },
+        "slidesPerView": 1,
+        "effect": "fade",
+        "loop": true
+      }'>
+    <div class="swiper-wrapper">
+      <div class="swiper-slide">
+        <div class="overflow-hidden position-relative h-100">
+          <div class="slideshow-character position-absolute bottom-0 pos_right-center">
+            <img loading="lazy" src="/mixishop/images/slideshow_mixigaming.png" width="542" height="733" alt="Woman Fashion 1" class="slideshow-character__img animate animate_fade animate_btt animate_delay-9 w-auto h-auto">
+            <div class="character_markup type2">
+              <p class="text-uppercase font-sofia mark-grey-color animate animate_fade animate_btt animate_delay-10 mb-0">Dresses</p>
+            </div>
+          </div>
+          <div class="slideshow-text container position-absolute start-50 top-50 translate-middle">
+            <h6 class="text_dash text-uppercase fs-base fw-medium animate animate_fade animate_btt animate_delay-3">New Arrivals</h6>
+            <h2 class="h1 fw-normal mb-0 animate animate_fade animate_btt animate_delay-5">Night Spring</h2>
+            <h2 class="h1 fw-bold animate animate_fade animate_btt animate_delay-5">Dresses</h2>
+            <a href="shop1.html" class="btn-link btn-link_lg default-underline fw-medium animate animate_fade animate_btt animate_delay-7">Shop Now</a>
+          </div>
+        </div>
+      </div><!-- /.slideshow-item -->
+
+      <div class="swiper-slide">
+        <div class="overflow-hidden position-relative h-100">
+          <div class="slideshow-character position-absolute bottom-0 pos_right-center">
+            <img loading="lazy" src="/mixishop/images/slideshow_qnt.png" width="400" height="733" alt="Woman Fashion 1" class="slideshow-character__img animate animate_fade animate_btt animate_delay-9 w-auto h-auto">
+            <div class="character_markup">
+              <p class="text-uppercase font-sofia fw-bold animate animate_fade animate_rtl animate_delay-10">Summer</p>
+            </div>
+          </div>
+          <div class="slideshow-text container position-absolute start-50 top-50 translate-middle">
+            <h6 class="text_dash text-uppercase fs-base fw-medium animate animate_fade animate_btt animate_delay-3">New Trend</h6>
+            <h2 class="h1 fw-normal mb-0 animate animate_fade animate_btt animate_delay-5">Winter Sale Stylish</h2>
+            <h2 class="h1 fw-bold animate animate_fade animate_btt animate_delay-5">Essentials</h2>
+            <a href="shop1.html" class="btn-link btn-link_lg default-underline fw-medium animate animate_fade animate_btt animate_delay-7">Shop Now</a>
+          </div>
+        </div>
+      </div><!-- /.slideshow-item -->
+
+      <div class="swiper-slide">
+        <div class="overflow-hidden position-relative h-100">
+          <div class="slideshow-character position-absolute bottom-0 pos_right-center">
+            <img loading="lazy" src="/mixishop/images/slideshow_djchip.png" width="400" height="690" alt="Woman Fashion 2" class="slideshow-character__img animate animate_fade animate_btt animate_delay-9 w-auto h-auto">
+          </div>
+          <div class="slideshow-text container position-absolute start-50 top-50 translate-middle">
+            <h6 class="text_dash text-uppercase fs-base fw-medium animate animate_fade animate_btt animate_delay-3">New Arrivals</h6>
+            <h2 class="h1 fw-normal mb-0 animate animate_fade animate_btt animate_delay-5">Top Selling</h2>
+            <h2 class="h1 fw-bold animate animate_fade animate_btt animate_delay-5">Dresses</h2>
+            <a href="shop1.html" class="btn-link btn-link_lg default-underline fw-medium animate animate_fade animate_btt animate_delay-7">Shop Now</a>
+          </div>
+        </div>
+      </div><!-- /.slideshow-item -->
+    </div><!-- /.slideshow-wrapper js-swiper-slider -->
+
+    <div class="container">
+      <div class="slideshow-pagination slideshow-number-pagination d-flex align-items-center position-absolute bottom-0 mb-5"></div>
+      <!-- /.products-pagination -->
+    </div><!-- /.container -->
+  </section><!-- /.slideshow -->
+
+  <div class="container mw-1620 bg-white border-radius-10">
+    <div class="mb-3 mb-xl-5 pt-1 pb-4"></div>
+    <section class="category-carousel container">
+      
+      
+      <h2 class="section-title text-center mb-3 pb-xl-2 mb-xl-4">ĐỒ HIỆU MIXI</h2>
+
+      <div class="position-relative">
+        <div class="swiper-container js-swiper-slider"
+             data-settings='{
+              "autoplay": {
+                "delay": 5000
+              },
+              "slidesPerView": 8,
+              "slidesPerGroup": 1,
+              "effect": "none",
+              "loop": true,
+              "navigation": {
+                "nextEl": ".products-carousel__next-1",
+                "prevEl": ".products-carousel__prev-1"
+              },
+              "breakpoints": {
+                "320": {
+                  "slidesPerView": 2,
+                  "slidesPerGroup": 2,
+                  "spaceBetween": 15
+                },
+                "768": {
+                  "slidesPerView": 4,
+                  "slidesPerGroup": 4,
+                  "spaceBetween": 30
+                },
+                "992": {
+                  "slidesPerView": 6,
+                  "slidesPerGroup": 1,
+                  "spaceBetween": 45,
+                  "pagination": false
+                },
+                "1200": {
+                  "slidesPerView": 8,
+                  "slidesPerGroup": 1,
+                  "spaceBetween": 60,
+                  "pagination": false
+                }
+              }
+            }'>
+          <div class="swiper-wrapper">
+            <% categories.forEach(category => { %>
+              <div class="swiper-slide">
+                <a href="/category/<%= category._id %>" class="d-block">
+                  <img loading="lazy" class="w-100 h-auto mb-3" src="<%= category.imageUrl %>" width="150" height="150" alt="">
+                  <div class="text-center">
+                    <a class="menu-link fw-medium"><%= category.name %></a>
+                  </div>
+                </a>
+              </div>
+            <% }) %>
+          </div>
+
+
+
+        </div><!-- /.swiper-wrapper -->
+      </div><!-- /.swiper-container js-swiper-slider -->
+
+      <div class="products-carousel__prev products-carousel__prev-1 position-absolute top-50 d-flex align-items-center justify-content-center">
+        <svg width="25" height="25" viewBox="0 0 25 25" xmlns="http://www.w3.org/2000/svg"><use href="#icon_prev_md" /></svg>
+      </div><!-- /.products-carousel__prev -->
+      <div class="products-carousel__next products-carousel__next-1 position-absolute top-50 d-flex align-items-center justify-content-center">
+        <svg width="25" height="25" viewBox="0 0 25 25" xmlns="http://www.w3.org/2000/svg"><use href="#icon_next_md" /></svg>
+      </div><!-- /.products-carousel__next -->
+    </section>
+
+    <div class="mb-3 mb-xl-5 pt-1 pb-4"></div>
+
+    <section class="hot-deals container">
+      <h2 class="section-title text-center mb-3 pb-xl-3 mb-xl-4">Hot Trending</h2>
+      <div class="row">
+        <div class="col-md-6 col-lg-4 col-xl-20per d-flex align-items-center flex-column justify-content-center py-4 align-items-md-start">
+          <h2>Siêu hấp dẫn</h2>
+          <h2 class="fw-bold">Sản phẩm từ nhà MixiShop</h2>
+
+          <div class="position-relative d-flex align-items-center text-center pt-xxl-4 js-countdown mb-3" data-date="18-5-2024" data-time="06:50">
+            <div class="day countdown-unit">
+              <span class="countdown-num d-block"></span>
+              <span class="countdown-word text-uppercase text-secondary">Days</span>
+            </div>
+
+            <div class="hour countdown-unit">
+              <span class="countdown-num d-block"></span>
+              <span class="countdown-word text-uppercase text-secondary">Hours</span>
+            </div>
+
+            <div class="min countdown-unit">
+              <span class="countdown-num d-block"></span>
+              <span class="countdown-word text-uppercase text-secondary">Mins</span>
+            </div>
+
+            <div class="sec countdown-unit">
+              <span class="countdown-num d-block"></span>
+              <span class="countdown-word text-uppercase text-secondary">Sec</span>
+            </div>
+          </div>
+
+          <a href="shop1.html" class="btn-link default-underline text-uppercase fw-medium mt-3">Xem tất cả</a>
+        </div>
+        <div class="col-md-6 col-lg-8 col-xl-80per">
+          <div class="position-relative">
+            <div class="swiper-container js-swiper-slider"
+                 data-settings='{
+                  "autoplay": {
+                    "delay": 5000,
+                    "disableOnInteraction": false
+                  },
+                  "slidesPerView": 4,
+                  "slidesPerGroup": 4,
+                  "effect": "none",
+                  "loop": true,
+                  "navigation": {
+                    "nextEl": ".products-carousel__next-2",
+                    "prevEl": ".products-carousel__prev-2"
+                  },
+                  "breakpoints": {
+                    "320": { "slidesPerView": 2, "slidesPerGroup": 2, "spaceBetween": 14 },
+                    "768": { "slidesPerView": 2, "slidesPerGroup": 3, "spaceBetween": 24 },
+                    "992": { "slidesPerView": 3, "slidesPerGroup": 1, "spaceBetween": 30 },
+                    "1200": { "slidesPerView": 4, "slidesPerGroup": 1, "spaceBetween": 30 }
+                  }
+                }'>
+              <div class="swiper-wrapper">
+                <% (products.length > 5 ? products.slice(0, 5) : products).forEach(product => { %>
+                  <div class="swiper-slide product-card product-card_style3">
+                    <div class="pc__img-wrapper position-relative">
+                      <a href="/product_detail/<%= product._id %>">
+                        <img loading="lazy"
+                            src="<%= product.colors.length > 0 ? product.colors[0].imageUrls[0] : '/images/default.png' %>"
+                            width="258" height="313"
+                            alt="<%= product.name %>" class="pc__img">
+
+                        <img loading="lazy"
+                            src="<%= product.colors.length > 0 && product.colors[0].imageUrls.length > 1 
+                                      ? product.colors[0].imageUrls[1] 
+                                      : '/images/default.png' %>"
+                            width="258" height="313"
+                            alt="<%= product.name %>" class="pc__img pc__img-second">
+
+                        <img class="category-banner__frame" src="/mixishop/images/frame_trending.png" alt="Nền">
+                      </a>
+                    </div>
+
+                    <!-- Swatch images -->
+                    <div class="d-flex align-items-center mt-1 custom-swatch-container">
+                      <% product.colors.forEach(productColor => { %>
+                        <a href="#" class="swatch-color custom-swatch-color"
+                          style="background-image: url(<%= productColor.imageUrls.length > 0 ? productColor.imageUrls[0] : '' %>); background-size: cover;"
+                          data-images="<%= productColor.imageUrls.join(',') %>"
+                          onclick="changeColor(this); return false;"
+                          title="<%= productColor.color %>"></a>
+                      <% }) %>
+                    </div>
+
+                    <div class="pc__info position-relative d-flex flex-column justify-content-between">
+                      <h1 class="pc__title">
+                        <a href="/product_detail/<%= product.id %>"><%= product.name %></a>
+                      </h1>
+
+                      <!-- ✅ thêm short_description -->
+                      <p class="small text-muted mb-1"><%= product.short_description %></p>
+
+                      <!-- ✅ thêm rating -->
+                      <div class="d-flex align-items-center mb-2">
+                        <% for (let i = 1; i <= 5; i++) { %>
+                          <% if (i <= Math.round(product.avg_rating)) { %>
+                            <span class="text-warning">★</span>
+                          <% } else { %>
+                            <span class="text-muted">☆</span>
+                          <% } %>
+                        <% } %>
+                        <span class="ms-2">(<%= product.rating_count %> đánh giá)</span>
+                      </div>
+
+                      <!-- Giá -->
+                      <div class="product-card__price d-flex align-items-center justify-content-between">
+                        <span class="money price-old">
+                          <%= (typeof product.price === "number" ? (product.price + 100000).toLocaleString() : "0") %> đ
+                        </span>
+                        <span class="money price text-secondary small-price" style="color: blue;">
+                          <%= (typeof product.price === "number" ? product.price.toLocaleString() : "0") %> đ
+                        </span>
+
+                      </div>
+                    </div>
+
+
+                    <div class="anim_appear-bottom position-absolute bottom-0 start-0 end-0 d-none d-sm-flex justify-content-between align-items-center bg-body px-3">
+                      <!-- Nút thêm giỏ hàng (bên trái) -->
+                      <a href="/product_detail/<%= product.id %>"
+                        class="btn-icon btn-link btn-link_lg fw-medium"
+                        title="Thêm vào giỏ hàng">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                          <use href="#icon_cart" />
+                        </svg>
+                        <span class="ms-2 small-text">Thêm giỏ hàng</span>
+                      </a>
+
+                      <!-- Nút yêu thích (bên phải) -->
+                      <button class="pc__btn-wl bg-transparent border-0 js-add-wishlist" title="Thêm yêu thích">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                          <use href="#icon_heart" />
+                        </svg>
+                      </button>
+                    </div>
+
+                  </div>
+                <% }) %>
+              </div>
+
+
+            </div><!-- /.swiper-container js-swiper-slider -->
+            <!-- Nút Prev -->
+            <div class="products-carousel__prev products-carousel__prev-2 position-absolute top-50 start-0 d-flex align-items-center justify-content-center">
+              <svg width="25" height="25" viewBox="0 0 25 25" xmlns="http://www.w3.org/2000/svg">
+                <use href="#icon_prev_md" />
+              </svg>
+            </div>
+
+            <!-- Nút Next -->
+            <div class="products-carousel__next products-carousel__next-2 position-absolute top-50 end-0 d-flex align-items-center justify-content-center">
+              <svg width="25" height="25" viewBox="0 0 25 25" xmlns="http://www.w3.org/2000/svg">
+                <use href="#icon_next_md" />
+              </svg>
+            </div>
+
+          </div><!-- /.position-relative -->
+        </div>
+      </div>
+    </section>
+
+    <div class="mb-3 mb-xl-5 pt-1 pb-4"></div>
+
+    <section class="category-banner container">
+      <div class="row">
+        <div class="col-md-6">
+          <div class="category-banner__item border-radius-10 mb-5">
+
+            <img loading="lazy" class="h-auto" src="/mixishop/images/tuitenbo.jpg" width="690" height="665" alt="">
+            <div class="category-banner__item-mark">
+              Siêu giảm giá
+            </div>
+            <div class="category-banner__item-content">
+              <h3 class="mb-0">Bán chạy</h3>
+              <a href="shop1.html" class="btn-link default-underline text-uppercase fw-medium">Mua ngay</a>
+            </div>
+          </div>
+          <div class="pb-2"></div>
+        </div>
+        <div class="col-md-6">
+          <div class="category-banner__item border-radius-10 mb-5">
+            <img loading="lazy" class="h-auto" src="/mixishop/images/mixi_coc.jpg" width="690" height="665" alt="">
+            <div class="category-banner__item-mark">
+              Tuyệt là vời
+            </div>
+            <div class="category-banner__item-content">
+              <h3 class="mb-0">Hàng mới</h3>
+              <a href="shop1.html" class="btn-link default-underline text-uppercase fw-medium">Mua ngay</a>
+            </div>
+          </div>
+          <div class="pb-2"></div>
+        </div>
+      </div>
+    </section>
+
+    <div class="mb-3 mb-xl-5 pt-1 pb-4"></div>
+    <section class="products-grid container">
+      <h2 class="section-title text-center mb-3 pb-xl-3 mb-xl-4">Danh mục sản phẩm</h2>
+
+      <div class="row">
+
+        <% (products.length > 16 ? products.slice(0, 16) : products).forEach(product_list => { %>
+          <div class="col-6 col-md-4 col-lg-3">
+            <div class="product-card product-card_style3 mb-3 mb-md-4 mb-xxl-5">
+              <div class="pc__img-wrapper">
+                <a href="/product_detail/<%= product_list.id %>">
+                  <img loading="lazy"
+                      src="<%= product_list.colors && product_list.colors.length > 0 && product_list.colors[0].imageUrls.length > 0 
+                              ? product_list.colors[0].imageUrls[0] 
+                              : '/images/default.png' %>"
+                      width="258" height="313"
+                      alt="<%= product_list.name %>" class="pc__img">
+
+                  <img loading="lazy"
+                      src="<%= product_list.colors && product_list.colors.length > 0 && product_list.colors[0].imageUrls.length > 1 
+                              ? product_list.colors[0].imageUrls[1] 
+                              : (product_list.colors.length > 0 && product_list.colors[0].imageUrls.length > 0 
+                                  ? product_list.colors[0].imageUrls[0] 
+                                  : '/images/default.png') %>"
+                      width="258" height="313"
+                      alt="<%= product_list.name %>" class="pc__img pc__img-second">
+
+                  <img class="category-banner__frame" 
+                      src="<%= product_list.productStatus && product_list.productStatus.statusName === 'Bán chạy' 
+                              ? '/mixishop/images/frame_banchay.png' 
+                              : (product_list.productStatus && product_list.productStatus.statusName === 'Trending' 
+                                  ? '/mixishop/images/frame_trending.png' 
+                                  : '/mixishop/images/frame_new.png') %>" 
+                      alt="Status Frame">
+                </a>
+              </div>
+
+              <!-- Swatch images -->
+              <div class="d-flex align-items-center mt-1 custom-swatch-container">
+                <% if (product_list.colors && product_list.colors.length > 0) { %>
+                  <% product_list.colors.forEach(productColor => { %>
+                    <a href="#" class="swatch-color custom-swatch-color"
+                      style="background-image: url(<%= productColor.imageUrls.length > 0 ? productColor.imageUrls[0] : '' %>); background-size: cover;"
+                      data-images="<%= productColor.imageUrls && productColor.imageUrls.length > 0 ? productColor.imageUrls.join(',') : '' %>"
+                      onclick="changeColor(this); return false;"
+                      title="<%= productColor.color %>"></a>
+                  <% }) %>
+                <% } %>
+              </div>
+
+              <div class="pc__info position-relative">
+                <h3 class="pc__title">
+                  <a href="/product_detail/<%= product_list.id %>"><%= product_list.name %></a>
+                </h3>
+
+                <p class="small text-muted"><%= product_list.short_description %></p>
+
+                <div class="product-card__rating mb-1">
+                  ⭐ <%= product_list.avg_rating %> / 5 
+                  (<%= product_list.rating_count %> đánh giá)
+                </div>
+
+                <div class="product-card__price d-flex align-items-center">
+                  <span class="money price text-secondary" style="color: blue;">
+                    <%= product_list.getFormattedPrice ? product_list.getFormattedPrice(product_list.price) : ('$' + product_list.price) %>
+                  </span>
+                  
+                </div>
+
+                <div class="anim_appear-bottom position-absolute bottom-0 start-0 end-0 d-none d-sm-flex justify-content-between align-items-center bg-body px-3">
+                  <!-- Nút thêm giỏ hàng (bên trái) -->
+                  <a href="/product_detail/<%= product_list.id %>"
+                    class="btn-icon btn-link btn-link_lg fw-medium"
+                    title="Thêm vào giỏ hàng">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                      <use href="#icon_cart" />
+                    </svg>
+                    <span class="ms-2 small-text">Thêm giỏ hàng</span>
+                  </a>
+
+                  <!-- Nút yêu thích (bên phải) -->
+                  <button class="pc__btn-wl bg-transparent border-0 js-add-wishlist" title="Thêm yêu thích">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                      <use href="#icon_heart" />
+                    </svg>
+                  </button>
+                </div>
+
+              </div>
+            </div>
+          </div>
+        <% }) %>
+
+      </div><!-- /.row -->
+
+      <div class="text-center mt-2">
+        <a class="btn-link btn-link_lg default-underline text-uppercase fw-medium" href="/category/alls">Xem tất cả</a>
+      </div>
+    </section>
+  </div>
+
+  <div class="mb-3 mb-xl-5 pt-1 pb-4"></div>
+
+  <section class="instagram px-1 position-relative">
+    <h2 class="d-none">Instagram</h2>
+    <div class="row row-cols-2 row-cols-md-4 row-cols-xl-8">
+      <div class="instagram__tile">
+        <a href="https://instagram.com/" target="_blank" class="position-relative overflow-hidden d-block effect overlay-plus">
+          <img loading="lazy" class="instagram__img" src="/mixishop/images/instagram/insta5.jpg" width="232" height="232" alt="Insta image 5">
+        </a>
+      </div>
+      <div class="instagram__tile">
+        <a href="https://instagram.com/" target="_blank" class="position-relative overflow-hidden d-block effect overlay-plus">
+          <img loading="lazy" class="instagram__img" src="/mixishop/images/instagram/insta7.jpg" width="232" height="232" alt="Insta image 7">
+        </a>
+      </div>
+      <div class="instagram__tile">
+        <a href="https://instagram.com/" target="_blank" class="position-relative overflow-hidden d-block effect overlay-plus">
+          <img loading="lazy" class="instagram__img" src="/mixishop/images/instagram/insta8.jpg" width="232" height="232" alt="Insta image 8">
+        </a>
+      </div>
+      <div class="instagram__tile">
+        <a href="https://instagram.com/" target="_blank" class="position-relative overflow-hidden d-block effect overlay-plus">
+          <img loading="lazy" class="instagram__img" src="/mixishop/images/instagram/insta9.jpg" width="232" height="232" alt="Insta image 9">
+        </a>
+      </div>
+      <div class="instagram__tile">
+        <a href="https://instagram.com/" target="_blank" class="position-relative overflow-hidden d-block effect overlay-plus">
+          <img loading="lazy" class="instagram__img" src="/mixishop/images/instagram/insta10.jpg" width="232" height="232" alt="Insta image 10">
+        </a>
+      </div>
+      <div class="instagram__tile">
+        <a href="https://instagram.com/" target="_blank" class="position-relative overflow-hidden d-block effect overlay-plus">
+          <img loading="lazy" class="instagram__img" src="/mixishop/images/instagram/insta11.jpg" width="232" height="232" alt="Insta image 11">
+        </a>
+      </div>
+      <div class="instagram__tile">
+        <a href="https://instagram.com/" target="_blank" class="position-relative overflow-hidden d-block effect overlay-plus">
+          <img loading="lazy" class="instagram__img" src="/mixishop/images/instagram/insta12.jpg" width="232" height="232" alt="Insta image 12">
+        </a>
+      </div>
+      <div class="instagram__tile">
+        <a href="https://instagram.com/" target="_blank" class="position-relative overflow-hidden d-block effect overlay-plus">
+          <img loading="lazy" class="instagram__img" src="/mixishop/images/instagram/insta6.jpg" width="232" height="232" alt="Insta image 6">
+        </a>
+      </div>
+    </div>
+    <button class="btn position-absolute position-center fw-medium px-4 d-flex align-items-center gap-2">
+      <svg class="svg-icon svg-icon_instagram" width="14" height="13" viewBox="0 0 14 13" xmlns="http://www.w3.org/2000/svg">
+        <path d="M7.125 3.2959C5.375 3.2959 3.98047 4.71777 3.98047 6.44043C3.98047 8.19043 5.375 9.58496 7.125 9.58496C8.84766 9.58496 10.2695 8.19043 10.2695 6.44043C10.2695 4.71777 8.84766 3.2959 7.125 3.2959ZM7.125 8.49121C6.00391 8.49121 5.07422 7.58887 5.07422 6.44043C5.07422 5.31934 5.97656 4.41699 7.125 4.41699C8.24609 4.41699 9.14844 5.31934 9.14844 6.44043C9.14844 7.58887 8.24609 8.49121 7.125 8.49121ZM11.1172 3.18652C11.1172 2.77637 10.7891 2.44824 10.3789 2.44824C9.96875 2.44824 9.64062 2.77637 9.64062 3.18652C9.64062 3.59668 9.96875 3.9248 10.3789 3.9248C10.7891 3.9248 11.1172 3.59668 11.1172 3.18652ZM13.1953 3.9248C13.1406 2.94043 12.9219 2.06543 12.2109 1.35449C11.5 0.643555 10.625 0.424805 9.64062 0.370117C8.62891 0.31543 5.59375 0.31543 4.58203 0.370117C3.59766 0.424805 2.75 0.643555 2.01172 1.35449C1.30078 2.06543 1.08203 2.94043 1.02734 3.9248C0.972656 4.93652 0.972656 7.97168 1.02734 8.9834C1.08203 9.96777 1.30078 10.8154 2.01172 11.5537C2.75 12.2646 3.59766 12.4834 4.58203 12.5381C5.59375 12.5928 8.62891 12.5928 9.64062 12.5381C10.625 12.4834 11.5 12.2646 12.2109 11.5537C12.9219 10.8154 13.1406 9.96777 13.1953 8.9834C13.25 7.97168 13.25 4.93652 13.1953 3.9248ZM11.8828 10.0498C11.6914 10.5967 11.2539 11.0068 10.7344 11.2256C9.91406 11.5537 8 11.4717 7.125 11.4717C6.22266 11.4717 4.30859 11.5537 3.51562 11.2256C2.96875 11.0068 2.55859 10.5967 2.33984 10.0498C2.01172 9.25684 2.09375 7.34277 2.09375 6.44043C2.09375 5.56543 2.01172 3.65137 2.33984 2.83105C2.55859 2.31152 2.96875 1.90137 3.51562 1.68262C4.30859 1.35449 6.22266 1.43652 7.125 1.43652C8 1.43652 9.91406 1.35449 10.7344 1.68262C11.2539 1.87402 11.6641 2.31152 11.8828 2.83105C12.2109 3.65137 12.1289 5.56543 12.1289 6.44043C12.1289 7.34277 12.2109 9.25684 11.8828 10.0498Z"></path>
+      </svg>
+      <span>Instagram</span>
+    </button>
+  </section><!-- /.instagram container -->
+</main>
+
+<hr class="mt-2 text-secondary">
+
+    <%- include('partials/footer') %>
+    <%- include('partials/icons') %>
+    <%- include('partials/login_form') %>
+    <%- include('partials/cart_drawer') %>
+    <%- include('partials/quick_view') %>
+    <%- include('partials/sitemap') %>
+
+<!-- Go To Top -->
+<div id="scrollTop" class="visually-hidden end-0"></div>
+
+<!-- Page Overlay -->
+<div class="page-overlay"></div><!-- /.page-overlay -->
+
+
+<!--  &lt;!&ndash; External JavaScripts &ndash;&gt;-->
+<script src="/mixishop/js/plugins/jquery.min.js"></script>
+<script src="/mixishop/js/plugins/bootstrap.bundle.min.js"></script>
+<script src="/mixishop/js/plugins/bootstrap-slider.min.js"></script>
+
+<script src="/mixishop/js/plugins/swiper.min.js"></script>
+<script src="/mixishop/js/plugins/countdown.js"></script>
+
+<!-- Footer Scripts -->
+<script src="/mixishop/js/theme.js"></script>
+
+<script>
+  function changeColor(swatch) {
+    const dataImages = swatch.getAttribute('data-images');
+    const images = dataImages ? dataImages.split(',') : [];
+
+    const productCard = swatch.closest('.product-card');
+
+    const firstImage = productCard.querySelector('.pc__img');
+    const secondImage = productCard.querySelector('.pc__img-second');
+
+    if (!firstImage || !secondImage) {
+      console.error('Không tìm thấy phần tử .pc__img hoặc .pc__img-second trong sản phẩm');
+      return;
+    }
+
+    if (images.length > 0) {
+      firstImage.src = images[0];
+      secondImage.src = images.length > 1 ? images[1] : images[0];
+    } else {
+      firstImage.src = 'path/to/default/image.png';
+      secondImage.src = 'path/to/default/image.png';
+    }
+
+    const swatchColors = productCard.querySelectorAll('.swatch-color');
+    swatchColors.forEach(color => color.classList.remove('swatch_active'));
+    swatch.classList.add('swatch_active');
+  }
+</script>
+
+</body>
+
+<!-- Mirrored from uomo-html.flexkitux.com/Demo3/index.html by HTTrack Website Copier/3.x [XR&CO'2014], Sat, 19 Oct 2024 06:53:32 GMT -->
+</html>

@@ -1,0 +1,43 @@
+<% layout('layouts/admin') %>
+<% const P = (typeof product !== 'undefined' && product) ? product : null; %>
+<section class="space-y-6" x-data="{ variants: <%- JSON.stringify(P && P.variants ? P.variants : [{sku:'', price:'', stock_quantity:''}]) %> }">
+  <div class="flex items-center justify-between">
+    <h2 class="text-xl font-semibold"><%= P ? 'Chỉnh sửa sản phẩm' : 'Thêm sản phẩm' %></h2>
+    <a class="btn ghost" href="/admin/products">Quay lại</a>
+  </div>
+
+  <form class="card space-y-4" method="post" action="<%= P ? '/admin/products/'+P._id : '/admin/products' %>">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div><label class="label">Tên sản phẩm</label><input class="input" name="name" value="<%= P ? (P.name || '') : '' %>" required></div>
+      <div><label class="label">Slug</label><input class="input" name="slug" value="<%= P ? (P.slug || '') : '' %>"></div>
+      <div><label class="label">Thương hiệu</label><select class="input" name="brand">
+        <% (brands||[]).forEach(b=>{ %><option value="<%= b._id %>" <%= (P && String(P.brand)===String(b._id)) ? 'selected' : '' %>><%= b.name %></option><% }) %>
+      </select></div>
+      <div><label class="label">Danh mục</label><select class="input" name="category">
+        <% (categories||[]).forEach(c=>{ %><option value="<%= c._id %>" <%= (P && String(P.category)===String(c._id)) ? 'selected' : '' %>><%= c.name %></option><% }) %>
+      </select></div>
+      <div class="md:col-span-2"><label class="label">Mô tả ngắn</label><textarea class="input" rows="3" name="short_description"><%= P ? (P.short_description || '') : '' %></textarea></div>
+      <div class="md:col-span-2"><label class="label">Mô tả dài</label><textarea class="input" rows="5" name="long_description"><%= P ? (P.long_description || '') : '' %></textarea></div>
+      <div><label class="label">Trạng thái</label>
+        <select class="input" name="statusName">
+          <% ['Bán chạy','Trending','New'].forEach(s=>{ %><option value="<%= s %>" <%= (P && P.productStatus && P.productStatus.statusName===s)?'selected':'' %>><%= s %></option><% }) %>
+        </select>
+      </div>
+    </div>
+
+    <div class="space-y-2">
+      <div class="font-medium">Biến thể nhanh</div>
+      <template x-for="(v,idx) in variants" :key="idx">
+        <div class="grid grid-cols-12 gap-3">
+          <input class="input col-span-3" placeholder="SKU" x-model="v.sku" :name="'variants['+idx+'][sku]'">
+          <input class="input col-span-3" placeholder="Giá" x-model="v.price" :name="'variants['+idx+'][price]'">
+          <input class="input col-span-3" placeholder="Tồn kho" x-model="v.stock_quantity" :name="'variants['+idx+'][stock_quantity]'">
+          <button type="button" class="btn col-span-3" @click="variants.splice(idx,1)" x-show="variants.length>1">Xóa</button>
+        </div>
+      </template>
+      <button type="button" class="btn" @click="variants.push({sku:'',price:'',stock_quantity:''})"><i class="lucide lucide-plus mr-2"></i>Thêm biến thể</button>
+    </div>
+
+    <div class="flex justify-end gap-2"><a class="btn ghost" href="/admin/products">Hủy</a><button class="btn-primary">Lưu</button></div>
+  </form>
+</section>

@@ -1,0 +1,44 @@
+<% layout('layouts/admin') %>
+<section class="space-y-6" x-data="{ open:false }">
+  <div class="flex items-center justify-between">
+    <h2 class="text-xl font-semibold">Mã giảm giá</h2>
+    <button @click="open=true" class="btn-primary"><i class="lucide lucide-plus mr-2"></i>Tạo mã</button>
+  </div>
+
+  <div class="card overflow-x-auto">
+    <table class="w-full text-sm">
+      <thead><tr class="text-left text-slate-500 uppercase text-[11px]">
+        <th class="p-2">Mã</th><th class="p-2">Giá trị</th><th class="p-2">Số lần dùng</th><th class="p-2">Trạng thái</th><th class="p-2">Ngày tạo</th><th class="p-2 w-24"></th>
+      </tr></thead>
+      <tbody>
+        <% (items||[]).forEach(d=>{ %>
+        <tr class="border-t hover:bg-slate-50/70">
+          <td class="p-2 font-mono"><%= d.code %></td>
+          <td class="p-2"><%= d.discount_value %>%</td>
+          <td class="p-2"><%= d.usage_count %>/<%= d.usage_limit %></td>
+          <td class="p-2"><span class="px-2 py-1 rounded text-xs <%= d.is_active ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-500' %>"><%= d.is_active ? 'Active' : 'Inactive' %></span></td>
+          <td class="p-2"><%= new Date(d.createdAt).toLocaleString('vi-VN') %></td>
+          <td class="p-2 text-right">
+            <form action="/admin/discounts/<%= d.code %>/delete" method="post" onsubmit="return confirm('Xóa mã này?')">
+              <button class="btn sm" type="submit">Xóa</button>
+            </form>
+          </td>
+        </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+
+  <div x-show="open" x-cloak class="fixed inset-0 bg-black/30 grid place-items-center p-4">
+    <form method="post" action="/admin/discounts" class="bg-white rounded-2xl w-full max-w-lg p-6 space-y-4">
+      <div class="text-lg font-semibold">Tạo mã giảm giá</div>
+      <div class="grid grid-cols-2 gap-3">
+        <div><label class="label">Mã (5 ký tự)</label><input class="input" required minlength="5" maxlength="5" name="code" placeholder="ABCDE"></div>
+        <div><label class="label">Giá trị (%)</label><input class="input" name="discount_value" type="number" min="1" max="100" required></div>
+        <div><label class="label">Giới hạn dùng</label><input class="input" name="usage_limit" type="number" min="1" max="10" required></div>
+        <div class="flex items-end"><label class="inline-flex items-center gap-2"><input type="checkbox" name="is_active" checked><span>Kích hoạt</span></label></div>
+      </div>
+      <div class="flex justify-end gap-2"><button type="button" @click="open=false" class="btn ghost">Hủy</button><button class="btn-primary">Tạo</button></div>
+    </form>
+  </div>
+</section>
