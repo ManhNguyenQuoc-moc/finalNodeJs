@@ -5,12 +5,24 @@ const engine = require('ejs-mate');
 
 const app = express();
 
-/* ---------------- View & static ---------------- */
+/* ---------------- View & static (KHỚP cấu trúc src/admin_views & src/admin_public) ---------------- */
+// Nếu file này đặt ở: FrontEnd/src/server.js  -> __dirname = FrontEnd/src
+// => views ở:        FrontEnd/src/admin_views/views
+// => static ở:       FrontEnd/src/admin_public/{css,js}
+const ROOT = __dirname;
+const VIEWS_DIR = path.join(ROOT, 'admin_views', 'views');
+const STATIC_DIR = path.join(ROOT, 'admin_public');
+
 app.engine('ejs', engine);
 app.set('view engine', 'ejs');
-app.set('views', path.join(__dirname, 'views'));
-app.use('/css', express.static(path.join(__dirname, 'public/css')));
-app.use('/js', express.static(path.join(__dirname, 'public/js')));
+app.set('views', VIEWS_DIR);
+
+// Mount static cho cả 2 prefix để hợp với mọi layout hiện có
+app.use('/css',        express.static(path.join(STATIC_DIR, 'css')));
+app.use('/js',         express.static(path.join(STATIC_DIR, 'js')));
+app.use('/admin/css',  express.static(path.join(STATIC_DIR, 'css')));
+app.use('/admin/js',   express.static(path.join(STATIC_DIR, 'js')));
+
 app.use(express.urlencoded({ extended: true }));
 
 /* ---------------- Helpers (locals) ---------------- */
@@ -187,9 +199,9 @@ app.post('/admin/product-variants/:id/delete',(req,res)=>{PRODUCT_VARIANTS=PRODU
 app.get('/admin/product-colors',(req,res)=>{const p=paginate(PRODUCT_COLORS,1,50); res.render('entity_index',{title:'Màu sắc',pageHeading:'Màu sắc',items:p.items,fields:['product','color_name','color_code','createdAt'],pagination:{...p,baseUrl:'/admin/product-colors?page='}});});
 app.get('/admin/product-colors/new',(req,res)=>res.render('entity_form',{title:'Thêm màu',pageHeading:'Thêm màu',item:null,fields:['product','color_name','color_code'],actionBase:'/admin/product-colors'}));
 app.get('/admin/product-colors/:id',(req,res)=>{const item=PRODUCT_COLORS.find(x=>x._id==req.params.id); if(!item) return res.status(404).send('Not found'); res.render('entity_form',{title:'Sửa màu',pageHeading:'Sửa màu',item,fields:['product','color_name','color_code'],actionBase:'/admin/product-colors'});});
+app.post('/admin/product-colors/:id/delete',(req,res)=>{PRODUCT_COLORS=PRODUCT_COLORS.filter(x=>x._id!=req.params.id); res.redirect('/admin/product-colors');});
 app.post('/admin/product-colors',(req,res)=>{PRODUCT_COLORS.unshift({_id:'pc'+Date.now(),product:req.body.product,color_name:req.body.color_name,color_code:req.body.color_code,createdAt:new Date()}); res.redirect('/admin/product-colors');});
 app.post('/admin/product-colors/:id',(req,res)=>{const i=PRODUCT_COLORS.findIndex(x=>x._id==req.params.id); if(i>-1){PRODUCT_COLORS[i]={...PRODUCT_COLORS[i],product:req.body.product,color_name:req.body.color_name,color_code:req.body.color_code}} res.redirect('/admin/product-colors');});
-app.post('/admin/product-colors/:id/delete',(req,res)=>{PRODUCT_COLORS=PRODUCT_COLORS.filter(x=>x._id!=req.params.id); res.redirect('/admin/product-colors');});
 
 app.get('/admin/product-sizes',(req,res)=>{const p=paginate(PRODUCT_SIZES,1,50); res.render('entity_index',{title:'Kích cỡ',pageHeading:'Kích cỡ',items:p.items,fields:['product','size_name','size_order','createdAt'],pagination:{...p,baseUrl:'/admin/product-sizes?page='}});});
 app.get('/admin/product-sizes/new',(req,res)=>res.render('entity_form',{title:'Thêm size',pageHeading:'Thêm size',item:null,fields:['product','size_name','size_order'],actionBase:'/admin/product-sizes'}));
@@ -198,7 +210,7 @@ app.post('/admin/product-sizes',(req,res)=>{PRODUCT_SIZES.unshift({_id:'ps'+Date
 app.post('/admin/product-sizes/:id',(req,res)=>{const i=PRODUCT_SIZES.findIndex(x=>x._id==req.params.id); if(i>-1){PRODUCT_SIZES[i]={...PRODUCT_SIZES[i],product:req.body.product,size_name:req.body.size_name,size_order:Number(req.body.size_order||0)}} res.redirect('/admin/product-sizes');});
 app.post('/admin/product-sizes/:id/delete',(req,res)=>{PRODUCT_SIZES=PRODUCT_SIZES.filter(x=>x._id!=req.params.id); res.redirect('/admin/product-sizes');});
 
-/* ---------------- Brands / Categories (dùng entity_* generic) ---------------- */
+/* ---------------- Brands / Categories (generic) ---------------- */
 app.get('/admin/brands',(req,res)=>{const p=paginate(BRANDS,1,100); res.render('entity_index',{title:'Thương hiệu',pageHeading:'Thương hiệu',items:p.items,fields:['name','slug','createdAt'],pagination:{...p,baseUrl:'/admin/brands?page='}});});
 app.get('/admin/brands/new',(req,res)=>res.render('entity_form',{title:'Thêm thương hiệu',pageHeading:'Thêm thương hiệu',item:null,fields:['name','slug'],actionBase:'/admin/brands'}));
 app.get('/admin/brands/:id',(req,res)=>{const item=BRANDS.find(x=>x._id==req.params.id); if(!item) return res.status(404).send('Not found'); res.render('entity_form',{title:'Sửa thương hiệu',pageHeading:'Sửa thương hiệu',item,fields:['name','slug'],actionBase:'/admin/brands'});});
@@ -324,7 +336,7 @@ app.post('/admin/account/password', (req, res) => {
 });
 
 app.post('/admin/logout', (req, res) => {
-  res.redirect('/admin?s=Đã đăng xuất'); // (trước bị thừa khoảng trắng sau '?')
+  res.redirect('/admin?s=Đã đăng xuất');
 });
 
 /* ---------------- Root ---------------- */
