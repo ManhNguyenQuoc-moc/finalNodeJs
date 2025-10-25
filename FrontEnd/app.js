@@ -1,321 +1,424 @@
-const express = require('express');
-const path = require('path');
-const bodyParser = require('body-parser');
-const session = require('express-session');
-const multer = require('multer');
-const fs = require('fs');
+// app.js
+const express = require("express");
+const path = require("path");
+const bodyParser = require("body-parser");
+const session = require("express-session");
+const multer = require("multer");
+const fs = require("fs");
+
 const app = express();
-const http = require('http');
-const { Server } = require('socket.io');
 
 // ============ Reviews & Ratings (in-memory) ============
 const reviewsDB = {}; // productId -> [{id,user,message,createdAt}]
 const ratingsDB = {}; // productId -> { byUser: { [email]: stars } }
-
-function getRatingStats(productId){
+function getRatingStats(productId) {
   const byUser = ratingsDB[productId]?.byUser || {};
   const scores = Object.values(byUser);
-  const avg = scores.length ? scores.reduce((a,b)=>a+b,0)/scores.length : 0;
+  const avg = scores.length
+    ? scores.reduce((a, b) => a + b, 0) / scores.length
+    : 0;
   return { avg: +avg.toFixed(2), count: scores.length };
 }
 
+// View engine & static
+app.set("view engine", "ejs");
+app.set("views", path.join(__dirname, "views"));
+app.use(express.static(path.join(__dirname, "public")));
 
-// Cấu hình EJS
-app.set('view engine', 'ejs');
-app.set('views', path.join(__dirname, 'views'));
-
-// Phục vụ file tĩnh (CSS, JS, images)
-app.use(express.static(path.join(__dirname, 'public')));
-
-// Middleware để parse form data và JSON
+// Parsers
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
-// Cấu hình session
-app.use(session({
-  secret: 'your-secret-key',
-  resave: false,
-  saveUninitialized: true
-}));
+// Session (MemoryStore đủ cho demo/Docker)
+app.use(
+  session({
+    secret: process.env.SESSION_SECRET || "your-secret-key",
+    resave: false,
+    saveUninitialized: true,
+  })
+);
 
-// Cấu hình multer cho upload file
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, 'public/mixishop/images/categories/');
-  },
-  filename: function (req, file, cb) {
-    cb(null, Date.now() + '-' + file.originalname);
-  }
+app.use((req, res, next) => {
+  // Lấy dữ liệu hiện có từ helper của bạn
+  // (getRenderData đã tính carts, total, categories, v.v.)
+  const data = (() => {
+    try {
+      return typeof getRenderData === "function" ? getRenderData(req) : {};
+    } catch {
+      return {};
+    }
+  })();
+
+  // Trải các biến vào res.locals, đặt mặc định an toàn
+  res.locals.carts = Array.isArray(data.carts) ? data.carts : [];
+  res.locals.cartCount =
+    typeof data.cartCount === "number"
+      ? data.cartCount
+      : res.locals.carts.length;
+
+  res.locals.total = typeof data.total === "number" ? data.total : 0;
+
+  // Các biến hay dùng khác
+  res.locals.categories = Array.isArray(data.categories) ? data.categories : [];
+  res.locals.wishlistCount =
+    typeof data.wishlistCount === "number" ? data.wishlistCount : 0;
+  res.locals.loggedInUser = !!data.loggedInUser;
+
+  next();
 });
-const upload = multer({ storage: storage });
 
-// Middleware kiểm tra đăng nhập
-const requireLogin = (req, res, next) => {
-  if (!req.session.user) {
-    return res.redirect('/login-register');
-  }
+// Multer storage (đảm bảo thư mục tồn tại trong container)
+const uploadDir = path.join(__dirname, "public/mixishop/images/categories");
+fs.mkdirSync(uploadDir, { recursive: true });
+
+const storage = multer.diskStorage({
+  destination: function (_req, _file, cb) {
+    cb(null, uploadDir);
+  },
+  filename: function (_req, file, cb) {
+    cb(null, Date.now() + "-" + file.originalname);
+  },
+});
+const upload = multer({ storage });
+
+// Auth guard
+const requireLogin = (req, _res, next) => {
+  if (!req.session.user) return next(); // cho demo FE, không chặn
   next();
 };
 
-// Giả lập cơ sở dữ liệu người dùng (in-memory)
+// ===== Mock DB / services (giữ nguyên logic cũ) =====
 const users = [
-  { email: 'test@example.com', password: 'password', name: 'Test User', phone: '123456789', address: '123 Main St' }
+  {
+    email: "test@example.com",
+    password: "password",
+    name: "Test User",
+    phone: "123456789",
+    address: "123 Main St",
+  },
 ];
 
-// Giả lập cơ sở dữ liệu giỏ hàng (in-memory)
 const cartsDB = [];
-
-// Giả lập cơ sở dữ liệu đơn hàng (in-memory)
 const ordersDB = [
   {
     id: 2416,
-    userId: 'test@example.com',
-    orderDate: 'October 1, 2023',
-    paymentMethod: 'Credit Card',
-    status: 'On hold',
-    totalAmount: '$250 for 3 items',
+    userId: "test@example.com",
+    orderDate: "October 1, 2023",
+    paymentMethod: "Credit Card",
+    status: "On hold",
+    totalAmount: "$250 for 3 items",
     items: [
-      { productName: 'Áo Thun Đen', color: 'Red', size: 'M', quantity: 2, price: '$100', subtotal: '$200' },
-      { productName: 'Quần Jeans', color: 'Blue', size: 'L', quantity: 1, price: '$50', subtotal: '$50' }
-    ]
-  }
+      {
+        productName: "Áo Thun Đen",
+        color: "Red",
+        size: "M",
+        quantity: 2,
+        price: "$100",
+        subtotal: "$200",
+      },
+      {
+        productName: "Quần Jeans",
+        color: "Blue",
+        size: "L",
+        quantity: 1,
+        price: "$50",
+        subtotal: "$50",
+      },
+    ],
+  },
 ];
 
-
-
-// Giả lập cơ sở dữ liệu categories (in-memory)
 let categoriesDB = [
-  { id: 1, name: 'Category 1', imageUrl: '/mixishop/images/cat1.jpg', status: 1 },
-  { id: 2, name: 'Category 2', imageUrl: '/mixishop/images/cat2.jpg', status: 1 }
+  {
+    id: 1,
+    name: "Category 1",
+    imageUrl: "/mixishop/images/cat1.jpg",
+    status: 1,
+  },
+  {
+    id: 2,
+    name: "Category 2",
+    imageUrl: "/mixishop/images/cat2.jpg",
+    status: 1,
+  },
 ];
 
-// Giả lập các service
 const orderService = {
-  getOrdersByUserId: (userId) => {
-    return ordersDB.filter(order => order.userId === userId);
-  },
-  getOrderById: (orderId, userId) => {
-    return ordersDB.find(order => order.id === parseInt(orderId) && order.userId === userId);
-  },
+  getOrdersByUserId: (userId) => ordersDB.filter((o) => o.userId === userId),
+  getOrderById: (orderId, userId) =>
+    ordersDB.find((o) => o.id === parseInt(orderId) && o.userId === userId),
   createOrderFromCart: (userId) => {
     const carts = cartService.getCartItems(userId);
     if (carts.length === 0) return null;
-    const totalAmount = carts.reduce((sum, cart) => sum + cart.productColor.product.price * cart.quantity, 0);
+    const totalAmount = carts.reduce(
+      (s, c) => s + c.productColor.product.price * c.quantity,
+      0
+    );
     const order = {
       id: ordersDB.length + 1,
       userId,
-      orderDate: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }),
-      paymentMethod: 'Credit Card',
-      status: 'On hold',
+      orderDate: new Date().toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      }),
+      paymentMethod: "Credit Card",
+      status: "On hold",
       totalAmount: `$${totalAmount} for ${carts.length} items`,
-      items: carts.map(cart => ({
+      items: carts.map((cart) => ({
         productName: cart.productColor.product.name,
         color: cart.productColor.color,
         size: cart.productSize.size,
         quantity: cart.quantity,
-        price: cart.productColor.product.getFormattedPrice(cart.productColor.product.price),
-        subtotal: cart.productColor.product.getFormattedPrice(cart.productColor.product.price * cart.quantity)
-      }))
+        price: cart.productColor.product.getFormattedPrice(
+          cart.productColor.product.price
+        ),
+        subtotal: cart.productColor.product.getFormattedPrice(
+          cart.productColor.product.price * cart.quantity
+        ),
+      })),
     };
     ordersDB.push(order);
-    // Xóa giỏ hàng của user
-    cartsDB.splice(0, cartsDB.length, ...cartsDB.filter(cart => cart.userId !== userId));
+    // clear cart user
+    for (let i = cartsDB.length - 1; i >= 0; i--) {
+      if (cartsDB[i].userId === userId) cartsDB.splice(i, 1);
+    }
     return order;
-  }
+  },
 };
 
-const cartService = {
-  getCartItems: (userId) => {
-    return userId ? cartsDB.filter(cart => cart.userId === userId) : [
-      { 
-        id: 1, 
-        productSize: { product: { id: 1, name: 'Áo Thun Đen', price: 100, getFormattedPrice: (price) => `$${price}` }, size: 'M' }, 
-        productColor: { color: 'Red', imageUrls: ['/mixishop/images/product1-1.jpg'], product: { id: 1, name: 'Áo Thun Đen', price: 100, getFormattedPrice: (price) => `$${price}` } }, 
-        quantity: 2 
-      },
-      { 
-        id: 2, 
-        productSize: { product: { id: 2, name: 'Quần Jeans', price: 50, getFormattedPrice: (price) => `$${price}` }, size: 'L' }, 
-        productColor: { color: 'Blue', imageUrls: ['/mixishop/images/product2-1.jpg'], product: { id: 2, name: 'Quần Jeans', price: 50, getFormattedPrice: (price) => `$${price}` } }, 
-        quantity: 1 
-      }
-    ];
-  },
-  addToCart: (userId, productId, size, color, quantity) => {
-    const product = productService.getProductById(productId);
-    if (!product) return false;
-    const cartItem = {
-      id: cartsDB.length + 1,
-      userId,
-      productSize: { product: { id: product.id, name: product.name, price: product.price, getFormattedPrice: product.getFormattedPrice }, size },
-      productColor: { color, imageUrls: product.colors.find(c => c.color === color)?.imageUrls || [], product: { id: product.id, name: product.name, price: product.price, getFormattedPrice: product.getFormattedPrice } },
-      quantity: parseInt(quantity)
-    };
-    cartsDB.push(cartItem);
-    return true;
-  },
-  removeCartItem: (cartId) => {
-    const index = cartsDB.findIndex(cart => cart.id === parseInt(cartId));
-    if (index === -1) return false;
-    cartsDB.splice(index, 1);
-    return true;
-  },
-  updateCartItem: (cartId, quantity) => {
-    const cartItem = cartsDB.find(cart => cart.id === parseInt(cartId));
-    if (!cartItem) return false;
-    cartItem.quantity = parseInt(quantity);
-    return true;
-  }
-};
-
-// ============ Dữ liệu sản phẩm dùng chung ============
 const productsData = [
-  { 
-    id: 1, 
-    name: "Áo Thun Đen", 
+  {
+    id: 1,
+    name: "Áo Thun Đen",
     brand: { name: "Mixi" },
-    price: 100, 
-    description: "Áo thun cotton thoáng mát.\nPhom regular.\nBo cổ bền.\nIn bền màu.\nPhối đồ đa dụng.",
+    price: 100,
+    description:
+      "Áo thun cotton thoáng mát.\nPhom regular.\nBo cổ bền.\nIn bền màu.\nPhối đồ đa dụng.",
     productStatus: { statusName: "Bán chạy" },
     sizes: [{ size: "S" }, { size: "M" }, { size: "L" }],
     colors: [
-      { color: "Red",   imageUrls: ["/mixishop/images/products/ao2023.png", "/mixishop/images/products/ao2024.png", "/mixishop/images/products/ao20241.png"] },
-      { color: "Black", imageUrls: ["/mixishop/images/products/ao3loMixi.png", "/mixishop/images/products/ao20242.png", "/mixishop/images/products/ao20243.png"] }
+      {
+        color: "Red",
+        imageUrls: [
+          "/mixishop/images/products/ao2023.png",
+          "/mixishop/images/products/ao2024.png",
+          "/mixishop/images/products/ao20241.png",
+        ],
+      },
+      {
+        color: "Black",
+        imageUrls: [
+          "/mixishop/images/products/ao3loMixi.png",
+          "/mixishop/images/products/ao20242.png",
+          "/mixishop/images/products/ao20243.png",
+        ],
+      },
     ],
-    category: { id: 1, name: 'Category 1' },
-    stock: { "Red": { "S": 10, "M": 5, "L": 0 }, "Black": { "S": 8, "M": 3, "L": 2 } },
-    getFormattedPrice: (price) => `$${price}`
+    category: { id: 1, name: "Category 1" },
+    stock: { Red: { S: 10, M: 5, L: 0 }, Black: { S: 8, M: 3, L: 2 } },
+    getFormattedPrice: (price) => `$${price}`,
   },
-  { 
-    id: 2, 
-    name: "Quần Jeans", 
+  {
+    id: 2,
+    name: "Quần Jeans",
     brand: { name: "DenimCo" },
-    price: 200, 
-    description: "Jeans nam co giãn nhẹ.\nForm vừa vặn.\nBạc màu nhẹ.\nKhóa kéo kim loại.\nỐng đứng dễ mặc.",
+    price: 200,
+    description:
+      "Jeans nam co giãn nhẹ.\nForm vừa vặn.\nBạc màu nhẹ.\nKhóa kéo kim loại.\nỐng đứng dễ mặc.",
     productStatus: { statusName: "Trending" },
     sizes: [{ size: "M" }, { size: "L" }, { size: "XL" }],
     colors: [
-      { color: "Red",   imageUrls: ["/mixishop/images/products/ao2023.png", "/mixishop/images/products/ao2024.png", "/mixishop/images/products/ao20241.png"] },
-      { color: "Black", imageUrls: ["/mixishop/images/products/ao3loMixi.png", "/mixishop/images/products/ao20242.png", "/mixishop/images/products/ao20243.png"] }
+      {
+        color: "Red",
+        imageUrls: [
+          "/mixishop/images/products/ao2023.png",
+          "/mixishop/images/products/ao2024.png",
+          "/mixishop/images/products/ao20241.png",
+        ],
+      },
+      {
+        color: "Black",
+        imageUrls: [
+          "/mixishop/images/products/ao3loMixi.png",
+          "/mixishop/images/products/ao20242.png",
+          "/mixishop/images/products/ao20243.png",
+        ],
+      },
     ],
-    category: { id: 2, name: 'Category 2' },
-    stock: { "Blue": { "M": 15, "L": 7, "XL": 4 }, "Black": { "M": 6, "L": 2, "XL": 0 } },
-    getFormattedPrice: (price) => `$${price}`
+    category: { id: 2, name: "Category 2" },
+    stock: { Blue: { M: 15, L: 7, XL: 4 }, Black: { M: 6, L: 2, XL: 0 } },
+    getFormattedPrice: (price) => `$${price}`,
   },
-  { 
-    id: 3, 
-    name: "Áo Khoác", 
+  {
+    id: 3,
+    name: "Áo Khoác",
     brand: { name: "OuterWear" },
-    price: 300, 
-    description: "Áo khoác ấm, cản gió.\nVải dệt dày.\nKhóa kéo trơn mượt.\nNhiều túi tiện lợi.\nĐi làm/đi chơi đều hợp.",
+    price: 300,
+    description:
+      "Áo khoác ấm, cản gió.\nVải dệt dày.\nKhóa kéo trơn mượt.\nNhiều túi tiện lợi.\nĐi làm/đi chơi đều hợp.",
     productStatus: { statusName: "New" },
     sizes: [{ size: "S" }, { size: "M" }],
     colors: [
-      { color: "Red",   imageUrls: ["/mixishop/images/products/ao2023.png", "/mixishop/images/products/ao2024.png", "/mixishop/images/products/ao20241.png"] },
-      { color: "Black", imageUrls: ["/mixishop/images/products/ao3loMixi.png", "/mixishop/images/products/ao20242.png", "/mixishop/images/products/ao20243.png"] }
+      {
+        color: "Red",
+        imageUrls: [
+          "/mixishop/images/products/ao2023.png",
+          "/mixishop/images/products/ao2024.png",
+          "/mixishop/images/products/ao20241.png",
+        ],
+      },
+      {
+        color: "Black",
+        imageUrls: [
+          "/mixishop/images/products/ao3loMixi.png",
+          "/mixishop/images/products/ao20242.png",
+          "/mixishop/images/products/ao20243.png",
+        ],
+      },
     ],
-    category: { id: 1, name: 'Category 1' },
-    stock: { "Green": { "S": 12, "M": 8 }, "Black": { "S": 4, "M": 3 } },
-    getFormattedPrice: (price) => `$${price}`
-  }
+    category: { id: 1, name: "Category 1" },
+    stock: { Green: { S: 12, M: 8 }, Black: { S: 4, M: 3 } },
+    getFormattedPrice: (price) => `$${price}`,
+  },
 ];
 
 const productService = {
   _data: productsData,
-
-  _paged(list, pageNo, pageSize = 12){
+  _paged(list, pageNo, pageSize = 12) {
     const totalPages = Math.max(Math.ceil(list.length / pageSize), 1);
     const content = list.slice((pageNo - 1) * pageSize, pageNo * pageSize);
-    return { content, number: pageNo - 1, totalPages, hasPrevious: pageNo > 1, hasNext: pageNo < totalPages };
+    return {
+      content,
+      number: pageNo - 1,
+      totalPages,
+      hasPrevious: pageNo > 1,
+      hasNext: pageNo < totalPages,
+    };
   },
-
-  getAllProducts(pageNo, sort, priceMin, priceMax, pageSize = 12){
-    let products = this._data.filter(p => p.price >= priceMin && p.price <= priceMax);
-
-    if (sort === 'a_z')                     products.sort((a,b)=> a.name.localeCompare(b.name));
-    else if (sort === 'z_a')                products.sort((a,b)=> b.name.localeCompare(a.name)); // ✅ FIX
-    else if (sort === 'price_low_to_high')  products.sort((a,b)=> a.price - b.price);
-    else if (sort === 'price_high_to_low')  products.sort((a,b)=> b.price - a.price);
-
+  getAllProducts(pageNo, sort, priceMin, priceMax, pageSize = 12) {
+    let products = this._data.filter(
+      (p) => p.price >= priceMin && p.price <= priceMax
+    );
+    if (sort === "a_z") products.sort((a, b) => a.name.localeCompare(b.name));
+    else if (sort === "z_a")
+      products.sort((a, b) => b.name.localeCompare(a.name));
+    else if (sort === "price_low_to_high")
+      products.sort((a, b) => a.price - b.price);
+    else if (sort === "price_high_to_low")
+      products.sort((a, b) => b.price - a.price);
     return this._paged(products, pageNo, pageSize);
   },
-
-  getProductsByCategoryId(categoryId, pageNo, sort, priceMin, priceMax, pageSize = 12){
-    let products = this._data.filter(p => p.category.id === categoryId && p.price >= priceMin && p.price <= priceMax);
-
-    if (sort === 'a_z')                     products.sort((a,b)=> a.name.localeCompare(b.name));
-    else if (sort === 'z_a')                products.sort((a,b)=> b.name.localeCompare(a.name));
-    else if (sort === 'price_low_to_high')  products.sort((a,b)=> a.price - b.price);
-    else if (sort === 'price_high_to_low')  products.sort((a,b)=> b.price - a.price);
-
+  getProductsByCategoryId(
+    categoryId,
+    pageNo,
+    sort,
+    priceMin,
+    priceMax,
+    pageSize = 12
+  ) {
+    let products = this._data.filter(
+      (p) =>
+        p.category.id === categoryId &&
+        p.price >= priceMin &&
+        p.price <= priceMax
+    );
+    if (sort === "a_z") products.sort((a, b) => a.name.localeCompare(b.name));
+    else if (sort === "z_a")
+      products.sort((a, b) => b.name.localeCompare(a.name));
+    else if (sort === "price_low_to_high")
+      products.sort((a, b) => a.price - b.price);
+    else if (sort === "price_high_to_low")
+      products.sort((a, b) => b.price - a.price);
     return this._paged(products, pageNo, pageSize);
   },
-
-  getProductsByColor(color, pageNo, priceMin, priceMax){
-    let products = this._data.filter(p => p.price >= priceMin && p.price <= priceMax && p.colors.some(c=>c.color===color));
+  getProductsByColor(color, pageNo, priceMin, priceMax) {
+    let products = this._data.filter(
+      (p) =>
+        p.price >= priceMin &&
+        p.price <= priceMax &&
+        p.colors.some((c) => c.color === color)
+    );
     return this._paged(products, pageNo);
   },
-
-  getProductsByColorAndCategoryId(color, categoryId, priceMin, priceMax, pageNo){
-    let products = this._data.filter(p => p.category.id===categoryId && p.price >= priceMin && p.price <= priceMax && p.colors.some(c=>c.color===color));
+  getProductsByColorAndCategoryId(
+    color,
+    categoryId,
+    priceMin,
+    priceMax,
+    pageNo
+  ) {
+    let products = this._data.filter(
+      (p) =>
+        p.category.id === categoryId &&
+        p.price >= priceMin &&
+        p.price <= priceMax &&
+        p.colors.some((c) => c.color === color)
+    );
     return this._paged(products, pageNo);
   },
-
-  getProductById(id){
-    return this._data.find(p => p.id === parseInt(id)); // ✅ không phụ thuộc phân trang
+  getProductById(id) {
+    return this._data.find((p) => p.id === parseInt(id));
   },
-
-  checkStock(productId, color, size){
+  checkStock(productId, color, size) {
     const p = this.getProductById(productId);
     if (!p || !p.stock[color] || !p.stock[color][size]) return 0;
     return p.stock[color][size];
   },
-
-  searchProducts(keyword, pageNo, sort, priceMin, priceMax, pageSize = 12){
-    let products = this._data.filter(p => p.price >= priceMin && p.price <= priceMax);
-    if (keyword && keyword.trim()){
+  searchProducts(keyword, pageNo, sort, priceMin, priceMax, pageSize = 12) {
+    let products = this._data.filter(
+      (p) => p.price >= priceMin && p.price <= priceMax
+    );
+    if (keyword && keyword.trim()) {
       const q = keyword.toLowerCase();
-      products = products.filter(p => 
-        p.name.toLowerCase().includes(q) ||
-        p.description.toLowerCase().includes(q) ||
-        ((p.brand?.name || '').toLowerCase().includes(q))
+      products = products.filter(
+        (p) =>
+          p.name.toLowerCase().includes(q) ||
+          p.description.toLowerCase().includes(q) ||
+          (p.brand?.name || "").toLowerCase().includes(q)
       );
     }
-    if (sort === 'a_z')                     products.sort((a,b)=> a.name.localeCompare(b.name));
-    else if (sort === 'z_a')                products.sort((a,b)=> b.name.localeCompare(a.name));
-    else if (sort === 'price_low_to_high')  products.sort((a,b)=> a.price - b.price);
-    else if (sort === 'price_high_to_low')  products.sort((a,b)=> b.price - a.price);
-
+    if (sort === "a_z") products.sort((a, b) => a.name.localeCompare(b.name));
+    else if (sort === "z_a")
+      products.sort((a, b) => b.name.localeCompare(a.name));
+    else if (sort === "price_low_to_high")
+      products.sort((a, b) => a.price - b.price);
+    else if (sort === "price_high_to_low")
+      products.sort((a, b) => b.price - a.price);
     const paged = this._paged(products, pageNo, pageSize);
     return { ...paged, totalElements: products.length };
-  }
+  },
 };
 
 const categoryService = {
   getAllCategories: () => categoriesDB,
-  getAllActiveCategories: () => categoriesDB.filter(cat => cat.status === 1),
-  getCategoryById: (id) => categoriesDB.find(cat => cat.id === parseInt(id)),
+  getAllActiveCategories: () => categoriesDB.filter((c) => c.status === 1),
+  getCategoryById: (id) => categoriesDB.find((c) => c.id === parseInt(id)),
   addCategory: (name, imagePath, status) => {
-    const newId = categoriesDB.length > 0 ? Math.max(...categoriesDB.map(c => c.id)) + 1 : 1;
-    const newCategory = { id: newId, name, imageUrl: imagePath, status: parseInt(status) };
+    const newId = categoriesDB.length
+      ? Math.max(...categoriesDB.map((c) => c.id)) + 1
+      : 1;
+    const newCategory = {
+      id: newId,
+      name,
+      imageUrl: imagePath,
+      status: parseInt(status),
+    };
     categoriesDB.push(newCategory);
     return newCategory;
   },
   updateCategory: (id, name, imagePath, status) => {
-    const category = categoriesDB.find(cat => cat.id === parseInt(id));
+    const category = categoriesDB.find((c) => c.id === parseInt(id));
     if (!category) return false;
     category.name = name;
     if (imagePath) category.imageUrl = imagePath;
     category.status = parseInt(status);
     return true;
-  }
+  },
 };
 
-const wishlistService = {
-  getWishlistCount: () => 3
-};
+const wishlistService = { getWishlistCount: () => 3 };
 
-// Hàm trợ giúp để lấy dữ liệu render
 const getRenderData = (req) => {
   const userId = req.session.user ? req.session.user.email : null;
   const user = req.session.user || null;
@@ -323,7 +426,10 @@ const getRenderData = (req) => {
   const orders = orderService.getOrdersByUserId(userId);
   const categories = categoryService.getAllActiveCategories();
   const wishlistCount = wishlistService.getWishlistCount();
-  const total = carts.reduce((sum, cart) => sum + cart.productColor.product.price * cart.quantity, 0);
+  const total = carts.reduce(
+    (s, c) => s + c.productColor.product.price * c.quantity,
+    0
+  );
   return {
     user,
     carts,
@@ -333,565 +439,625 @@ const getRenderData = (req) => {
     total,
     formattedTotal: `$${total}`,
     loggedInUser: !!req.session.user,
-    isEmpty: carts.length === 0
+    isEmpty: carts.length === 0,
   };
 };
 
-// Admin Routes
-app.get('/admin', requireLogin, (req, res) => {
-  res.render('admin/dashboard_admin', { title: 'Trang chủ Admin' });
+const cartService = {
+  getCartItems: (userId) => {
+    return userId
+      ? cartsDB.filter((c) => c.userId === userId)
+      : [
+          {
+            id: 1,
+            productSize: {
+              product: {
+                id: 1,
+                name: "Áo Thun Đen",
+                price: 100,
+                getFormattedPrice: (p) => `$${p}`,
+              },
+              size: "M",
+            },
+            productColor: {
+              color: "Red",
+              imageUrls: ["/mixishop/images/product1-1.jpg"],
+              product: {
+                id: 1,
+                name: "Áo Thun Đen",
+                price: 100,
+                getFormattedPrice: (p) => `$${p}`,
+              },
+            },
+            quantity: 2,
+          },
+          {
+            id: 2,
+            productSize: {
+              product: {
+                id: 2,
+                name: "Quần Jeans",
+                price: 50,
+                getFormattedPrice: (p) => `$${p}`,
+              },
+              size: "L",
+            },
+            productColor: {
+              color: "Blue",
+              imageUrls: ["/mixishop/images/product2-1.jpg"],
+              product: {
+                id: 2,
+                name: "Quần Jeans",
+                price: 50,
+                getFormattedPrice: (p) => `$${p}`,
+              },
+            },
+            quantity: 1,
+          },
+        ];
+  },
+  addToCart: (userId, productId, size, color, quantity) => {
+    const product = productService.getProductById(productId);
+    if (!product) return false;
+    const cartItem = {
+      id: cartsDB.length + 1,
+      userId,
+      productSize: {
+        product: {
+          id: product.id,
+          name: product.name,
+          price: product.price,
+          getFormattedPrice: product.getFormattedPrice,
+        },
+        size,
+      },
+      productColor: {
+        color,
+        imageUrls:
+          product.colors.find((c) => c.color === color)?.imageUrls || [],
+        product: {
+          id: product.id,
+          name: product.name,
+          price: product.price,
+          getFormattedPrice: product.getFormattedPrice,
+        },
+      },
+      quantity: parseInt(quantity),
+    };
+    cartsDB.push(cartItem);
+    return true;
+  },
+  removeCartItem: (cartId) => {
+    const idx = cartsDB.findIndex((c) => c.id === parseInt(cartId));
+    if (idx === -1) return false;
+    cartsDB.splice(idx, 1);
+    return true;
+  },
+  updateCartItem: (cartId, quantity) => {
+    const item = cartsDB.find((c) => c.id === parseInt(cartId));
+    if (!item) return false;
+    item.quantity = parseInt(quantity);
+    return true;
+  },
+};
+
+// ===== Routes (giữ như bản bạn gửi, chỉ đổi io.emit -> global.io?.emit) =====
+app.get("/admin", requireLogin, (req, res) => {
+  res.render("admin/dashboard_admin", { title: "Trang chủ Admin" });
 });
 
-app.get('/admin/categogy', requireLogin, (req, res) => {
+app.get("/admin/categogy", requireLogin, (req, res) => {
   const categories = categoryService.getAllCategories();
-  res.render('admin/category', { title: 'Danh sách nhóm sản phẩm', categories });
+  res.render("admin/category", {
+    title: "Danh sách nhóm sản phẩm",
+    categories,
+  });
 });
 
-app.get('/admin/categogy/addCategogy', requireLogin, (req, res) => {
-  res.render('admin/category_add', { title: 'Thêm nhóm sản phẩm' });
+app.get("/admin/categogy/addCategogy", requireLogin, (_req, res) => {
+  res.render("admin/category_add", { title: "Thêm nhóm sản phẩm" });
 });
 
-app.post('/admin/addCategory', requireLogin, upload.single('image'), (req, res) => {
-  const { name, status } = req.body;
-  let imagePath = '/mixishop/images/categories/default.jpg'; // Default image
-  if (req.file) {
-    imagePath = '/mixishop/images/categories/' + req.file.filename;
+app.post(
+  "/admin/addCategory",
+  requireLogin,
+  upload.single("image"),
+  (req, res) => {
+    const { name, status } = req.body;
+    let imagePath = "/mixishop/images/categories/default.jpg";
+    if (req.file)
+      imagePath = "/mixishop/images/categories/" + req.file.filename;
+    categoryService.addCategory(name, imagePath, status);
+    res.redirect("/admin/categogy");
   }
-  categoryService.addCategory(name, imagePath, status);
-  res.redirect('/admin/categogy');
+);
+
+app.get("/admin/categogy/update/:id", requireLogin, (req, res) => {
+  const category = categoryService.getCategoryById(req.params.id);
+  if (!category) return res.status(404).send("Không tìm thấy nhóm sản phẩm");
+  res.render("admin/category_edit", {
+    title: "Chỉnh sửa nhóm sản phẩm",
+    category,
+  });
 });
 
-app.get('/admin/categogy/update/:id', requireLogin, (req, res) => {
-  const id = req.params.id;
-  const category = categoryService.getCategoryById(id);
-  if (!category) {
-    return res.status(404).send('Không tìm thấy nhóm sản phẩm');
+app.post(
+  "/admin/updateCategory",
+  requireLogin,
+  upload.single("image"),
+  (req, res) => {
+    const { id, name, status } = req.body;
+    const imagePath = req.file
+      ? "/mixishop/images/categories/" + req.file.filename
+      : null;
+    const ok = categoryService.updateCategory(id, name, imagePath, status);
+    if (!ok)
+      return res.status(404).send("Không tìm thấy nhóm sản phẩm để cập nhật");
+    res.redirect("/admin/categogy");
   }
-  res.render('admin/category_edit', { title: 'Chỉnh sửa nhóm sản phẩm', category });
-});
+);
 
-app.post('/admin/updateCategory', requireLogin, upload.single('image'), (req, res) => {
-  const { id, name, status } = req.body;
-  let imagePath = null;
-  if (req.file) {
-    imagePath = '/mixishop/images/categories/' + req.file.filename;
-  }
-  const success = categoryService.updateCategory(id, name, imagePath, status);
-  if (success) {
-    res.redirect('/admin/categogy');
-  } else {
-    res.status(404).send('Không tìm thấy nhóm sản phẩm để cập nhật');
-  }
-});
-
-app.get('/admin/products', requireLogin, (req, res) => {
-  // giả lập dữ liệu từ DB
+app.get("/admin/products", requireLogin, (_req, res) => {
   const products = [
-    { id: 1, name: 'Áo thun', description: 'Áo cotton 100%', formattedPrice: '150,000đ', statusName: 'Còn hàng' },
-    { id: 2, name: 'Quần jean', description: 'Quần jean nam', formattedPrice: '350,000đ', statusName: 'Hết hàng' }
+    {
+      id: 1,
+      name: "Áo thun",
+      description: "Áo cotton 100%",
+      formattedPrice: "150,000đ",
+      statusName: "Còn hàng",
+    },
+    {
+      id: 2,
+      name: "Quần jean",
+      description: "Quần jean nam",
+      formattedPrice: "350,000đ",
+      statusName: "Hết hàng",
+    },
   ];
-
   const productsData = {
     hasPrevious: false,
     hasNext: true,
-    number: 0,          // trang hiện tại (bắt đầu từ 0)
-    totalPages: 5
+    number: 0,
+    totalPages: 5,
   };
-
-  res.render('admin/products', {
-    title: 'Danh sách sản phẩm',
-    products,           // <-- Truyền mảng sản phẩm
-    productsData        // <-- Truyền thông tin phân trang
+  res.render("admin/products", {
+    title: "Danh sách sản phẩm",
+    products,
+    productsData,
   });
 });
 
-// Thêm sản phẩm
-app.get('/admin/products/addProduct', requireLogin, (req, res) => {
-  // giả lập dữ liệu lấy từ DB
+app.get("/admin/products/addProduct", requireLogin, (_req, res) => {
   const productStatuses = [
-    { id: 1, statusName: 'Còn hàng' },
-    { id: 2, statusName: 'Hết hàng' }
+    { id: 1, statusName: "Còn hàng" },
+    { id: 2, statusName: "Hết hàng" },
   ];
-
   const categories = [
-    { id: 1, name: 'Áo thun' },
-    { id: 2, name: 'Quần jean' }
+    { id: 1, name: "Áo thun" },
+    { id: 2, name: "Quần jean" },
   ];
-
-  res.render('admin/product_add', {
-    title: 'Thêm sản phẩm',
+  res.render("admin/product_add", {
+    title: "Thêm sản phẩm",
     productStatuses,
-    categories
+    categories,
   });
 });
 
-// Xử lý submit form thêm sản phẩm
-app.post('/admin/addProducts', requireLogin, (req, res) => {
-  const { name, description, price, statusId, categoryId } = req.body;
-  console.log('Dữ liệu sản phẩm mới:', name, description, price, statusId, categoryId);
-
-  // TODO: Lưu vào DB
-
-  res.redirect('/admin/products');
+app.post("/admin/addProducts", requireLogin, (req, res) => {
+  console.log("Dữ liệu sản phẩm mới:", req.body);
+  res.redirect("/admin/products");
 });
 
-// ví dụ service giả lập
 const ordersService = {
   getOrders: (pageNo = 1, pageSize = 5) => {
-    // dữ liệu giả
     const allOrders = [
-      { id: 1, customerName: "Nguyễn Văn A", customerPhone: "0901234567", orderDate: "2025-09-01", paymentMethod: "COD", totalAmount: 150000, notes: "Giao nhanh" },
-      { id: 2, customerName: "Trần Thị B", customerPhone: "0912345678", orderDate: "2025-09-02", paymentMethod: "Momo", totalAmount: 250000, notes: "" },
-      { id: 3, customerName: "Phạm Văn C", customerPhone: "0923456789", orderDate: "2025-09-03", paymentMethod: "Banking", totalAmount: 300000, notes: "Giao buổi tối" },
-      // thêm dữ liệu nữa...
+      {
+        id: 1,
+        customerName: "Nguyễn Văn A",
+        customerPhone: "0901234567",
+        orderDate: "2025-09-01",
+        paymentMethod: "COD",
+        totalAmount: 150000,
+        notes: "Giao nhanh",
+      },
+      {
+        id: 2,
+        customerName: "Trần Thị B",
+        customerPhone: "0912345678",
+        orderDate: "2025-09-02",
+        paymentMethod: "Momo",
+        totalAmount: 250000,
+        notes: "",
+      },
+      {
+        id: 3,
+        customerName: "Phạm Văn C",
+        customerPhone: "0923456789",
+        orderDate: "2025-09-03",
+        paymentMethod: "Banking",
+        totalAmount: 300000,
+        notes: "Giao buổi tối",
+      },
     ];
-
     const totalPages = Math.ceil(allOrders.length / pageSize);
     const start = (pageNo - 1) * pageSize;
     const end = start + pageSize;
-
     return {
       content: allOrders.slice(start, end),
-      number: pageNo - 1, // để khớp với EJS (0-based)
-      totalPages: totalPages,
+      number: pageNo - 1,
+      totalPages,
       hasPrevious: pageNo > 1,
-      hasNext: pageNo < totalPages
+      hasNext: pageNo < totalPages,
     };
-  }
+  },
 };
 
-// Route
-app.get('/admin/order-list', requireLogin, (req, res) => {
+app.get("/admin/order-list", requireLogin, (req, res) => {
   const pageNo = parseInt(req.query.pageNo) || 1;
-  const pageSize = 5; // tuỳ chỉnh
-  const orders = ordersService.getOrders(pageNo, pageSize);
-
-  res.render('admin/order_list', {
-    title: 'Danh sách đơn hàng',
-    orders: orders
-  });
+  const orders = ordersService.getOrders(pageNo, 5);
+  res.render("admin/order_list", { title: "Danh sách đơn hàng", orders });
 });
 
-// Trang danh sách màu theo productId
-app.get('/admin/products/color/:productId', requireLogin, (req, res) => {
-  const productId = parseInt(req.params.productId);
-
-  // Giả lập dữ liệu sản phẩm
-  const product = productService.getProductById(productId);
-  if (!product) {
-    return res.status(404).send('Không tìm thấy sản phẩm');
-  }
-
-  // Giả lập danh sách màu (sẽ gắn theo product)
-  const productColors = product.colors.map((c, index) => ({
-    id: index + 1,
+app.get("/admin/products/color/:productId", requireLogin, (req, res) => {
+  const product = productService.getProductById(parseInt(req.params.productId));
+  if (!product) return res.status(404).send("Không tìm thấy sản phẩm");
+  const productColors = product.colors.map((c, i) => ({
+    id: i + 1,
     color: c.color,
-    product: product,
-    imageUrls: c.imageUrls
+    product,
+    imageUrls: c.imageUrls,
   }));
-
-  res.render('admin/product_color', {
+  res.render("admin/product_color", {
     title: "Màu sắc sản phẩm",
-    product: product,
-    productColors: productColors
+    product,
+    productColors,
   });
 });
 
-// Form thêm màu
-app.get('/admin/products/color/:productId/add', requireLogin, (req, res) => {
-  const productId = parseInt(req.params.productId);
-  const product = productService.getProductById(productId);
-  if (!product) {
-    return res.status(404).send('Không tìm thấy sản phẩm');
-  }
-  res.render('admin/product_color_add', {
+app.get("/admin/products/color/:productId/add", requireLogin, (req, res) => {
+  const product = productService.getProductById(parseInt(req.params.productId));
+  if (!product) return res.status(404).send("Không tìm thấy sản phẩm");
+  res.render("admin/product_color_add", {
     title: "Thêm màu sản phẩm",
-    product: product
+    product,
   });
 });
 
-// Xử lý thêm màu (upload ảnh)
-app.post('/admin/products/color/:productId/add', requireLogin, upload.array('images', 5), (req, res) => {
-  const productId = parseInt(req.params.productId);
-  const { color } = req.body;
-  const product = productService.getProductById(productId);
-  if (!product) {
-    return res.status(404).send('Không tìm thấy sản phẩm');
+app.post(
+  "/admin/products/color/:productId/add",
+  requireLogin,
+  upload.array("images", 5),
+  (req, res) => {
+    const productId = parseInt(req.params.productId);
+    const { color } = req.body;
+    const product = productService.getProductById(productId);
+    if (!product) return res.status(404).send("Không tìm thấy sản phẩm");
+    const imageUrls = (req.files || []).map(
+      (f) => "/mixishop/images/categories/" + f.filename
+    );
+    product.colors.push({ color, imageUrls });
+    res.redirect(`/admin/products/color/${productId}`);
   }
+);
 
-  const imageUrls = req.files.map(file => '/mixishop/images/categories/' + file.filename);
-
-  // Thêm vào product.colors (giả lập DB)
-  product.colors.push({ color, imageUrls });
-
-  res.redirect(`/admin/products/color/${productId}`);
-});
-
-// Xóa màu
-app.post('/admin/products/color/:productId/delete/:color', requireLogin, (req, res) => {
-  const productId = parseInt(req.params.productId);
-  const color = req.params.color;
-  const product = productService.getProductById(productId);
-  if (!product) {
-    return res.status(404).send('Không tìm thấy sản phẩm');
+app.post(
+  "/admin/products/color/:productId/delete/:color",
+  requireLogin,
+  (req, res) => {
+    const product = productService.getProductById(
+      parseInt(req.params.productId)
+    );
+    if (!product) return res.status(404).send("Không tìm thấy sản phẩm");
+    product.colors = product.colors.filter((c) => c.color !== req.params.color);
+    res.redirect(`/admin/products/color/${req.params.productId}`);
   }
+);
 
-  product.colors = product.colors.filter(c => c.color !== color);
-  res.redirect(`/admin/products/color/${productId}`);
+app.get("/admin/order-pending", requireLogin, (_req, res) => {
+  res.render("admin/order_pending", {
+    title: "Danh sách đơn hàng chờ phê duyệt",
+  });
 });
 
-
-
-
-
-
-app.get('/admin/order-pending', requireLogin, (req, res) => {
-  res.render('admin/order_pending', { title: 'Danh sách đơn hàng chờ phê duyệt' });
-});
-
-// Route Home
-app.get('/home', (req, res) => {
+app.get(["/", "/home"], (req, res) => {
   const productPage = productService.getAllProducts(1, null, 0, 100000000);
-  res.render('home', {
-    title: 'Trang chủ',
+  res.render("home", {
+    title: "Trang chủ",
     products: productPage.content,
-    ...getRenderData(req)
+    ...getRenderData(req),
   });
 });
 
-// Route Cart
-app.get('/cart', (req, res) => {
-  res.render('cart', {
-    title: 'Giỏ hàng',
-    ...getRenderData(req)
-  });
+app.get("/cart", (req, res) => {
+  res.render("cart", { title: "Giỏ hàng", ...getRenderData(req) });
 });
 
-// Route About
-app.get('/about', (req, res) => {
-  res.render('about', {
-    title: 'Giới thiệu',
-    ...getRenderData(req)
-  });
-});
+app.get("/about", (req, res) =>
+  res.render("about", { title: "Giới thiệu", ...getRenderData(req) })
+);
+app.get("/blog", (req, res) =>
+  res.render("blog", { title: "Blog", ...getRenderData(req) })
+);
+app.get("/contact", (req, res) =>
+  res.render("contact", { title: "Liên hệ", ...getRenderData(req) })
+);
 
-// Route Blog
-app.get('/blog', (req, res) => {
-  res.render('blog', {
-    title: 'Blog',
-    ...getRenderData(req)
-  });
-});
-
-// Route Contact
-app.get('/contact', (req, res) => {
-  res.render('contact', {
-    title: 'Liên hệ',
-    ...getRenderData(req)
-  });
-});
-
-// Route Product Detail
-app.get('/product_detail/:id', (req, res) => {
+app.get("/product_detail/:id", (req, res) => {
   const productId = parseInt(req.params.id);
   const product = productService.getProductById(productId);
-  if (!product) return res.status(404).send('Sản phẩm không tồn tại');
+  if (!product) return res.status(404).send("Sản phẩm không tồn tại");
 
   const relatedProducts = productService.getProductsByCategoryId(
-    product.category.id, 1, null, 0, 100000000
+    product.category.id,
+    1,
+    null,
+    0,
+    100000000
   ).content;
+  let allImages = product.colors.reduce(
+    (acc, c) => acc.concat(c.imageUrls),
+    []
+  );
+  while (allImages.length < 3 && allImages.length > 0)
+    allImages.push(allImages[0]);
 
-  // Ảnh
-  let allImages = product.colors.reduce((acc, c) => acc.concat(c.imageUrls), []);
-  while (allImages.length < 3 && allImages.length > 0) allImages.push(allImages[0]);
-
-  // Đánh giá / bình luận
   const reviews = reviewsDB[productId] || [];
   const ratingStats = getRatingStats(productId) || { avg: 0, count: 0 };
-
-  // -> build phân bố sao cho UI (5,4,3,2,1)
-  const dist = { 1:0, 2:0, 3:0, 4:0, 5:0 };
+  const dist = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
   for (const r of reviews) {
     const s = Number(r.stars) || 0;
     if (s >= 1 && s <= 5) dist[s]++;
   }
   const ratingBreakdown = {
     avg: Number(ratingStats.avg) || 0,
-    count: Number(ratingStats.count) || reviews.filter(r => r.stars).length,
-    dist
+    count: Number(ratingStats.count) || reviews.filter((r) => r.stars).length,
+    dist,
   };
 
-  // Nếu có thống kê trải nghiệm thì truyền, không thì để mảng rỗng
-  const expStats = []; // [{name:'Hiệu năng', avg:4.8, count:ratingBreakdown.count}, ...]
-
+  const expStats = [];
   const userRated = req.session.user
-    ? (ratingsDB[productId]?.byUser?.[req.session.user.email] || 0)
+    ? ratingsDB[productId]?.byUser?.[req.session.user.email] || 0
     : 0;
   const likerId = req.session.user ? req.session.user.email : req.sessionID;
 
-  res.render('product_detail', {
+  res.render("product_detail", {
     title: product.name,
     product,
     productSizes: product.sizes,
     allImages,
     products: relatedProducts,
     reviews,
-    ratingStats,          // vẫn truyền nếu JS phía client dùng
-    ratingBreakdown,      // 👈 thêm biến mà EJS cần
-    expStats,             // 👈 có/không đều an toàn
+    ratingStats,
+    ratingBreakdown,
+    expStats,
     userRated,
     likerId,
     message: null,
     error: null,
-    ...getRenderData(req)
+    ...getRenderData(req),
   });
 });
 
-
-// Bình luận: KHÔNG cần login
-app.post('/api/products/:id/comments', (req, res) => {
+// Comments (guest ok)
+app.post("/api/products/:id/comments", (req, res) => {
   const productId = parseInt(req.params.id);
   const { name, message, parentId } = req.body || {};
-
   const p = productService.getProductById(productId);
-  if (!p) return res.status(404).json({ error: 'Không tìm thấy sản phẩm' });
-  if (!message || message.trim().length < 2) return res.status(400).json({ error: 'Nội dung quá ngắn' });
+  if (!p) return res.status(404).json({ error: "Không tìm thấy sản phẩm" });
+  if (!message || message.trim().length < 2)
+    return res.status(400).json({ error: "Nội dung quá ngắn" });
 
   const cmt = {
     id: Date.now(),
-    parentId: parentId ? parseInt(parentId) : null,   // 👈 HỖ TRỢ TRẢ LỜI
-    user: (name && name.trim()) || (req.session.user?.name || 'Khách'),
+    parentId: parentId ? parseInt(parentId) : null,
+    user: (name && name.trim()) || req.session.user?.name || "Khách",
     message: message.trim(),
     createdAt: new Date().toISOString(),
     likes: 0,
-    likedBy: {} // { likerId: true }
+    likedBy: {},
   };
 
   if (!reviewsDB[productId]) reviewsDB[productId] = [];
   reviewsDB[productId].push(cmt);
 
-  if (io) io.emit('new-comment', { productId, comment: cmt });
+  if (global.io) global.io.emit("new-comment", { productId, comment: cmt });
   return res.json({ ok: true, comment: cmt });
 });
 
-app.post('/api/products/:pid/comments/:cid/like', (req, res) => {
+app.post("/api/products/:pid/comments/:cid/like", (req, res) => {
   const pid = parseInt(req.params.pid);
   const cid = parseInt(req.params.cid);
   const likerId = req.session.user ? req.session.user.email : req.sessionID;
 
   const list = reviewsDB[pid] || [];
-  const c = list.find(it => it.id === cid);
-  if (!c) return res.status(404).json({ error: 'Không tìm thấy bình luận' });
+  const c = list.find((it) => it.id === cid);
+  if (!c) return res.status(404).json({ error: "Không tìm thấy bình luận" });
 
   if (!c.likedBy) c.likedBy = {};
-  if (c.likedBy[likerId]) {
-    delete c.likedBy[likerId]; // bỏ tim
-  } else {
-    c.likedBy[likerId] = true; // thả tim
-  }
+  if (c.likedBy[likerId]) delete c.likedBy[likerId];
+  else c.likedBy[likerId] = true;
   c.likes = Object.keys(c.likedBy).length;
 
-  if (io) io.emit('comment-liked', { productId: pid, commentId: cid, likes: c.likes });
+  if (global.io)
+    global.io.emit("comment-liked", {
+      productId: pid,
+      commentId: cid,
+      likes: c.likes,
+    });
   return res.json({ ok: true, likes: c.likes, liked: !!c.likedBy[likerId] });
 });
 
-
-// Đánh giá sao: CẦN login
-app.post('/api/products/:id/ratings', (req, res) => {
+// Ratings (require login in real app; demo cho phép)
+app.post("/api/products/:id/ratings", (req, res) => {
   const productId = parseInt(req.params.id);
-  if (!req.session.user) return res.status(401).json({ error: 'Bạn cần đăng nhập để đánh giá.' });
   const p = productService.getProductById(productId);
-  if (!p) return res.status(404).json({ error: 'Không tìm thấy sản phẩm' });
+  if (!p) return res.status(404).json({ error: "Không tìm thấy sản phẩm" });
 
   const stars = parseInt(req.body?.stars, 10);
-  if (!(stars >= 1 && stars <= 5)) return res.status(400).json({ error: 'Số sao không hợp lệ' });
+  if (!(stars >= 1 && stars <= 5))
+    return res.status(400).json({ error: "Số sao không hợp lệ" });
 
-  const email = req.session.user.email;
+  const email =
+    (req.session.user && req.session.user.email) || `guest-${req.sessionID}`;
   if (!ratingsDB[productId]) ratingsDB[productId] = { byUser: {} };
   ratingsDB[productId].byUser[email] = stars;
 
   const stats = getRatingStats(productId);
-  if (io) io.emit('rating-updated', { productId, stats });
+  if (global.io) global.io.emit("rating-updated", { productId, stats });
   return res.json({ ok: true, stats });
 });
 
-
-// Route Check Stock
-app.get('/product_detail/:id/check-stock', (req, res) => {
+app.get("/product_detail/:id/check-stock", (req, res) => {
   const productId = parseInt(req.params.id);
   const { color, size } = req.query;
   const stockQuantity = productService.checkStock(productId, color, size);
   res.json(stockQuantity);
 });
 
-// Route Add to Cart (POST)
-app.post('/add-to-cart', (req, res) => {
+// Cart APIs
+app.post("/add-to-cart", (req, res) => {
   const { productId, size, color, quantity } = req.body;
   const userId = req.session.user ? req.session.user.email : null;
-  const success = cartService.addToCart(userId, productId, size, color, quantity);
+  const success = cartService.addToCart(
+    userId,
+    productId,
+    size,
+    color,
+    quantity
+  );
   const product = productService.getProductById(productId);
-  if (!product) {
-    return res.status(404).send('Sản phẩm không tồn tại');
-  }
-  const relatedProducts = productService.getProductsByCategoryId(product.category.id, 1, null, 0, 100000000).content;
-  const allImages = product.colors.reduce((acc, color) => acc.concat(color.imageUrls), []);
-  res.render('product_detail', {
+  if (!product) return res.status(404).send("Sản phẩm không tồn tại");
+  const relatedProducts = productService.getProductsByCategoryId(
+    product.category.id,
+    1,
+    null,
+    0,
+    100000000
+  ).content;
+  const allImages = product.colors.reduce(
+    (acc, c) => acc.concat(c.imageUrls),
+    []
+  );
+  res.render("product_detail", {
     title: product.name,
     product,
     productSizes: product.sizes,
     allImages,
     products: relatedProducts,
-    message: success ? 'Thêm vào giỏ hàng thành công!' : null,
-    error: !success ? 'Không thể thêm vào giỏ hàng!' : null,
-    ...getRenderData(req)
-  });
-});
-
-// Route Search
-app.get('/search', (req, res) => {
-  const keyword = req.query.keyword || '';
-  const pageNo = parseInt(req.query.pageNo) || 1;
-  const sort = req.query.sort || null;
-  const priceRange = req.query.price_range || null;
-  let priceMin = 0;
-  let priceMax = 100000000;
-  if (priceRange && priceRange !== '') {
-    const [min, max] = priceRange.split(',').map(Number);
-    priceMin = min;
-    priceMax = max;
-  }
-  const searchResult = productService.searchProducts(keyword, pageNo, sort, priceMin, priceMax);
-  res.render('product_search', {
-    title: `Kết quả tìm kiếm: ${keyword}`,
-    products: searchResult.content,
-    quantity: searchResult.totalElements,
-    keyword,
-    ...getRenderData(req)
-  });
-});
-
-// Route Shop Cart
-app.get('/shop-cart', (req, res) => {
-  res.render('shop_cart', {
-    title: 'Giỏ hàng',
-    ...getRenderData(req)
+    message: success ? "Thêm vào giỏ hàng thành công!" : null,
+    error: !success ? "Không thể thêm vào giỏ hàng!" : null,
+    ...getRenderData(req),
   });
 });
 
 function itemPrice(cartItem) {
-  return cartItem.productColor.product.price; // đơn giá
+  return cartItem.productColor.product.price;
 }
-
 function computeTotalsForUser(userId) {
-  const list = cartService.getCartItems(userId); // mảng cart của user
+  const list = cartService.getCartItems(userId);
   const subtotal = list.reduce((s, it) => s + itemPrice(it) * it.quantity, 0);
-  // nếu sau có thuế/ship thì cộng thêm ở đây
   return { total: subtotal };
 }
 
-
-// Route Remove from Cart
-app.post('/remove-from-cart', (req, res) => {
-  const { cartItemId } = req.body;
-  const success = cartService.removeCartItem(cartItemId);
-  res.send(success ? 'Xóa sản phẩm khỏi giỏ hàng thành công!' : 'Không thể xóa sản phẩm!');
+app.post("/remove-from-cart", (req, res) => {
+  const ok = cartService.removeCartItem(req.body.cartItemId);
+  res.send(
+    ok ? "Xóa sản phẩm khỏi giỏ hàng thành công!" : "Không thể xóa sản phẩm!"
+  );
 });
 
-// Route Update Cart Item
-app.post('/cart/update/:id', (req, res) => {
+app.post("/cart/update/:id", (req, res) => {
   const cartId = parseInt(req.params.id, 10);
   const qty = parseInt(req.body?.quantity, 10);
-  if (!Number.isFinite(qty) || qty < 1) {
-    return res.json({ ok: false, message: 'Số lượng không hợp lệ' });
-  }
-
+  if (!Number.isFinite(qty) || qty < 1)
+    return res.json({ ok: false, message: "Số lượng không hợp lệ" });
   const ok = cartService.updateCartItem(cartId, qty);
-  if (!ok) return res.json({ ok: false, message: 'Không tìm thấy sản phẩm' });
+  if (!ok) return res.json({ ok: false, message: "Không tìm thấy sản phẩm" });
 
-  // lấy lại item vừa sửa để tính lineTotal
   const userId = req.session.user ? req.session.user.email : null;
-  const item = cartService.getCartItems(userId).find(i => i.id === cartId);
+  const item = cartService.getCartItems(userId).find((i) => i.id === cartId);
   const lineTotal = item ? itemPrice(item) * item.quantity : 0;
-
   const totals = computeTotalsForUser(userId);
   return res.json({ ok: true, lineTotal, totals });
 });
 
+app.get("/check-login", (req, res) =>
+  res.json({ isLoggedIn: !!req.session.user })
+);
 
-
-// Route Check-login
-app.get('/check-login', (req, res) => {
-  res.json({ isLoggedIn: !!req.session.user });
-});
-
-// Route Category Alls
-app.get('/category/alls', (req, res) => {
+app.get("/category/alls", (req, res) => {
   const pageNo = parseInt(req.query.pageNo) || 1;
   const sort = req.query.sort || null;
   const color = req.query.color || null;
   const priceRange = req.query.price_range || null;
-
-  // 👇 bổ sung
-  const brand  = req.query.brand  || '';
-  const rating = req.query.rating || '';
-  const q      = req.query.q      || '';
-
-  let priceMin = 0, priceMax = 100000000;
-  if (priceRange && priceRange !== '') {
-    const [min, max] = priceRange.split(',').map(Number);
-    priceMin = min; priceMax = max;
+  const brand = req.query.brand || "";
+  const rating = req.query.rating || "";
+  const q = req.query.q || "";
+  let priceMin = 0,
+    priceMax = 100000000;
+  if (priceRange) {
+    const [min, max] = priceRange.split(",").map(Number);
+    priceMin = min;
+    priceMax = max;
   }
-
-  const products = color && color !== ''
+  const products = color
     ? productService.getProductsByColor(color, pageNo, priceMin, priceMax)
     : productService.getAllProducts(pageNo, sort, priceMin, priceMax);
-
-  res.render('category', {
-    title: 'Tất cả sản phẩm',
+  res.render("category", {
+    title: "Tất cả sản phẩm",
     products,
-    sort, color,
+    sort,
+    color,
     price_range: priceRange,
     selectedCategoryId: null,
-    selectedCategoryName: 'Tất cả sản phẩm',
-    // 👇 truyền vào view để EJS dùng được
-    brand, rating, q,
-    ...getRenderData(req)
+    selectedCategoryName: "Tất cả sản phẩm",
+    brand,
+    rating,
+    q,
+    ...getRenderData(req),
   });
 });
 
-app.post('/cart/remove/:id', (req, res) => {
-  const id = parseInt(req.params.id, 10);
-  const ok = cartService.removeCartItem(id);
-  if (!ok) return res.json({ ok: false, message: 'Không tìm thấy sản phẩm' });
-
+app.post("/cart/remove/:id", (req, res) => {
+  const ok = cartService.removeCartItem(parseInt(req.params.id, 10));
+  if (!ok) return res.json({ ok: false, message: "Không tìm thấy sản phẩm" });
   const userId = req.session.user ? req.session.user.email : null;
   const totals = computeTotalsForUser(userId);
   return res.json({ ok: true, totals });
 });
 
-
-
-
-// Route Category
-app.get('/category/:id', (req, res) => {
+app.get("/category/:id", (req, res) => {
   const categoryId = parseInt(req.params.id);
   const pageNo = parseInt(req.query.pageNo) || 1;
   const sort = req.query.sort || null;
   const color = req.query.color || null;
   const priceRange = req.query.price_range || null;
-  let priceMin = 0;
-  let priceMax = 100000000;
-  if (priceRange && priceRange !== '') {
-    const [min, max] = priceRange.split(',').map(Number);
+  let priceMin = 0,
+    priceMax = 100000000;
+  if (priceRange) {
+    const [min, max] = priceRange.split(",").map(Number);
     priceMin = min;
     priceMax = max;
   }
-  const products = color && color !== ''
-    ? productService.getProductsByColorAndCategoryId(color, categoryId, priceMin, priceMax, pageNo)
-    : productService.getProductsByCategoryId(categoryId, pageNo, sort, priceMin, priceMax);
+  const products = color
+    ? productService.getProductsByColorAndCategoryId(
+        color,
+        categoryId,
+        priceMin,
+        priceMax,
+        pageNo
+      )
+    : productService.getProductsByCategoryId(
+        categoryId,
+        pageNo,
+        sort,
+        priceMin,
+        priceMax
+      );
   const categories = categoryService.getAllActiveCategories();
-  const selectedCategoryName = categories.find(cat => cat.id === categoryId)?.name || 'Chưa chọn danh mục';
-  res.render('category', {
+  const selectedCategoryName =
+    categories.find((c) => c.id === categoryId)?.name || "Chưa chọn danh mục";
+  res.render("category", {
     title: `Danh mục ${selectedCategoryName}`,
     products,
     sort,
@@ -899,61 +1065,64 @@ app.get('/category/:id', (req, res) => {
     price_range: priceRange,
     selectedCategoryId: categoryId,
     selectedCategoryName,
-    ...getRenderData(req)
+    ...getRenderData(req),
   });
 });
 
-// Route Add to Cart (GET, mock implementation)
-app.get('/add-to-cart/:id', (req, res) => {
-  const productId = req.params.id;
-  console.log(`Thêm sản phẩm ${productId} vào giỏ hàng`);
-  res.redirect('/cart');
+app.get("/add-to-cart/:id", (req, res) => {
+  console.log(`Thêm sản phẩm ${req.params.id} vào giỏ hàng`);
+  res.redirect("/cart");
 });
 
-// Route Login (GET)
-app.get('/login-register', (req, res) => {
-  res.render('login_register', {
-    title: 'Đăng nhập & Đăng ký',
+app.get("/login-register", (req, res) => {
+  res.render("login_register", {
+    title: "Đăng nhập & Đăng ký",
     error: null,
     success: null,
-    ...getRenderData(req)
+    ...getRenderData(req),
   });
 });
 
-// Route Login (POST)
-app.post('/login', (req, res) => {
+app.post("/login", (req, res) => {
   const { username, password } = req.body;
-  const user = users.find(u => u.email === username && u.password === password);
+  const user = users.find(
+    (u) => u.email === username && u.password === password
+  );
   if (user) {
     req.session.user = user;
-    res.redirect('/my-account');
-  } else {
-    res.render('login_register', {
-      title: 'Đăng nhập & Đăng ký',
-      error: 'Email hoặc mật khẩu không đúng!',
-      success: null,
-      ...getRenderData(req)
-    });
+    return res.redirect("/my-account");
   }
+  res.render("login_register", {
+    title: "Đăng nhập & Đăng ký",
+    error: "Email hoặc mật khẩu không đúng!",
+    success: null,
+    ...getRenderData(req),
+  });
 });
 
-// Route Register (POST)
-app.post('/register', (req, res) => {
-  const { register_name, register_email, register_phone, register_address, register_password, register_confirmPassword } = req.body;
+app.post("/register", (req, res) => {
+  const {
+    register_name,
+    register_email,
+    register_phone,
+    register_address,
+    register_password,
+    register_confirmPassword,
+  } = req.body;
   if (register_password !== register_confirmPassword) {
-    return res.render('login_register', {
-      title: 'Đăng nhập & Đăng ký',
-      error: 'Mật khẩu xác nhận không khớp!',
+    return res.render("login_register", {
+      title: "Đăng nhập & Đăng ký",
+      error: "Mật khẩu xác nhận không khớp!",
       success: null,
-      ...getRenderData(req)
+      ...getRenderData(req),
     });
   }
-  if (users.find(u => u.email === register_email)) {
-    return res.render('login_register', {
-      title: 'Đăng nhập & Đăng ký',
-      error: 'Email đã được sử dụng!',
+  if (users.find((u) => u.email === register_email)) {
+    return res.render("login_register", {
+      title: "Đăng nhập & Đăng ký",
+      error: "Email đã được sử dụng!",
       success: null,
-      ...getRenderData(req)
+      ...getRenderData(req),
     });
   }
   users.push({
@@ -961,150 +1130,118 @@ app.post('/register', (req, res) => {
     password: register_password,
     name: register_name,
     phone: register_phone,
-    address: register_address
+    address: register_address,
   });
-  res.render('login_register', {
-    title: 'Đăng nhập & Đăng ký',
+  res.render("login_register", {
+    title: "Đăng nhập & Đăng ký",
     error: null,
-    success: 'Đăng ký thành công! Vui lòng đăng nhập.',
-    ...getRenderData(req)
+    success: "Đăng ký thành công! Vui lòng đăng nhập.",
+    ...getRenderData(req),
   });
 });
 
-// Route Forgot Password (placeholder)
-app.get('/forgot-password', (req, res) => {
-  res.render('forgot_password', {
-    title: 'Khôi phục mật khẩu',
-    ...getRenderData(req)
-  });
-});
+app.get("/forgot-password", (req, res) =>
+  res.render("forgot_password", {
+    title: "Khôi phục mật khẩu",
+    ...getRenderData(req),
+  })
+);
+app.get("/shop-cart", (req, res) =>
+  res.render("shop_cart", { title: "Giỏ hàng", ...getRenderData(req) })
+);
 
-// Route Checkout
-app.get('/shop-cart/checkout', (req, res) => {
-  res.render('shop_checkout', {
-    title: 'Thanh toán',
-    ...getRenderData(req)
-  });
-});
-
-// Route Submit Checkout
-app.post('/shop-cart/submit', (req, res) => {
+app.get("/shop-cart/checkout", (req, res) =>
+  res.render("shop_checkout", { title: "Thanh toán", ...getRenderData(req) })
+);
+app.post("/shop-cart/submit", (req, res) => {
   const userId = req.session.user ? req.session.user.email : null;
-  if (!userId) {
-    return res.redirect('/login-register');
-  }
+  if (!userId) return res.redirect("/login-register");
   const carts = cartService.getCartItems(userId);
-  if (carts.length === 0) {
-    return res.render('shop_checkout', {
-      title: 'Thanh toán',
-      error: 'Giỏ hàng trống, không thể đặt hàng!',
+  if (carts.length === 0)
+    return res.render("shop_checkout", {
+      title: "Thanh toán",
+      error: "Giỏ hàng trống, không thể đặt hàng!",
       success: null,
-      ...getRenderData(req)
+      ...getRenderData(req),
     });
-  }
   const order = orderService.createOrderFromCart(userId);
-  if (!order) {
-    return res.render('shop_checkout', {
-      title: 'Thanh toán',
-      error: 'Không thể tạo đơn hàng!',
+  if (!order)
+    return res.render("shop_checkout", {
+      title: "Thanh toán",
+      error: "Không thể tạo đơn hàng!",
       success: null,
-      ...getRenderData(req)
+      ...getRenderData(req),
     });
-  }
-  res.render('shop_order_complete', {
-    title: 'Hoàn tất đơn hàng',
+  res.render("shop_order_complete", {
+    title: "Hoàn tất đơn hàng",
     order,
-    ...getRenderData(req)
+    ...getRenderData(req),
   });
 });
 
-// Route My Account
-app.get('/my-account', requireLogin, (req, res) => {
-  res.render('account_dashboard', {
-    title: 'Tổng quan tài khoản',
-    ...getRenderData(req)
-  });
-});
-
-// Route Account Edit
-app.get('/account-edit', requireLogin, (req, res) => {
-  res.render('account_edit', {
-    title: 'Quản lý tài khoản',
+app.get("/my-account", requireLogin, (req, res) =>
+  res.render("account_dashboard", {
+    title: "Tổng quan tài khoản",
+    ...getRenderData(req),
+  })
+);
+app.get("/account-edit", requireLogin, (req, res) =>
+  res.render("account_edit", {
+    title: "Quản lý tài khoản",
     error: null,
     success: null,
-    ...getRenderData(req)
-  });
-});
+    ...getRenderData(req),
+  })
+);
 
-// Route Change Password
-app.post('/change-password', requireLogin, (req, res) => {
+app.post("/change-password", requireLogin, (req, res) => {
   const { currentPassword, newPassword, confirmPassword } = req.body;
-  const user = users.find(u => u.email === req.session.user.email);
-  if (currentPassword !== user.password) {
-    return res.render('account_edit', {
-      title: 'Quản lý tài khoản',
-      error: 'Mật khẩu hiện tại không đúng!',
+  const user = users.find((u) => u.email === req.session.user.email);
+  if (!user || currentPassword !== user.password)
+    return res.render("account_edit", {
+      title: "Quản lý tài khoản",
+      error: "Mật khẩu hiện tại không đúng!",
       success: null,
-      ...getRenderData(req)
+      ...getRenderData(req),
     });
-  }
-  if (newPassword !== confirmPassword) {
-    return res.render('account_edit', {
-      title: 'Quản lý tài khoản',
-      error: 'Mật khẩu mới và xác nhận mật khẩu không khớp!',
+  if (newPassword !== confirmPassword)
+    return res.render("account_edit", {
+      title: "Quản lý tài khoản",
+      error: "Mật khẩu mới và xác nhận không khớp!",
       success: null,
-      ...getRenderData(req)
+      ...getRenderData(req),
     });
-  }
   user.password = newPassword;
-  res.render('account_edit', {
-    title: 'Quản lý tài khoản',
+  res.render("account_edit", {
+    title: "Quản lý tài khoản",
     error: null,
-    success: 'Thay đổi mật khẩu thành công!',
-    ...getRenderData(req)
+    success: "Thay đổi mật khẩu thành công!",
+    ...getRenderData(req),
   });
 });
 
-// Route Account Orders - FIXED: Pass orders to template
-app.get('/account-orders', requireLogin, (req, res) => {
-  const userId = req.session.user.email;
+app.get("/account-orders", requireLogin, (req, res) => {
+  const userId = req.session.user?.email;
   const orders = orderService.getOrdersByUserId(userId);
-  res.render('account_orders', {
-    title: 'Đơn hàng',
-    orders,  // Pass orders array to avoid 'order is not defined'
-    ...getRenderData(req)
+  res.render("account_orders", {
+    title: "Đơn hàng",
+    orders,
+    ...getRenderData(req),
   });
 });
 
-// Route Order Details
-app.get('/orders/:id/details', requireLogin, (req, res) => {
-  const orderId = req.params.id;
-  const userId = req.session.user.email;
-  const order = orderService.getOrderById(orderId, userId);
-  if (!order) {
-    return res.render('order_detail', {
-      title: 'Chi tiết đơn hàng',
-      order: null,
-      ...getRenderData(req)
-    });
-  }
-  res.render('order_detail', {
-    title: `Chi tiết đơn hàng #${orderId}`,
+app.get("/orders/:id/details", requireLogin, (req, res) => {
+  const userId = req.session.user?.email;
+  const order = orderService.getOrderById(req.params.id, userId);
+  res.render("order_detail", {
+    title: "Chi tiết đơn hàng",
     order,
-    ...getRenderData(req)
+    ...getRenderData(req),
   });
 });
 
-// Route Logout
-app.get('/logout', (req, res) => {
-  req.session.destroy();
-  res.redirect('/login-register');
+app.get("/logout", (req, res) => {
+  req.session.destroy(() => res.redirect("/login-register"));
 });
 
-// Start Server
-// Start Server (kèm Socket.IO)
-const server = http.createServer(app);
-const io = new Server(server);
-global.io = io;
-
-server.listen(3000, () => console.log('✅ Server chạy tại http://localhost:3000'));
+module.exports = app;

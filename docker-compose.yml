@@ -1,0 +1,62 @@
+version: "3.9"
+
+networks:
+  default:
+    name: shop-network
+    driver: bridge
+
+volumes:
+  mongo_data:
+
+services:
+  mongo:
+    image: mongo:7
+    container_name: shop-mongodb
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_DATABASE: shop
+    volumes:
+      - mongo_data:/data/db
+    healthcheck:
+      test:
+        ["CMD", "mongosh", "--quiet", "--eval", "db.runCommand({ ping: 1 }).ok"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+
+  backend:
+    build:
+      context: ./Backend
+      dockerfile: Dockerfile
+    container_name: shop-backend
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: "5000" # ⬅️ đồng bộ 5000
+      MONGO_URI: mongodb://mongo:27017/shop
+    depends_on:
+      mongo:
+        condition: service_healthy
+    ports:
+      - "5000:5000" # ⬅️ publish 5000
+
+  frontend:
+    build:
+      context: ./FrontEnd
+      dockerfile: Dockerfile
+    container_name: shop-frontend
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: "3000"
+      MONGO_URI: mongodb://mongo:27017/shop
+      API_BASE_URL: http://backend:5000 # ⬅️ gọi BE qua 5000
+    depends_on:
+      mongo:
+        condition: service_healthy
+      backend:
+        condition: service_started
+    ports:
+      - "3000:3000"

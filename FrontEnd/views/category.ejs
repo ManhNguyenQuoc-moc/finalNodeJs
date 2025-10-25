@@ -11,6 +11,10 @@
 }
 
 
+.is-disabled {
+  opacity: 0.5;
+  pointer-events: none;
+}
 
 
 /* viên thuốc thấp hơn, gọn hơn */
@@ -44,20 +48,29 @@
 
 .breadcrumb{ margin-bottom:0 }
 
-@media (max-width:991.98px){
-  .toolbar-left{ flex-wrap:wrap }
-  .search-inline{ width:100% }
+/* Responsive nhỏ */
+@media (max-width: 991.98px) {
+  .toolbar-left { flex-wrap: wrap; }
+  .search-inline { width: 100%; }
 }
 
+/* Clamp 5 dòng – có cả thuộc tính chuẩn và -webkit- */
+.line-clamp-5 {
+  /* Chuẩn mới */
+  line-clamp: 5;
 
-  .line-clamp-5 {
-    display: -webkit-box;
-    -webkit-line-clamp: 5;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-  }
-  .rating-stars .on { color:#ffc107; }
-  .rating-stars .off { color:#c7c7c7; }
+  /* WebKit cũ (Chrome cũ, Safari) */
+  display: -webkit-box;
+  -webkit-line-clamp: 5;
+  -webkit-box-orient: vertical;
+
+  overflow: hidden;         /* ẩn phần dư */
+}
+
+/* Sao đánh giá */
+.rating-stars .on  { color: #ffc107; }
+.rating-stars .off { color: #c7c7c7; }
+
 </style>
 
 <%- include('partials/head') %>
@@ -119,22 +132,26 @@
             <div id="accordion-filter-brand" class="accordion-collapse collapse show border-0" data-bs-parent="#brand-filters">
             <div class="accordion-body px-0 pb-0">
               <ul class="list-unstyled mb-0">
-                <% 
-                  // brands: có thể là ['Mixi','DenimCo',...] hoặc [{name:'Mixi'},...]
-                  const picked = new Set((brand || '').split(',').filter(Boolean));
-                  (brands || []).forEach(br => {
-                    const b = (typeof br === 'string') ? br : (br.name || '');
-                    if (!b) return;
+                <%
+                  // brands: có thể là ['Mixi','DenimCo', ...] hoặc [{ name: 'Mixi' }, ...]
+                  const brandsSafe = Array.isArray(brands) ? brands : [];
+                  const brandParam = (typeof brand === 'string') ? brand : '';
+                  const picked = new Set(brandParam.split(',').filter(Boolean));
+                %>
+
+                <% brandsSafe.forEach(br => { 
+                    const name = (typeof br === 'string') ? br : ((br && br.name) || '');
+                    if (!name) return;
                 %>
                   <li class="mb-2">
                     <label class="d-flex align-items-center gap-2">
                       <input 
-                        type="checkbox"
-                        class="form-check-input js-brand"
-                        value="<%= b %>"
-                        <%= picked.has(b) ? 'checked' : '' %>
-                      >
-                      <span><%= b %></span>
+                        type="checkbox" 
+                        name="brand" 
+                        value="<%= name %>" 
+                        <%= picked.has(name) ? 'checked' : '' %>
+                      />
+                      <span><%= name %></span>
                     </label>
                   </li>
                 <% }) %>
@@ -468,17 +485,25 @@
                   </a>
                 </div>
                 <div class="d-flex align-items-center mt-1 custom-swatch-container">
-                  <% if (product.colors && product.colors.length > 0) { %>
-                    <% product.colors.forEach(productColor => { %>
-                      <a href="#" 
-                         class="swatch-color custom-swatch-color"
-                         style="background-image: url('<%= productColor.imageUrls && productColor.imageUrls.length > 0 ? productColor.imageUrls[0] : '' %>'); background-size: cover;"
-                         data-images="<%= productColor.imageUrls && productColor.imageUrls.length > 0 ? productColor.imageUrls.join(',') : '' %>"
-                         onclick="changeColor(this); return false;"
-                         title="<%= productColor.color %>"></a>
+                  <% const colorsSafe = (product && Array.isArray(product.colors)) ? product.colors : []; %>
+                  <% if (colorsSafe.length > 0) { %>
+                    <% colorsSafe.forEach((productColor) => { 
+                        const imgs = Array.isArray(productColor.imageUrls) ? productColor.imageUrls : [];
+                        const first = imgs.length ? imgs[0] : '/images/placeholder.png'; // đổi path placeholder nếu cần
+                        const encodedImgs = imgs.map(u => encodeURI(u));
+                    %>
+                      <a
+                        href="#"
+                        class="swatch-color custom-swatch-color"
+                        style="background-image: url('<%= encodeURI(first) %>'); background-size: cover;"
+                        data-images='<%= JSON.stringify(encodedImgs) %>'
+                        onclick="changeColor(this); return false;"
+                        title="<%= productColor.color || '' %>">
+                      </a>
                     <% }) %>
                   <% } %>
                 </div>
+
 
                 <div class="pc__info position-relative">
                   <p class="pc__category"><%= product.category_id?.name %></p>
@@ -534,14 +559,15 @@
 <nav class="shop-pages d-flex justify-content-between mt-3" aria-label="Phân trang">
   <!-- Prev -->
   <a href="<%= hasPrev ? (baseUrl + '?' + qs(currentPage - 1)) : '#' %>"
-     class="btn-link d-inline-flex align-items-center <%= hasPrev ? '' : 'disabled' %>"
-     aria-disabled="<%= hasPrev ? 'false' : 'true' %>"
-     style="opacity:<%= hasPrev ? 1 : 0.5 %>; pointer-events:<%= hasPrev ? 'auto' : 'none' %>;">
+    class="btn-link d-inline-flex align-items-center <%= hasPrev ? '' : 'is-disabled disabled' %>"
+    aria-disabled="<%= hasPrev ? 'false' : 'true' %>">
     <svg class="me-1" width="7" height="11" viewBox="0 0 7 11" xmlns="http://www.w3.org/2000/svg">
       <use href="/images/sprite.svg#icon_prev_sm" />
     </svg>
     <span class="fw-medium">TRƯỚC</span>
   </a>
+
+
 
   <!-- Pages -->
   <ul class="pagination mb-0">
@@ -555,9 +581,8 @@
 
   <!-- Next -->
   <a href="<%= hasNext ? (baseUrl + '?' + qs(currentPage + 1)) : '#' %>"
-     class="btn-link d-inline-flex align-items-center <%= hasNext ? '' : 'disabled' %>"
-     aria-disabled="<%= hasNext ? 'false' : 'true' %>"
-     style="opacity:<%= hasNext ? 1 : 0.5 %>; pointer-events:<%= hasNext ? 'auto' : 'none' %>;">
+     class="btn-link d-inline-flex align-items-center <%= hasNext ? '' : 'is-disabled' %>"
+     aria-disabled="<%= hasNext ? 'false' : 'true' %>">
     <span class="fw-medium me-1">TIẾP</span>
     <svg width="7" height="11" viewBox="0 0 7 11" xmlns="http://www.w3.org/2000/svg">
       <use href="/images/sprite.svg#icon_next_sm" />

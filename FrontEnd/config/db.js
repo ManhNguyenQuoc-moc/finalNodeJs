@@ -3,10 +3,12 @@ const mongoose = require("mongoose");
 
 const connectDB = async () => {
   try {
-    const uri = process.env.MONGO_URI || "mongodb://localhost:27017/finalnodejs";
+    console.log("🔍 Current MONGO_URI:", process.env.MONGO_URI);
+    const uri =
+      process.env.MONGODB_URI || "mongodb://localhost:27017/finalnodejs";
     await mongoose.connect(uri, {
       useNewUrlParser: true,
-      useUnifiedTopology: true
+      useUnifiedTopology: true,
     });
     console.log("✅ MongoDB connected:", uri);
   } catch (err) {

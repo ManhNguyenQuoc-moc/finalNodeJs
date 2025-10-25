@@ -24,7 +24,7 @@ app.use("/api", routes);
 app.use(errorMiddleware);
 
 //connect DB
-connectDB();
+//connectDB();
 // test route
 app.get("/", (req, res) => {
   res.send("API is running...");
