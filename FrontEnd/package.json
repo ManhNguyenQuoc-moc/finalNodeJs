@@ -1,24 +1,26 @@
 {
-  "dependencies": {
-    "cookie-parser": "^1.4.7",
-    "dotenv": "^17.2.3",
-    "ejs": "^3.1.10",
-    "ejs-mate": "^4.0.0",
-    "express": "^5.1.0",
-    "express-ejs-layouts": "^2.5.1",
-    "express-http-proxy": "^2.1.2",
-    "express-session": "^1.18.2",
-    "mongoose": "^8.19.1",
-    "node-fetch": "^2.7.0"
-  },
-  "name": "frontend",
+  "name": "shop-frontend",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "Frontend EJS for Ecommerce",
+  "main": "server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node index.js",
+    "dev": "nodemon index.js"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC"
+  "type": "commonjs",
+  "dependencies": {
+    "bcrypt": "^6.0.0",
+    "body-parser": "^2.2.0",
+    "dotenv": "^17.2.2",
+    "ejs": "^3.1.10",
+    "express": "^5.1.0",
+    "express-session": "^1.18.2",
+    "mongoose": "^8.18.1",
+    "multer": "^2.0.2",
+    "socket.io": "^4.8.1",
+    "uuid": "^8.3.2"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.10"
+  }
 }

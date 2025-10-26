@@ -221,14 +221,21 @@
 
                     <!-- Swatch images -->
                     <div class="d-flex align-items-center mt-1 custom-swatch-container">
-                      <% product.colors.forEach(productColor => { %>
-                        <a href="#" class="swatch-color custom-swatch-color"
-                          style="background-image: url(<%= productColor.imageUrls.length > 0 ? productColor.imageUrls[0] : '' %>); background-size: cover;"
-                          data-images="<%= productColor.imageUrls.join(',') %>"
+                      <% (product && Array.isArray(product.colors) ? product.colors : []).forEach(productColor => { 
+                          const imgs = Array.isArray(productColor.imageUrls) ? productColor.imageUrls : [];
+                          const first = imgs.length ? imgs[0] : '/images/placeholder.png'; // đổi path placeholder theo dự án của bạn
+                      %>
+                        <a
+                          href="#"
+                          class="swatch-color custom-swatch-color"
+                          style="background-image: url('<%= encodeURI(first) %>'); background-size: cover;"
+                          data-images="<%= imgs.map(u => encodeURI(u)).join('|') %>"
                           onclick="changeColor(this); return false;"
-                          title="<%= productColor.color %>"></a>
+                          title="<%= productColor.color || '' %>">
+                        </a>
                       <% }) %>
                     </div>
+
 
                     <div class="pc__info position-relative d-flex flex-column justify-content-between">
                       <h1 class="pc__title">
@@ -380,16 +387,25 @@
 
               <!-- Swatch images -->
               <div class="d-flex align-items-center mt-1 custom-swatch-container">
-                <% if (product_list.colors && product_list.colors.length > 0) { %>
-                  <% product_list.colors.forEach(productColor => { %>
-                    <a href="#" class="swatch-color custom-swatch-color"
-                      style="background-image: url(<%= productColor.imageUrls.length > 0 ? productColor.imageUrls[0] : '' %>); background-size: cover;"
-                      data-images="<%= productColor.imageUrls && productColor.imageUrls.length > 0 ? productColor.imageUrls.join(',') : '' %>"
+                <% const colorsSafe = (product_list && Array.isArray(product_list.colors)) ? product_list.colors : []; %>
+                <% if (colorsSafe.length > 0) { %>
+                  <% colorsSafe.forEach((productColor) => { 
+                      const imgs = Array.isArray(productColor.imageUrls) ? productColor.imageUrls : [];
+                      const first = imgs.length ? imgs[0] : '/images/placeholder.png'; // đổi path placeholder nếu cần
+                      const dataImages = imgs.map(u => encodeURI(u)).join('|');       // dùng '|' thay vì ','
+                  %>
+                    <a
+                      href="#"
+                      class="swatch-color custom-swatch-color"
+                      style="background-image: url('<%= encodeURI(first) %>'); background-size: cover;"
+                      data-images="<%= dataImages %>"
                       onclick="changeColor(this); return false;"
-                      title="<%= productColor.color %>"></a>
+                      title="<%= productColor.color || '' %>">
+                    </a>
                   <% }) %>
                 <% } %>
               </div>
+
 
               <div class="pc__info position-relative">
                 <h3 class="pc__title">

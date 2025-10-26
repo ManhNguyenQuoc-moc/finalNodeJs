@@ -10,6 +10,13 @@
   max-width: 100%;
 }
 
+
+.is-disabled {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+
 /* viên thuốc thấp hơn, gọn hơn */
 .search-pill{
   border-radius: 999px;
@@ -41,61 +48,35 @@
 
 .breadcrumb{ margin-bottom:0 }
 
-@media (max-width:991.98px){
-  .toolbar-left{ flex-wrap:wrap }
-  .search-inline{ width:100% }
+/* Responsive nhỏ */
+@media (max-width: 991.98px) {
+  .toolbar-left { flex-wrap: wrap; }
+  .search-inline { width: 100%; }
 }
 
-  .line-clamp-5 {
-    display: -webkit-box;
-    -webkit-line-clamp: 5;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-  }
-  .rating-stars .on { color:#ffc107; }
-  .rating-stars .off { color:#c7c7c7; }
+/* Clamp 5 dòng – có cả thuộc tính chuẩn và -webkit- */
+.line-clamp-5 {
+  /* Chuẩn mới */
+  line-clamp: 5;
+
+  /* WebKit cũ (Chrome cũ, Safari) */
+  display: -webkit-box;
+  -webkit-line-clamp: 5;
+  -webkit-box-orient: vertical;
+
+  overflow: hidden;         /* ẩn phần dư */
+}
+
+/* Sao đánh giá */
+.rating-stars .on  { color: #ffc107; }
+.rating-stars .off { color: #c7c7c7; }
+
 </style>
 
 <%- include('partials/head') %>
 
 <body>
     <%- include('partials/header') %>
-
-<%
-  // ===== Safety defaults để tránh ReferenceError trong EJS =====
-  var selectedCategoryId   = typeof selectedCategoryId   !== 'undefined' ? selectedCategoryId   : null;
-  var selectedCategoryName = typeof selectedCategoryName !== 'undefined' ? selectedCategoryName : 'Tất cả';
-  var sort        = typeof sort        !== 'undefined' ? sort        : '';
-  var price_range = typeof price_range !== 'undefined' ? price_range : '';
-  var brand       = typeof brand       !== 'undefined' ? brand       : '';
-  var rating      = typeof rating      !== 'undefined' ? rating      : '';
-  var color       = typeof color       !== 'undefined' ? color       : '';
-  var q           = typeof q           !== 'undefined' ? q           : '';
-  var categories  = Array.isArray(categories) ? categories : (categories || []);
-  var brands      = Array.isArray(brands) ? brands : (brands || []);
-  var products    = typeof products !== 'undefined' ? products : [];
-
-  // formatPrice fallback
-  var formatPrice = (typeof formatPrice === 'function')
-    ? formatPrice
-    : function(n){ return new Intl.NumberFormat('vi-VN').format(Number(n || 0)) + ' đ'; };
-
-  // Chuẩn hoá danh sách sản phẩm: chấp nhận cả Array và { content:[...] }
-  var productList = [];
-  if (Array.isArray(products)) {
-    productList = products;
-  } else if (products && Array.isArray(products.content)) {
-    productList = products.content;
-  } else {
-    productList = [];
-  }
-
-  // Biến phân trang: nếu products là mảng -> mặc định 1 trang
-  const totalPages  = Math.max((!Array.isArray(products) && products && products.totalPages) || 1, 1);
-  const currentPage = ((!Array.isArray(products) && products && products.number) || 0) + 1;
-  const hasPrev     = !!(!Array.isArray(products) && products && products.hasPrevious);
-  const hasNext     = !!(!Array.isArray(products) && products && products.hasNext);
-%>
 
     <main>
     <section class="shop-main container d-flex pt-4 pt-xl-5">
@@ -151,22 +132,26 @@
             <div id="accordion-filter-brand" class="accordion-collapse collapse show border-0" data-bs-parent="#brand-filters">
             <div class="accordion-body px-0 pb-0">
               <ul class="list-unstyled mb-0">
-                <% 
-                  // brands: có thể là ['Mixi','DenimCo',...] hoặc [{name:'Mixi'},...]
-                  const picked = new Set((brand || '').split(',').filter(Boolean));
-                  (brands || []).forEach(br => {
-                    const b = (typeof br === 'string') ? br : (br.name || '');
-                    if (!b) return;
+                <%
+                  // brands: có thể là ['Mixi','DenimCo', ...] hoặc [{ name: 'Mixi' }, ...]
+                  const brandsSafe = Array.isArray(brands) ? brands : [];
+                  const brandParam = (typeof brand === 'string') ? brand : '';
+                  const picked = new Set(brandParam.split(',').filter(Boolean));
+                %>
+
+                <% brandsSafe.forEach(br => { 
+                    const name = (typeof br === 'string') ? br : ((br && br.name) || '');
+                    if (!name) return;
                 %>
                   <li class="mb-2">
                     <label class="d-flex align-items-center gap-2">
                       <input 
-                        type="checkbox"
-                        class="form-check-input js-brand"
-                        value="<%= b %>"
-                        <%= picked.has(b) ? 'checked' : '' %>
-                      >
-                      <span><%= b %></span>
+                        type="checkbox" 
+                        name="brand" 
+                        value="<%= name %>" 
+                        <%= picked.has(name) ? 'checked' : '' %>
+                      />
+                      <span><%= name %></span>
                     </label>
                   </li>
                 <% }) %>
@@ -176,6 +161,7 @@
 
           </div>
         </div>
+
 
         <div class="accordion" id="color-filters">
           <div class="accordion-item mb-4 pb-3">
@@ -242,6 +228,7 @@
             </div>
           </div>
         </div>
+
 
         <div class="accordion" id="price-filters">
           <div class="accordion-item mb-4">
@@ -425,7 +412,7 @@
           <form method="GET" action="/category/<%= selectedCategoryId || 'alls' %>">
             <div class="shop-acs d-flex align-items-center justify-content-between justify-content-md-end flex-grow-1">
               <select class="shop-acs__select form-select w-auto border-0 py-0 order-1 order-md-0" aria-label="Sort Items" name="sort" onchange="this.form.submit();">
-                <option <%= sort == null || sort === '' ? 'selected' : '' %> value="">Mặc định</option>
+                <option <%= sort == null ? 'selected' : '' %> value="">Mặc định</option>
                 <option <%= sort === 'a_z' ? 'selected' : '' %> value="a_z">Tên A-Z</option>
                 <option <%= sort === 'z_a' ? 'selected' : '' %> value="z_a">Tên Z-A</option>
                 <option <%= sort === 'price_low_to_high' ? 'selected' : '' %> value="price_low_to_high">Giá tăng dần</option>
@@ -451,8 +438,10 @@
           </form>
         </div>
 
+        
+
         <div class="products-grid row row-cols-2 row-cols-md-4" id="products-grid">
-          <% productList.forEach(product => { %>
+          <% products.content.forEach(product => { %>
             <div class="product-card-wrapper">
               <div class="product-card mb-3 mb-md-4 mb-xxl-5">
                 <div class="pc__img-wrapper">
@@ -471,17 +460,19 @@
                                alt="<%= product.name %>"
                                class="pc__img pc__img-second">
 
-                          <%
-                            const statusName = product.productStatus?.statusName 
-                                            || product.statusName 
-                                            || product.status 
-                                            || '';
-                            const frameSrc =
-                              statusName === 'Bán chạy' ? '/mixishop/images/frame_banchay.png' :
-                              statusName === 'Trending' ? '/mixishop/images/frame_trending.png' :
-                              '/mixishop/images/frame_new.png';
+                          <% 
+                            let statusFrame = '';
+                            if (product.productStatus?.statusName === 'Bán chạy') {
+                              statusFrame = '/mixishop/images/frame_banchay.png';
+                            } else if (product.productStatus?.statusName === 'Trending') {
+                              statusFrame = '/mixishop/images/frame_trending.png';
+                            } else {
+                              statusFrame = '/mixishop/images/frame_new.png';
+                            }
                           %>
-                          <img class="category-banner__frame" src="<%= frameSrc %>" alt="Status Frame">
+                          <img class="category-banner__frame"
+                              src="<%= statusFrame %>"
+                              alt="<%= product.productStatus?.statusName || 'New' %> Frame">
                         </a>
                       </div>
                     </div>
@@ -493,22 +484,29 @@
                     Thêm giỏ hàng
                   </a>
                 </div>
-
                 <div class="d-flex align-items-center mt-1 custom-swatch-container">
-                  <% if (product.colors && product.colors.length > 0) { %>
-                    <% product.colors.forEach(productColor => { %>
-                      <a href="#"
-                         class="swatch-color custom-swatch-color"
-                         style="background-image: url('<%= productColor.imageUrls && productColor.imageUrls.length > 0 ? productColor.imageUrls[0] : '' %>'); background-size: cover;"
-                         data-images="<%= productColor.imageUrls && productColor.imageUrls.length > 0 ? productColor.imageUrls.join(',') : '' %>"
-                         onclick="changeColor(this); return false;"
-                         title="<%= productColor.color %>"></a>
+                  <% const colorsSafe = (product && Array.isArray(product.colors)) ? product.colors : []; %>
+                  <% if (colorsSafe.length > 0) { %>
+                    <% colorsSafe.forEach((productColor) => { 
+                        const imgs = Array.isArray(productColor.imageUrls) ? productColor.imageUrls : [];
+                        const first = imgs.length ? imgs[0] : '/images/placeholder.png'; // đổi path placeholder nếu cần
+                        const encodedImgs = imgs.map(u => encodeURI(u));
+                    %>
+                      <a
+                        href="#"
+                        class="swatch-color custom-swatch-color"
+                        style="background-image: url('<%= encodeURI(first) %>'); background-size: cover;"
+                        data-images='<%= JSON.stringify(encodedImgs) %>'
+                        onclick="changeColor(this); return false;"
+                        title="<%= productColor.color || '' %>">
+                      </a>
                     <% }) %>
                   <% } %>
                 </div>
 
+
                 <div class="pc__info position-relative">
-                  <p class="pc__category"><%= product.category?.name %></p>
+                  <p class="pc__category"><%= product.category_id?.name %></p>
 
                   <h6 class="pc__title">
                     <a href="/product_detail/<%= product._id %>"><%= product.name %></a>
@@ -526,7 +524,7 @@
 
                   <div class="product-card__price d-flex">
                     <span class="money price" style="color: blue;">
-                      <%= formatPrice(product.price) %>
+                      <%= product.price.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) %>
                     </span>
                   </div>
 
@@ -540,7 +538,12 @@
           <% }) %>
         </div>
 
-<%
+        <%
+  const totalPages  = Math.max((products && products.totalPages) || 1, 1);
+  const currentPage = ((products && products.number) || 0) + 1;
+  const hasPrev     = !!(products && products.hasPrevious);
+  const hasNext     = !!(products && products.hasNext);
+
   const qs = (page) =>
     `pageNo=${page}`
     + `&sort=${encodeURIComponent(sort || '')}`
@@ -556,14 +559,15 @@
 <nav class="shop-pages d-flex justify-content-between mt-3" aria-label="Phân trang">
   <!-- Prev -->
   <a href="<%= hasPrev ? (baseUrl + '?' + qs(currentPage - 1)) : '#' %>"
-     class="btn-link d-inline-flex align-items-center <%= hasPrev ? '' : 'disabled' %>"
-     aria-disabled="<%= hasPrev ? 'false' : 'true' %>"
-     style="opacity:<%= hasPrev ? 1 : 0.5 %>; pointer-events:<%= hasPrev ? 'auto' : 'none' %>;">
+    class="btn-link d-inline-flex align-items-center <%= hasPrev ? '' : 'is-disabled disabled' %>"
+    aria-disabled="<%= hasPrev ? 'false' : 'true' %>">
     <svg class="me-1" width="7" height="11" viewBox="0 0 7 11" xmlns="http://www.w3.org/2000/svg">
       <use href="/images/sprite.svg#icon_prev_sm" />
     </svg>
     <span class="fw-medium">TRƯỚC</span>
   </a>
+
+
 
   <!-- Pages -->
   <ul class="pagination mb-0">
@@ -577,9 +581,8 @@
 
   <!-- Next -->
   <a href="<%= hasNext ? (baseUrl + '?' + qs(currentPage + 1)) : '#' %>"
-     class="btn-link d-inline-flex align-items-center <%= hasNext ? '' : 'disabled' %>"
-     aria-disabled="<%= hasNext ? 'false' : 'true' %>"
-     style="opacity:<%= hasNext ? 1 : 0.5 %>; pointer-events:<%= hasNext ? 'auto' : 'none' %>;">
+     class="btn-link d-inline-flex align-items-center <%= hasNext ? '' : 'is-disabled' %>"
+     aria-disabled="<%= hasNext ? 'false' : 'true' %>">
     <span class="fw-medium me-1">TIẾP</span>
     <svg width="7" height="11" viewBox="0 0 7 11" xmlns="http://www.w3.org/2000/svg">
       <use href="/images/sprite.svg#icon_next_sm" />
@@ -605,6 +608,7 @@
     <!-- Page Overlay -->
     <div class="page-overlay"></div><!-- /.page-overlay -->
 
+
     <!-- External JavaScripts -->
     <script src="/mixishop/js/plugins/jquery.min.js"></script>
     <script src="/mixishop/js/plugins/bootstrap.bundle.min.js"></script>
@@ -629,201 +633,204 @@
         });
       });
 
-      function changeColor(swatch) {
-        const dataImages = swatch.getAttribute('data-images');
-        const images = dataImages ? dataImages.split(',') : [];
+        function changeColor(swatch) {
+            const dataImages = swatch.getAttribute('data-images');
+            const images = dataImages ? dataImages.split(',') : [];
 
-        const productCard = swatch.closest('.product-card');
+            const productCard = swatch.closest('.product-card');
 
-        const firstImage = productCard.querySelector('.pc__img');
-        const secondImage = productCard.querySelector('.pc__img-second');
+            const firstImage = productCard.querySelector('.pc__img');
+            const secondImage = productCard.querySelector('.pc__img-second');
 
-        if (!firstImage || !secondImage) {
-          console.error('Không tìm thấy phần tử .pc__img hoặc .pc__img-second trong sản phẩm');
-          return;
-        }
-
-        if (images.length > 0) {
-          firstImage.src = images[0];
-          secondImage.src = images.length > 1 ? images[1] : images[0];
-        } else {
-          firstImage.src = 'path/to/default/image.png';
-          secondImage.src = 'path/to/default/image.png';
-        }
-
-        const swatchColors = productCard.querySelectorAll('.swatch-color');
-        swatchColors.forEach(color => color.classList.remove('swatch_active'));
-        swatch.classList.add('swatch_active');
-      }
-    </script>
-
-    <script>
-      (function(){
-        const getURL = () => new URL(window.location.href);
-
-        function setParam(url, key, val){
-          if(!val) url.searchParams.delete(key);
-          else url.searchParams.set(key, val);
-        }
-        function go(url){
-          url.searchParams.set('pageNo','1');
-          window.location.href = url.toString();
-        }
-
-        // --- Brand ---
-        document.querySelectorAll('.js-brand').forEach(cb=>{
-          cb.addEventListener('change', ()=>{
-            const url = getURL();
-            const values = [...document.querySelectorAll('.js-brand:checked')].map(x=>x.value.trim());
-            setParam(url, 'brand', values.join(','));
-            go(url);
-          });
-        });
-
-        // --- Rating ---
-        document.querySelectorAll('.js-rating').forEach(r=>{
-          r.addEventListener('change', ()=>{
-            const url = getURL();
-            setParam(url, 'rating', r.checked ? r.value : '');
-            go(url);
-          });
-        });
-        const btnClearRating = document.getElementById('clearRating');
-        if(btnClearRating){
-          btnClearRating.addEventListener('click', (e)=>{
-            e.preventDefault();
-            const url = getURL();
-            setParam(url, 'rating', '');
-            go(url);
-          });
-        }
-
-        // --- Color ---
-        document.querySelectorAll('.swatch-color.js-filter').forEach(el=>{
-          el.addEventListener('click', (e)=>{
-            e.preventDefault();
-            const url = getURL();
-            setParam(url, 'color', el.dataset.color || '');
-            go(url);
-          });
-        });
-
-        // --- Price ---
-        const minI = document.getElementById('minPrice');
-        const maxI = document.getElementById('maxPrice');
-        function applyPrice(min, max){
-          const url = getURL();
-          if(!min && !max) setParam(url,'price_range','');
-          else setParam(url,'price_range', (min||'')+','+(max||''));
-          go(url);
-        }
-        document.getElementById('applyPrice')?.addEventListener('click', ()=>applyPrice(minI.value,maxI.value));
-        document.getElementById('clearPrice')?.addEventListener('click', ()=>applyPrice('',''));
-        document.querySelectorAll('.js-quick-price').forEach(btn=>{
-          btn.addEventListener('click', ()=> applyPrice(btn.dataset.min, btn.dataset.max));
-        });
-
-        // --- Giữ style active cho color ---
-        const curColor = getURL().searchParams.get('color');
-        if(curColor){
-          document.querySelectorAll('.swatch-color.js-filter').forEach(el=>{
-            el.classList.toggle('swatch_active', el.dataset.color===curColor);
-          });
-        }
-      })();
-
-      (function(){
-        const btn = document.getElementById('btnClearKeyword');
-        if(btn){
-          btn.addEventListener('click', function(){
-            const form = this.closest('form');
-            const input = form.querySelector('input[name="q"]');
-            input.value = '';
-            const page = form.querySelector('input[name="pageNo"]');
-            if(page) page.value = '1';
-            form.submit();
-          });
-        }
-      })();
-
-      (function () {
-        const getURL = () => new URL(window.location.href);
-
-        function applyPrice(min, max) {
-          const url = getURL();
-          if ((!min && !max) || (min === '' && max === '')) {
-            url.searchParams.delete('price_range');
-          } else {
-            url.searchParams.set('price_range', `${min || ''},${max || ''}`);
-          }
-          url.searchParams.set('pageNo', '1');
-          window.location.href = url.toString();
-        }
-
-        // 1) Quick range: chỉ 1 ô được chọn + điều hướng
-        document.querySelectorAll('.js-quick-price').forEach(cb => {
-          cb.addEventListener('change', () => {
-            // bỏ chọn các ô khác
-            document.querySelectorAll('.js-quick-price').forEach(other => {
-              if (other !== cb) other.checked = false;
-            });
-            // chuyển giá trị
-            const min = cb.dataset.min || '';
-            const max = cb.dataset.max || '';
-            applyPrice(min, max);
-          });
-        });
-
-        // 2) Phản chiếu trạng thái checkbox theo URL khi load trang
-        (function reflectQuickPriceFromURL() {
-          const url = getURL();
-          const pr = url.searchParams.get('price_range') || '';
-          const [curMin, curMax] = pr.split(',');
-          // mặc định: nếu không có price_range -> tick "Tất cả"
-          let matched = false;
-          document.querySelectorAll('.js-quick-price').forEach(cb => {
-            const m = cb.dataset.min || '';
-            const x = cb.dataset.max || '';
-            const isMatch =
-              (curMin ?? '') === m &&
-              (curMax ?? '') === x &&
-              pr !== null; // có param hoặc rỗng đều OK
-            if (isMatch && (m !== '' || x !== '')) {
-              cb.checked = true;
-              matched = true;
-            } else {
-              cb.checked = false;
+            if (!firstImage || !secondImage) {
+                console.error('Không tìm thấy phần tử .pc__img hoặc .pc__img-second trong sản phẩm');
+                return;
             }
-          });
-          // nếu không khớp khoảng nào (hoặc rỗng) => tick "Tất cả"
-          if (!matched) {
-            const allCb = document.querySelector('.js-quick-price[data-min=""][data-max=""]');
-            if (allCb) allCb.checked = true;
-          }
-        })();
 
-        // 3) Ô nhập tay: Áp dụng/Xóa -> bỏ tick các checkbox nhanh
-        const minI = document.getElementById('minPrice');
-        const maxI = document.getElementById('maxPrice');
-        const uncheckQuick = () => {
-          document.querySelectorAll('.js-quick-price').forEach(cb => (cb.checked = false));
-        };
+            if (images.length > 0) {
+                firstImage.src = images[0];
+                secondImage.src = images.length > 1 ? images[1] : images[0];
+            } else {
+                firstImage.src = 'path/to/default/image.png';
+                secondImage.src = 'path/to/default/image.png';
+            }
 
-        document.getElementById('applyPrice')?.addEventListener('click', () => {
-          uncheckQuick();
-          applyPrice(minI.value, maxI.value);
-        });
-
-        document.getElementById('clearPrice')?.addEventListener('click', () => {
-          minI.value = '';
-          maxI.value = '';
-          // chọn lại "Tất cả" cho dễ nhìn
-          const allCb = document.querySelector('.js-quick-price[data-min=""][data-max=""]');
-          if (allCb) allCb.checked = true;
-          applyPrice('', '');
-        });
-      })();
+            const swatchColors = productCard.querySelectorAll('.swatch-color');
+            swatchColors.forEach(color => color.classList.remove('swatch_active'));
+            swatch.classList.add('swatch_active');
+        }
     </script>
+
+        <script>
+          (function(){
+            const getURL = () => new URL(window.location.href);
+
+            function setParam(url, key, val){
+              if(!val) url.searchParams.delete(key);
+              else url.searchParams.set(key, val);
+            }
+            function go(url){
+              url.searchParams.set('pageNo','1');
+              window.location.href = url.toString();
+            }
+
+            // --- Brand ---
+            document.querySelectorAll('.js-brand').forEach(cb=>{
+              cb.addEventListener('change', ()=>{
+                const url = getURL();
+                const values = [...document.querySelectorAll('.js-brand:checked')].map(x=>x.value.trim());
+                setParam(url, 'brand', values.join(','));
+                go(url);
+              });
+            });
+
+            // --- Rating ---
+            document.querySelectorAll('.js-rating').forEach(r=>{
+              r.addEventListener('change', ()=>{
+                const url = getURL();
+                setParam(url, 'rating', r.checked ? r.value : '');
+                go(url);
+              });
+            });
+            const btnClearRating = document.getElementById('clearRating');
+            if(btnClearRating){
+              btnClearRating.addEventListener('click', (e)=>{
+                e.preventDefault();
+                const url = getURL();
+                setParam(url, 'rating', '');
+                go(url);
+              });
+            }
+
+            // --- Color ---
+            document.querySelectorAll('.swatch-color.js-filter').forEach(el=>{
+              el.addEventListener('click', (e)=>{
+                e.preventDefault();
+                const url = getURL();
+                setParam(url, 'color', el.dataset.color || '');
+                go(url);
+              });
+            });
+
+            // --- Price ---
+            const minI = document.getElementById('minPrice');
+            const maxI = document.getElementById('maxPrice');
+            function applyPrice(min, max){
+              const url = getURL();
+              if(!min && !max) setParam(url,'price_range','');
+              else setParam(url,'price_range', (min||'')+','+(max||''));
+              go(url);
+            }
+            document.getElementById('applyPrice')?.addEventListener('click', ()=>applyPrice(minI.value,maxI.value));
+            document.getElementById('clearPrice')?.addEventListener('click', ()=>applyPrice('',''));
+            document.querySelectorAll('.js-quick-price').forEach(btn=>{
+              btn.addEventListener('click', ()=> applyPrice(btn.dataset.min, btn.dataset.max));
+            });
+
+            // --- Giữ style active cho color ---
+            const curColor = getURL().searchParams.get('color');
+            if(curColor){
+              document.querySelectorAll('.swatch-color.js-filter').forEach(el=>{
+                el.classList.toggle('swatch_active', el.dataset.color===curColor);
+              });
+            }
+          })();
+
+  (function(){
+    const btn = document.getElementById('btnClearKeyword');
+    if(btn){
+      btn.addEventListener('click', function(){
+        const form = this.closest('form');
+        const input = form.querySelector('input[name="q"]');
+        input.value = '';
+        const page = form.querySelector('input[name="pageNo"]');
+        if(page) page.value = '1';
+        form.submit();
+      });
+    }
+  })();
+
+  (function () {
+    const getURL = () => new URL(window.location.href);
+
+    function applyPrice(min, max) {
+      const url = getURL();
+      if ((!min && !max) || (min === '' && max === '')) {
+        url.searchParams.delete('price_range');
+      } else {
+        url.searchParams.set('price_range', `${min || ''},${max || ''}`);
+      }
+      url.searchParams.set('pageNo', '1');
+      window.location.href = url.toString();
+    }
+
+    // 1) Quick range: chỉ 1 ô được chọn + điều hướng
+    document.querySelectorAll('.js-quick-price').forEach(cb => {
+      cb.addEventListener('change', () => {
+        // bỏ chọn các ô khác
+        document.querySelectorAll('.js-quick-price').forEach(other => {
+          if (other !== cb) other.checked = false;
+        });
+        // chuyển giá trị
+        const min = cb.dataset.min || '';
+        const max = cb.dataset.max || '';
+        applyPrice(min, max);
+      });
+    });
+
+    // 2) Phản chiếu trạng thái checkbox theo URL khi load trang
+    (function reflectQuickPriceFromURL() {
+      const url = getURL();
+      const pr = url.searchParams.get('price_range') || '';
+      const [curMin, curMax] = pr.split(',');
+      // mặc định: nếu không có price_range -> tick "Tất cả"
+      let matched = false;
+      document.querySelectorAll('.js-quick-price').forEach(cb => {
+        const m = cb.dataset.min || '';
+        const x = cb.dataset.max || '';
+        const isMatch =
+          (curMin ?? '') === m &&
+          (curMax ?? '') === x &&
+          pr !== null; // có param hoặc rỗng đều OK
+        if (isMatch && (m !== '' || x !== '')) {
+          cb.checked = true;
+          matched = true;
+        } else {
+          cb.checked = false;
+        }
+      });
+      // nếu không khớp khoảng nào (hoặc rỗng) => tick "Tất cả"
+      if (!matched) {
+        const allCb = document.querySelector('.js-quick-price[data-min=""][data-max=""]');
+        if (allCb) allCb.checked = true;
+      }
+    })();
+
+    // 3) Ô nhập tay: Áp dụng/Xóa -> bỏ tick các checkbox nhanh
+    const minI = document.getElementById('minPrice');
+    const maxI = document.getElementById('maxPrice');
+    const uncheckQuick = () => {
+      document.querySelectorAll('.js-quick-price').forEach(cb => (cb.checked = false));
+    };
+
+    document.getElementById('applyPrice')?.addEventListener('click', () => {
+      uncheckQuick();
+      applyPrice(minI.value, maxI.value);
+    });
+
+    document.getElementById('clearPrice')?.addEventListener('click', () => {
+      minI.value = '';
+      maxI.value = '';
+      // chọn lại "Tất cả" cho dễ nhìn
+      const allCb = document.querySelector('.js-quick-price[data-min=""][data-max=""]');
+      if (allCb) allCb.checked = true;
+      applyPrice('', '');
+    });
+  })();
+
+
+</script>
+
 
     </body>
 
