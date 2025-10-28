@@ -3,7 +3,7 @@ const api = require('../lib/api');
 
 // Home
 r.get(['/', '/home'], async (req, res) => {
-  const { data } = await api.get('/home', { headers: { cookie: req.headers.cookie || '' } });
+  const { data } = await api.get('api/page/home', { headers: { cookie: req.headers.cookie || '' } });
   res.render('home', data);
 });
 

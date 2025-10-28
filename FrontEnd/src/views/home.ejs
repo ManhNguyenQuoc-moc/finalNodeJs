@@ -543,7 +543,7 @@
 <script>
   function changeColor(swatch) {
     const dataImages = swatch.getAttribute('data-images');
-    const images = dataImages ? dataImages.split(',') : [];
+    const images = dataImages ? dataImages.split('|') : [];
 
     const productCard = swatch.closest('.product-card');
 

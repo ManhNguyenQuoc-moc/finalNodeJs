@@ -1,18 +1,24 @@
-# Backend/Dockerfile
-FROM node:20-alpine
-
+# ========= base =========
+FROM node:20-alpine AS base
 WORKDIR /app
-
-# Cài deps (cache tốt)
+ENV CI=true
 COPY package*.json ./
-RUN npm ci --omit=dev
 
-# Copy toàn bộ mã nguồn
+# ========= dev =========
+FROM base AS dev
+# Cài cả dev deps để dùng nodemon trong dev
+RUN npm install
 COPY . .
-
-ENV NODE_ENV=production
-ENV PORT=5000
+ENV NODE_ENV=development
+# giữ port đồng bộ với compose
 EXPOSE 5000
+CMD ["npm", "run", "dev"]
 
-# Chạy theo script để sau này đổi entry không cần sửa Dockerfile
+# ========= prod =========
+FROM base AS prod
+# Prod chỉ cài deps thường
+RUN npm ci --omit=dev
+COPY . .
+ENV NODE_ENV=production
+EXPOSE 5000
 CMD ["npm", "start"]

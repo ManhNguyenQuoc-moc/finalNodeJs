@@ -1,6 +1,5 @@
-// src/controllers/cart.controller.js
 const { getOrCreateCart, addItemToCart, findVariant } = require("../services/cart.service");
-const { Order, DiscountCode, Cart } = require("../models"); // DiscountCode not used here but safe to import
+const { Order, DiscountCode, Cart } = require("../models"); 
 
 exports.addToCartForm = async (req, res) => {
   try {

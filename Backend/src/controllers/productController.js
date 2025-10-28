@@ -15,7 +15,7 @@ exports.createProduct = async (req, res) => {
 };
 exports.getProductbyID = async (req, res) => {
   try {
-    const { id } = req.params; // lấy id từ URL
+    const { id } = req.params;
     const result = await productService.getProductById(id);
     res.status(200).json(result);
   } catch (err) {
@@ -25,7 +25,7 @@ exports.getProductbyID = async (req, res) => {
 };
 exports.getProducts = async (req, res) => {
   try {
-    
+
     const result = await productService.getProducts(req.quẻy);
     res.status(200).json(result);
   } catch (err) {
@@ -38,7 +38,7 @@ exports.getProducts = async (req, res) => {
   try {
     // Nếu không có query thì để filter = {}
     const filter = Object.keys(req.query).length ? { ...req.query } : {};
-    
+
     // Options có thể thêm phân trang, sort...
     const options = {};
 
@@ -58,31 +58,6 @@ exports.getProducts = async (req, res) => {
   }
 };
 
-// const { ProductUpdateInputDTO } = require("../DTO/product/input/ProductUpdateInputDTO");
-
-// exports.updateProduct = async (req, res) => {
-//   try {
-//     const productId = req.params.id;
-
-//     const dto = new ProductUpdateInputDTO(req.body, req.files);
-
-//     console.log("Updating product ID:", productId);
-//     console.log("Update data:", dto);
-
-//     const updatedProduct = await productService.updateProduct(productId, dto);
-
-//     res.status(200).json({
-//       success: true,
-//       data: updatedProduct,
-//     });
-//   } catch (err) {
-//     console.error("Error updating product:", err);
-//     res.status(500).json({
-//       success: false,
-//       message: err.message,
-//     });
-//   }
-// };
 
 
 // -------------------- UPDATE PRODUCT --------------------
@@ -134,5 +109,16 @@ exports.addVariant = async (req, res) => {
     });
   }
 };
+// exports.getAllProducts() = async (req, res) => {
+//   try {
+
+//   } catch (err) {
+//     console.error("Fail get all product:", err);
+//     res.status(500).json({
+//       success: false,
+//       message: err.message,
+//     });
+//   }
+// }
 
 
