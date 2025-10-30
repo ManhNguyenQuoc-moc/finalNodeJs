@@ -25,17 +25,6 @@ exports.getProductbyID = async (req, res) => {
 };
 exports.getProducts = async (req, res) => {
   try {
-
-    const result = await productService.getProducts(req.quẻy);
-    res.status(200).json(result);
-  } catch (err) {
-    console.error("Error fetching product:", err);
-    res.status(500).json({ message: err.message });
-  }
-};
-
-exports.getProducts = async (req, res) => {
-  try {
     // Nếu không có query thì để filter = {}
     const filter = Object.keys(req.query).length ? { ...req.query } : {};
 
@@ -57,9 +46,6 @@ exports.getProducts = async (req, res) => {
     });
   }
 };
-
-
-
 // -------------------- UPDATE PRODUCT --------------------
 exports.updateProduct = async (req, res) => {
   try {
@@ -109,16 +95,41 @@ exports.addVariant = async (req, res) => {
     });
   }
 };
-// exports.getAllProducts() = async (req, res) => {
-//   try {
+exports.getAllProducts = async (req, res) => {
+  try {
+    const result = await productService.getAllProducts(); // result = { items, total }
 
-//   } catch (err) {
-//     console.error("Fail get all product:", err);
-//     res.status(500).json({
-//       success: false,
-//       message: err.message,
-//     });
-//   }
-// }
+    res.status(200).json({
+      success: true,
+      count: result.length || 0,
+      data: result || [],
+    });
+  } catch (err) {
+    console.error("Fail get all products:", err);
+    res.status(500).json({
+      success: false,
+      message: err.message,
+    });
+  }
+};
+
+// -------------------- LẤY SẢN PHẨM THEO ID --------------------
+exports.getProductById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const result = await productService.getProductById(id);
+    return res.status(200).json({
+      success: true,
+      data: result,
+    });
+  } catch (err) {
+    console.error("Fail get product by ID:", err);
+    const code = /not found/i.test(err.message) ? 404 : 500;
+    return res.status(code).json({
+      success: false,
+      message: err.message,
+    });
+  }
+};
 
 

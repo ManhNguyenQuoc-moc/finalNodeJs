@@ -8,7 +8,6 @@ const productSchema = new mongoose.Schema(
     category: { type: mongoose.Schema.Types.ObjectId, ref: "Category" },
     short_description: String,
     long_description: String,
-    
     productStatus: {
       statusName: {
         type: String,

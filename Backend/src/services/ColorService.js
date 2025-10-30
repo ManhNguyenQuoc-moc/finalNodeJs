@@ -5,7 +5,7 @@ class ColorService {
     return colorrepo.create(data);
   }
 
-  async getAllBrands() {
+  async getAllBColor() {
     return colorrepo.findAll();
   }
 

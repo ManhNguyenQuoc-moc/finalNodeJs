@@ -7,7 +7,6 @@ class AddProductResponse {
     this.category = product.category || null;
     this.short_description = product.short_description || "";
     this.long_description = product.long_description || "";
-
     // Images của product
     this.images = (product.images || []).map((img) => ({
       url: img.url,
@@ -23,17 +22,17 @@ class AddProductResponse {
       stock_quantity: Number(v.stock_quantity) || 0,
       color: v.color
         ? {
-            id: v.color._id?.toString(),
-            name: v.color.color_name,
-            code: v.color.color_code,
-          }
+          id: v.color._id?.toString(),
+          name: v.color.color_name,
+          code: v.color.color_code,
+        }
         : null,
       size: v.size
         ? {
-            id: v.size._id?.toString(),
-            name: v.size.size_name,
-            order: Number(v.size.size_order) || 0,
-          }
+          id: v.size._id?.toString(),
+          name: v.size.size_name,
+          order: Number(v.size.size_order) || 0,
+        }
         : null,
       images: (v.images || []).map((img) => ({
         url: img.url,

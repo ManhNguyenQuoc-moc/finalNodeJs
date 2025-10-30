@@ -1,30 +1,51 @@
 <% layout('layouts/admin') %>
-<section class="space-y-6">
-  <div class="flex items-center justify-between">
-    <h2 class="text-xl font-semibold">Người dùng</h2>
-  </div>
-  <div class="card overflow-x-auto">
-    <table class="w-full text-sm">
-      <thead><tr class="text-left text-slate-500 uppercase text-[11px]">
-        <th class="p-2">Tên</th><th class="p-2">Email</th><th class="p-2">Role</th><th class="p-2">Verified</th><th class="p-2">Điểm</th><th class="p-2">Ngày tạo</th><th class="p-2 w-28"></th>
-      </tr></thead>
-      <tbody>
-        <% (items||[]).forEach(u=>{ %>
-          <tr class="border-t hover:bg-slate-50/70">
-            <td class="p-2 font-medium"><%= u.full_name || '-' %></td>
-            <td class="p-2"><%= u.email || '—' %></td>
-            <td class="p-2"><span class="px-2 py-1 rounded bg-slate-100 text-slate-700 text-xs"><%= u.role %></span></td>
-            <td class="p-2"><%= u.is_verified ? '✅' : '—' %></td>
-            <td class="p-2"><%= u.loyalty_points || 0 %></td>
-            <td class="p-2"><%= new Date(u.createdAt).toLocaleString('vi-VN') %></td>
-            <td class="p-2 text-right space-x-1">
-              <form action="/admin/users/<%= u._id %>/delete" method="post" class="inline" onsubmit="return confirm('Xóa user này?')">
-                <button class="btn sm" type="submit">Xóa</button>
-              </form>
-            </td>
+  <section class="space-y-6">
+    <div class="flex items-center justify-between">
+      <h2 class="text-xl font-semibold">Người dùng</h2>
+    </div>
+    <div class="card overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="text-left text-slate-500 uppercase text-[11px]">
+            <th class="p-2">Tên</th>
+            <th class="p-2">Email</th>
+            <th class="p-2">Role</th>
+            <th class="p-2">Verified</th>
+            <th class="p-2">Điểm</th>
+            <th class="p-2">Ngày tạo</th>
+            <th class="p-2 w-28"></th>
           </tr>
-        <% }) %>
-      </tbody>
-    </table>
-  </div>
-</section>
+        </thead>
+        <tbody>
+          <% (items||[]).forEach(u=>{ %>
+            <tr class="border-t hover:bg-slate-50/70">
+              <td class="p-2 font-medium">
+                <%= u.full_name || '-' %>
+              </td>
+              <td class="p-2">
+                <%= u.email || '—' %>
+              </td>
+              <td class="p-2"><span class="px-2 py-1 rounded bg-slate-100 text-slate-700 text-xs">
+                  <%= u.role %>
+                </span></td>
+              <td class="p-2">
+                <%= u.is_verified ? '✅' : '—' %>
+              </td>
+              <td class="p-2">
+                <%= u.loyalty_points || 0 %>
+              </td>
+              <td class="p-2">
+                <%= new Date(u.createdAt).toLocaleString('vi-VN') %>
+              </td>
+              <td class="p-2 text-right space-x-1">
+                <form action="/admin/users/<%= u._id %>/delete" method="post" class="inline"
+                  onsubmit="return confirm('Xóa user này?')">
+                  <button class="btn sm" type="submit">Xóa</button>
+                </form>
+              </td>
+            </tr>
+            <% }) %>
+        </tbody>
+      </table>
+    </div>
+  </section>

@@ -120,7 +120,7 @@
             <% categories.forEach(category => { %>
               <div class="swiper-slide">
                 <a href="/category/<%= category._id %>" class="d-block">
-                  <img loading="lazy" class="w-100 h-auto mb-3" src="<%= category.imageUrl %>" width="150" height="150" alt="">
+                  <img loading="lazy" class="w-100 h-auto mb-3" src="<%= category.image%>" width="150" height="150" alt="">
                   <div class="text-center">
                     <a class="menu-link fw-medium"><%= category.name %></a>
                   </div>

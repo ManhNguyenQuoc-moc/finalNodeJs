@@ -1,35 +1,64 @@
-<header class="bg-white/80 border-b backdrop-blur sticky top-0 z-30" x-data="{menu:false}">
-  <div class="max-w-[1400px] mx-auto px-4 py-3 flex items-center justify-between gap-3">
+<header class="bg-white/80 border-b backdrop-blur sticky top-0 z-30" x-data="{ menu:false }">
+  <div class="max-w-[1400px] mx-auto px-4 h-14 flex items-center justify-between gap-3">
     <div class="flex items-center gap-3">
-      <button class="md:hidden inline-flex items-center justify-center h-9 w-9 rounded-lg hover:bg-slate-100" @click="$root.open=true">
+      <button class="md:hidden inline-flex items-center justify-center h-9 w-9 rounded-lg hover:bg-slate-100"
+        @click="$root.open=true" aria-label="Mở menu">
         <i class="lucide lucide-menu"></i>
       </button>
-      <h1 class="text-lg font-semibold"><%= pageHeading || "Tổng quan" %></h1>
+      <h1 class="text-lg font-semibold">
+        <%= pageHeading || "Tổng quan" %>
+      </h1>
+      <div class="hidden md:flex items-center gap-2 ml-4">
+        <i class="lucide lucide-search text-slate-400"></i>
+        <input
+          class="h-9 rounded-lg border border-slate-300 bg-white px-3 text-sm shadow-sm placeholder:text-slate-400 focus:border-brand-400 focus:ring-2 focus:ring-brand-200 w-72"
+          type="search" placeholder="Tìm kiếm..." aria-label="Tìm kiếm" />
+      </div>
     </div>
 
-    <div class="relative">
-      <button class="h-9 w-9 rounded-full bg-brand-500 text-white grid place-items-center font-medium focus:outline-none"
-              @click="menu=!menu" @keydown.escape="menu=false" aria-haspopup="menu" aria-expanded="false">
+
+    <div class="flex items-center gap-2 relative">
+      <button class="inline-flex items-center justify-center h-9 w-9 rounded-lg hover:bg-slate-100"
+        aria-label="Thông báo">
+        <i class="lucide lucide-bell text-brand-700"></i>
+        <span class="sr-only">Thông báo</span>
+      </button>
+      <a href="/admin/me"
+        class="inline-flex items-center justify-center h-9 w-9 rounded-lg hover:bg-slate-100 text-brand-700">
+        <i class="lucide lucide-user"></i>
+      </a>
+
+
+      <button
+        class="h-9 w-9 rounded-full bg-brand-600 text-white grid place-items-center font-medium ring-2 ring-brand-200"
+        @click="menu=!menu" @keydown.escape="menu=false" :aria-expanded="menu.toString()" aria-haspopup="menu"
+        aria-label="Mở menu tài khoản">
         <%= (admin && admin.full_name) ? admin.full_name[0] : "A" %>
       </button>
 
-      <!-- Dropdown -->
-      <div x-show="menu" x-cloak @click.outside="menu=false"
-           class="absolute right-0 mt-2 w-56 bg-white border rounded-xl shadow-soft overflow-hidden">
+
+      <div x-show="menu" x-cloak @click.outside="menu=false" x-transition.origin.top.right
+        class="absolute right-0 top-12 w-56 bg-white border rounded-xl shadow-soft overflow-hidden" role="menu"
+        aria-label="Tài khoản">
         <div class="px-4 py-3">
           <div class="text-sm text-slate-500">Đăng nhập với</div>
-          <div class="font-semibold"><%= (admin && admin.full_name) || 'Admin' %></div>
+          <div class="font-semibold">
+            <%= (admin && admin.full_name) || 'Admin' %>
+          </div>
         </div>
         <div class="border-t"></div>
-        <a href="/admin/account/password" class="flex items-center gap-2 px-4 py-2.5 hover:bg-slate-50 text-[15px]">
+        <a href="/admin/account/password" class="flex items-center gap-2 px-4 py-2.5 hover:bg-slate-50 text-[15px]"
+          role="menuitem">
           <i class="lucide lucide-key h-4 w-4"></i> Đổi mật khẩu
         </a>
         <form action="/admin/logout" method="post">
-          <button type="submit" class="w-full text-left flex items-center gap-2 px-4 py-2.5 hover:bg-slate-50 text-[15px]">
+          <button type="submit"
+            class="w-full text-left flex items-center gap-2 px-4 py-2.5 hover:bg-slate-50 text-[15px]" role="menuitem">
             <i class="lucide lucide-log-out h-4 w-4"></i> Đăng xuất
           </button>
         </form>
       </div>
     </div>
   </div>
+  <div class="fixed inset-0 bg-black/20 md:hidden" x-show="menu" x-transition.opacity x-cloak aria-hidden="true"></div>
 </header>

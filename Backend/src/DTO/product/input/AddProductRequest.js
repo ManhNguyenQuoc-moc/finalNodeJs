@@ -12,7 +12,9 @@ class AddProductRequest {
     this.category = body.category;
     this.short_description = body.short_description;
     this.long_description = body.long_description;
-
+    this.productStatus = {
+      statusName: body.statusName || "New",
+    };
     // productImages: file upload của product
     this.productImages = files.filter(f => f.fieldname === "productImages");
 

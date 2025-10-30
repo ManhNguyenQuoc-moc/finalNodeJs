@@ -84,7 +84,7 @@ async function main() {
 
   await ProductVariant.insertMany(variantsToCreate);
 
-  console.log('✅ Seed xong!');
+  console.log(' Seed xong!');
   console.log('Product ID:', product._id.toString());
   await mongoose.disconnect();
 }

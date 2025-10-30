@@ -1,30 +1,134 @@
-<aside :class="['fixed md:static z-40 inset-y-0 left-0 w-72 md:w-64 bg-white border-r shadow-soft transform transition-transform', open ? 'translate-x-0' : '-translate-x-full md:translate-x-0']">
-  <div class="px-4 py-4 border-b flex items-center gap-3">
-    <button class="md:hidden h-9 w-9 grid place-items-center rounded-lg hover:bg-slate-100" @click="open=false">
-      <i class="lucide lucide-x"></i>
-    </button>
-    <div class="h-9 w-9 bg-brand-500 rounded-xl grid place-items-center text-white font-semibold">A</div>
-    <div><div class="font-semibold">Admin</div><div class="text-xs text-slate-500">Console</div></div>
+<!-- Sidebar / Admin Nav -->
+<aside role="navigation" aria-label="Admin navigation" class="fixed inset-y-0 left-0 z-40 w-72 md:w-64 bg-white border-r shadow-xl md:shadow-none
+         transform transition-transform duration-200
+         md:translate-x-0 md:static md:inset-auto"
+  :class="$root.open ? 'translate-x-0' : '-translate-x-full md:translate-x-0'">
+
+  <!-- Header (logo + close on mobile) -->
+  <div class="sticky top-0 bg-white/95 backdrop-blur border-b">
+    <div class="px-4 py-3 flex items-center gap-3">
+      <button class="md:hidden size-9 grid place-items-center rounded-lg hover:bg-slate-100" @click="$root.open=false"
+        aria-label="Đóng menu">
+        <i class="lucide lucide-x"></i>
+      </button>
+
+      <div class="relative size-9">
+        <img src="/mixishop/images/logo_mixishop.png" alt="Logo"
+          class="size-9 rounded-xl object-contain ring-2 ring-brand-200 bg-white"
+          onerror="this.style.display='none'; this.nextElementSibling.classList.remove('hidden');" />
+        <div class="hidden size-9 bg-brand-500 rounded-xl grid place-items-center text-white font-semibold">
+          A
+        </div>
+      </div>
+
+      <div>
+        <div class="font-semibold text-slate-800">Admin</div>
+        <div class="text-xs text-brand-700">Console</div>
+      </div>
+    </div>
   </div>
-  <nav class="flex-1 p-3 text-[15px]">
-    <a href="/admin" class="nav-item <%= activePath==='/admin' ? 'active' : '' %>"><i class="lucide lucide-gauge h-4 w-4"></i>Dashboard</a>
 
-    <div class="mt-3 uppercase text-[11px] tracking-wide text-slate-400 px-3">Sản phẩm</div>
-    <a href="/admin/products" class="nav-item <%= activePath.startsWith('/admin/products') ? 'active' : '' %>"><i class="lucide lucide-box h-4 w-4"></i>Sản phẩm</a>
-    <a href="/admin/product-colors" class="nav-item <%= activePath.startsWith('/admin/product-colors') ? 'active' : '' %>"><i class="lucide lucide-palette h-4 w-4"></i>Màu</a>
-    <a href="/admin/product-sizes" class="nav-item <%= activePath.startsWith('/admin/product-sizes') ? 'active' : '' %>"><i class="lucide lucide-ruler h-4 w-4"></i>Size</a>
-    <a href="/admin/product-variants" class="nav-item <%= activePath.startsWith('/admin/product-variants') ? 'active' : '' %>"><i class="lucide lucide-layers h-4 w-4"></i>Biến thể</a>
-    <a href="/admin/brands" class="nav-item <%= activePath.startsWith('/admin/brands') ? 'active' : '' %>"><i class="lucide lucide-badge-check h-4 w-4"></i>Thương hiệu</a>
-    <a href="/admin/categories" class="nav-item <%= activePath.startsWith('/admin/categories') ? 'active' : '' %>"><i class="lucide lucide-folders h-4 w-4"></i>Danh mục</a>
+  <!-- Scrollable nav body -->
+  <nav class="flex-1 overflow-y-auto p-3 text-[15px] space-y-1" x-data="{ sp:true, vh:false, nd:false }">
+    <!-- DASHBOARD -->
+    <a href="/admin" class="mt-2 flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold transition group
+             hover:bg-slate-100"
+      :class="activePath === '/admin' ? 'bg-brand-50 text-brand-700 ring-1 ring-inset ring-brand-100' : 'text-slate-600'">
+      <i class="lucide lucide-gauge text-brand-600"></i>
+      <span>DASHBOARD</span>
+    </a>
 
-    <div class="mt-3 uppercase text-[11px] tracking-wide text-slate-400 px-3">Vận hành</div>
-    <a href="/admin/orders" class="nav-item <%= activePath.startsWith('/admin/orders') ? 'active' : '' %>"><i class="lucide lucide-receipt h-4 w-4"></i>Đơn hàng</a>
-    <a href="/admin/discounts" class="nav-item <%= activePath.startsWith('/admin/discounts') ? 'active' : '' %>"><i class="lucide lucide-ticket-percent h-4 w-4"></i>Mã giảm giá</a>
+    <!-- SẢN PHẨM -->
+    <button @click="sp=!sp" class="mt-3 flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm font-semibold
+             text-slate-600 hover:bg-slate-100 transition">
+      <i class="lucide lucide-box text-brand-600"></i>
+      <span>SẢN PHẨM</span>
+      <i class="lucide lucide-chevron-down ml-auto transition-transform"
+        :class="sp ? 'rotate-180 text-brand-700' : 'text-slate-400'"></i>
+    </button>
+    <div x-show="sp" x-collapse x-cloak class="pl-2 space-y-0.5">
+      <a href="/admin/products"
+        class="flex items-center gap-2 rounded-lg px-3 py-2 transition hover:bg-brand-50 hover:text-brand-700
+                <%= activePath.startsWith('/admin/products') ? 'bg-brand-50 text-brand-700 ring-1 ring-inset ring-brand-100' : 'text-slate-700' %>">
+        <i class="lucide lucide-box h-4 w-4"></i>Sản phẩm
+      </a>
+      <a href="/admin/product-colors"
+        class="flex items-center gap-2 rounded-lg px-3 py-2 transition hover:bg-brand-50 hover:text-brand-700
+                <%= activePath.startsWith('/admin/product-colors') ? 'bg-brand-50 text-brand-700 ring-1 ring-inset ring-brand-100' : 'text-slate-700' %>">
+        <i class="lucide lucide-palette h-4 w-4"></i>Màu
+      </a>
+      <a href="/admin/product-sizes"
+        class="flex items-center gap-2 rounded-lg px-3 py-2 transition hover:bg-brand-50 hover:text-brand-700
+                <%= activePath.startsWith('/admin/product-sizes') ? 'bg-brand-50 text-brand-700 ring-1 ring-inset ring-brand-100' : 'text-slate-700' %>">
+        <i class="lucide lucide-ruler h-4 w-4"></i>Size
+      </a>
+      <a href="/admin/product-variants"
+        class="flex items-center gap-2 rounded-lg px-3 py-2 transition hover:bg-brand-50 hover:text-brand-700
+                <%= activePath.startsWith('/admin/product-variants') ? 'bg-brand-50 text-brand-700 ring-1 ring-inset ring-brand-100' : 'text-slate-700' %>">
+        <i class="lucide lucide-layers h-4 w-4"></i>Biến thể
+      </a>
+      <a href="/admin/brands"
+        class="flex items-center gap-2 rounded-lg px-3 py-2 transition hover:bg-brand-50 hover:text-brand-700
+                <%= activePath.startsWith('/admin/brands') ? 'bg-brand-50 text-brand-700 ring-1 ring-inset ring-brand-100' : 'text-slate-700' %>">
+        <i class="lucide lucide-badge-check h-4 w-4"></i>Thương hiệu
+      </a>
+      <a href="/admin/categories"
+        class="flex items-center gap-2 rounded-lg px-3 py-2 transition hover:bg-brand-50 hover:text-brand-700
+                <%= activePath.startsWith('/admin/categories') ? 'bg-brand-50 text-brand-700 ring-1 ring-inset ring-brand-100' : 'text-slate-700' %>">
+        <i class="lucide lucide-folders h-4 w-4"></i>Danh mục
+      </a>
+    </div>
 
-    <div class="mt-3 uppercase text-[11px] tracking-wide text-slate-400 px-3">Người dùng</div>
-    <a href="/admin/users" class="nav-item <%= activePath.startsWith('/admin/users') ? 'active' : '' %>"><i class="lucide lucide-users h-4 w-4"></i>Người dùng</a>
-    <a href="/admin/addresses" class="nav-item <%= activePath.startsWith('/admin/addresses') ? 'active' : '' %>"><i class="lucide lucide-map-pin h-4 w-4"></i>Địa chỉ</a>
-    <a href="/admin/reviews" class="nav-item <%= activePath.startsWith('/admin/reviews') ? 'active' : '' %>"><i class="lucide lucide-message-square h-4 w-4"></i>Đánh giá</a>
-    <a href="/admin/wishlists" class="nav-item <%= activePath.startsWith('/admin/wishlists') ? 'active' : '' %>"><i class="lucide lucide-heart h-4 w-4"></i>Wishlist</a>
+    <!-- VẬN HÀNH -->
+    <button @click="vh=!vh" class="mt-3 flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm font-semibold
+             text-slate-600 hover:bg-slate-100 transition">
+      <i class="lucide lucide-receipt text-brand-600"></i>
+      <span>VẬN HÀNH</span>
+      <i class="lucide lucide-chevron-down ml-auto transition-transform"
+        :class="vh ? 'rotate-180 text-brand-700' : 'text-slate-400'"></i>
+    </button>
+    <div x-show="vh" x-collapse x-cloak class="pl-2 space-y-0.5">
+      <a href="/admin/orders"
+        class="flex items-center gap-2 rounded-lg px-3 py-2 transition hover:bg-brand-50 hover:text-brand-700
+                <%= activePath.startsWith('/admin/orders') ? 'bg-brand-50 text-brand-700 ring-1 ring-inset ring-brand-100' : 'text-slate-700' %>">
+        <i class="lucide lucide-receipt h-4 w-4"></i>Đơn hàng
+      </a>
+      <a href="/admin/discounts"
+        class="flex items-center gap-2 rounded-lg px-3 py-2 transition hover:bg-brand-50 hover:text-brand-700
+                <%= activePath.startsWith('/admin/discounts') ? 'bg-brand-50 text-brand-700 ring-1 ring-inset ring-brand-100' : 'text-slate-700' %>">
+        <i class="lucide lucide-ticket-percent h-4 w-4"></i>Mã giảm giá
+      </a>
+    </div>
+
+    <!-- NGƯỜI DÙNG -->
+    <button @click="nd=!nd" class="mt-3 flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm font-semibold
+             text-slate-600 hover:bg-slate-100 transition">
+      <i class="lucide lucide-users text-brand-600"></i>
+      <span>NGƯỜI DÙNG</span>
+      <i class="lucide lucide-chevron-down ml-auto transition-transform"
+        :class="nd ? 'rotate-180 text-brand-700' : 'text-slate-400'"></i>
+    </button>
+    <div x-show="nd" x-collapse x-cloak class="pl-2 space-y-0.5">
+      <a href="/admin/users"
+        class="flex items-center gap-2 rounded-lg px-3 py-2 transition hover:bg-brand-50 hover:text-brand-700
+                <%= activePath.startsWith('/admin/users') ? 'bg-brand-50 text-brand-700 ring-1 ring-inset ring-brand-100' : 'text-slate-700' %>">
+        <i class="lucide lucide-users h-4 w-4"></i>Người dùng
+      </a>
+      <a href="/admin/addresses"
+        class="flex items-center gap-2 rounded-lg px-3 py-2 transition hover:bg-brand-50 hover:text-brand-700
+                <%= activePath.startsWith('/admin/addresses') ? 'bg-brand-50 text-brand-700 ring-1 ring-inset ring-brand-100' : 'text-slate-700' %>">
+        <i class="lucide lucide-map-pin h-4 w-4"></i>Địa chỉ
+      </a>
+      <a href="/admin/reviews"
+        class="flex items-center gap-2 rounded-lg px-3 py-2 transition hover:bg-brand-50 hover:text-brand-700
+                <%= activePath.startsWith('/admin/reviews') ? 'bg-brand-50 text-brand-700 ring-1 ring-inset ring-brand-100' : 'text-slate-700' %>">
+        <i class="lucide lucide-message-square h-4 w-4"></i>Đánh giá
+      </a>
+      <a href="/admin/wishlists"
+        class="flex items-center gap-2 rounded-lg px-3 py-2 transition hover:bg-brand-50 hover:text-brand-700
+                <%= activePath.startsWith('/admin/wishlists') ? 'bg-brand-50 text-brand-700 ring-1 ring-inset ring-brand-100' : 'text-slate-700' %>">
+        <i class="lucide lucide-heart h-4 w-4"></i>Wishlist
+      </a>
+    </div>
   </nav>
 </aside>
