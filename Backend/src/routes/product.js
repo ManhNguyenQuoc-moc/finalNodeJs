@@ -2,14 +2,33 @@ const express = require("express");
 const router = express.Router();
 const { upload } = require("../config/multer");
 const productController = require("../controllers/productController");
+const colorController = require("../controllers/colorController");
+const sizeController = require("../controllers/sizeController");
 
-// CRUD routes cho Product
-// POST create product  // Tạo sản phẩm
+// ===== Product (tạo / danh sách) =====
 router.post("/", upload.any(), productController.createProduct);
-router.get("/", productController.getProducts);          // Lấy danh sách sản phẩm (có filter/pagination)
-// router.get("/:id", productController.getProductbyID);          // Lấy chi tiết 1 sản phẩm
-router.put("/:id",upload.any(), productController.updateProduct); 
-router.put("/variants/:id",upload.any(), productController.addVariant); // Cập nhật sản phẩm
-// router.delete("/:id", productController.deleteProduct);     // Xoá sản phẩm
+router.get("/", productController.getAllProducts);
+
+// ===== Color (đặt TRƯỚC /:id) =====
+router.get("/color", colorController.getAll);
+router.get("/color/:id", colorController.getById);
+router.post("/color", colorController.create);
+router.put("/color/:id", colorController.update);
+router.delete("/color/:id", colorController.delete);
+
+// ===== Size (đặt TRƯỚC /:id) =====
+router.get("/size", sizeController.getAll);
+router.get("/size/:id", sizeController.getById);
+router.post("/size", sizeController.create);
+router.put("/size/:id", sizeController.update);
+router.delete("/size/:id", sizeController.delete);
+
+// ===== Variants (đặt TRƯỚC /:id) =====
+router.put("/variants/:id", upload.any(), productController.addVariant);
+
+// ===== Cuối cùng mới là /:id (bắt-mọi) =====
+router.get("/:id", productController.getProductbyID);
+router.put("/:id", upload.any(), productController.updateProduct);
+// router.delete("/:id", productController.deleteProduct);
 
 module.exports = router;

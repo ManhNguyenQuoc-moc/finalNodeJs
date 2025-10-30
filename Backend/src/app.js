@@ -18,20 +18,14 @@ app.use(passport.initialize());
 app.use(cors());
 app.use(helmet());
 app.use(morgan("dev"));
-//gọi tới api
 app.use("/api", routes);
-//gọi tới middleware
 app.use(errorMiddleware);
 
-//connect DB
-//connectDB();
-// test route
 app.get("/", (req, res) => {
   res.send("API is running...");
 });
 
-// start server
 app.use("/api/auth", authRoutes);
-//app.use("/api/users", require("./routes/users"));
-
+const pageRoutes = require('./routes/page.routes');
+app.use('/', pageRoutes);
 module.exports = app;

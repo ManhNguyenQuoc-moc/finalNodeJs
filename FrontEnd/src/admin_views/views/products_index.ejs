@@ -1,82 +1,203 @@
 <% layout('layouts/admin') %>
-<section class="space-y-6">
-  <div class="flex items-center justify-between gap-3">
-    <h2 class="text-xl font-semibold">Quản lý sản phẩm</h2>
-    <a href="/admin/products/new" class="btn-primary"><i class="lucide lucide-plus mr-2"></i>Thêm sản phẩm</a>
-  </div>
-
-  <form class="card grid grid-cols-1 lg:grid-cols-6 gap-3" method="get">
-    <input class="input lg:col-span-2" name="q" value="<%= (query && query.q) || '' %>" placeholder="Từ khóa / SKU...">
-    <select class="input" name="brand">
-      <option value="">— Thương hiệu —</option>
-      <% (brands||[]).forEach(b=>{ %>
-        <option value="<%= b._id %>" <%= (query && query.brand)===String(b._id)?'selected':'' %>><%= b.name %></option>
-      <% }) %>
-    </select>
-    <select class="input" name="category">
-      <option value="">— Danh mục —</option>
-      <% (categories||[]).forEach(c=>{ %>
-        <option value="<%= c._id %>" <%= (query && query.category)===String(c._id)?'selected':'' %>><%= c.name %></option>
-      <% }) %>
-    </select>
-    <input class="input" type="number" name="min" step="1000" placeholder="Giá từ" value="<%= (query && query.min) || '' %>">
-    <input class="input" type="number" name="max" step="1000" placeholder="đến" value="<%= (query && query.max) || '' %>">
-    <select class="input" name="sort">
-      <option value="">— Sắp xếp —</option>
-      <option value="name_asc"  <%= (query && query.sort)==='name_asc'?'selected':'' %>>Tên A→Z</option>
-      <option value="name_desc" <%= (query && query.sort)==='name_desc'?'selected':'' %>>Tên Z→A</option>
-      <option value="price_asc" <%= (query && query.sort)==='price_asc'?'selected':'' %>>Giá tăng dần</option>
-      <option value="price_desc"<%= (query && query.sort)==='price_desc'?'selected':'' %>>Giá giảm dần</option>
-      <option value="created_desc"<%= (query && query.sort)==='created_desc'?'selected':'' %>>Mới nhất</option>
-    </select>
-    <div class="lg:col-span-6 flex justify-end gap-2">
-      <a href="/admin/products" class="btn ghost">Xóa lọc</a>
-      <button class="btn-primary">Lọc</button>
+  <section class="space-y-6">
+    <!-- Header -->
+    <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <div>
+        <p class="text-sm text-slate-500">Tìm kiếm, lọc và quản trị danh sách sản phẩm của bạn.</p>
+      </div>
+      <a href="/admin/products/new"
+        class="inline-flex items-center justify-center gap-2 rounded-xl bg-green-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-green-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-green-400">
+        Thêm sản phẩm
+      </a>
     </div>
-  </form>
 
-  <div class="card overflow-x-auto">
-    <table class="w-full text-sm">
-      <thead>
-        <tr class="text-left text-slate-500 uppercase text-[11px]">
-          <th class="p-2">Sản phẩm</th>
-          <th class="p-2">Thương hiệu</th>
-          <th class="p-2">Danh mục</th>
-          <th class="p-2">Trạng thái</th>
-          <th class="p-2">Biến thể</th>
-          <th class="p-2">Giá</th>
-          <th class="p-2">Tồn kho</th>
-          <th class="p-2 w-36"></th>
-        </tr>
-      </thead>
-      <tbody>
-        <% (items||[]).forEach(p=>{ %>
-          <tr class="border-t hover:bg-slate-50/70">
-            <td class="p-2">
-              <div class="flex items-center gap-3">
-                <img src="<%= p.cover || '/placeholder.png' %>" class="h-12 w-12 object-cover rounded-lg border">
-                <div>
-                  <div class="font-medium"><%= p.name %></div>
-                  <div class="text-xs text-slate-500"><%= p.slug %></div>
-                </div>
-              </div>
-            </td>
-            <td class="p-2"><%= p.brand && p.brand.name || '-' %></td>
-            <td class="p-2"><%= p.category && p.category.name || '-' %></td>
-            <td class="p-2"><span class="px-2 py-1 rounded bg-slate-100 text-slate-700 text-xs"><%= (p.productStatus && p.productStatus.statusName) || 'New' %></span></td>
-            <td class="p-2"><%= p.variants_count || 0 %></td>
-            <td class="p-2 font-medium"><%= money(p.price_min || 0) %> - <%= money(p.price_max || 0) %></td>
-            <td class="p-2"><%= p.stock_total || 0 %></td>
-            <td class="p-2 text-right space-x-1">
-              <a class="btn sm" href="/admin/products/<%= p._id %>">Sửa</a>
-              <form action="/admin/products/<%= p._id %>/delete" method="post" class="inline" onsubmit="return confirm('Xóa sản phẩm này?')">
-                <button class="btn sm" type="submit">Xóa</button>
-              </form>
-            </td>
-          </tr>
-        <% }) %>
-      </tbody>
-    </table>
-    <%- include('partials/_pagination') %>
-  </div>
-</section>
+    <!-- Filters -->
+    <form
+      class="rounded-2xl border border-slate-200 bg-white/60 p-4 shadow-sm backdrop-blur-sm grid grid-cols-1 lg:grid-cols-6 gap-3"
+      method="get">
+      <div class="lg:col-span-2">
+        <label class="mb-1 block text-xs font-medium text-slate-600">Từ khóa / SKU</label>
+        <div class="relative">
+          <i class="lucide lucide-search absolute left-3 top-1/2 -translate-y-1/2 size-4 text-slate-400"></i>
+          <input
+            class="w-full rounded-xl border border-slate-200 bg-white px-9 py-2.5 text-sm shadow-sm outline-none ring-0 placeholder:text-slate-400 focus:border-slate-300 focus:ring-2 focus:ring-slate-200"
+            name="q" value="<%= (query && query.q) || '' %>" placeholder="Từ khóa / SKU...">
+        </div>
+      </div>
+
+      <div>
+        <label class="mb-1 block text-xs font-medium text-slate-600">Thương hiệu</label>
+        <select
+          class="w-full appearance-none rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm shadow-sm outline-none focus:border-slate-300 focus:ring-2 focus:ring-slate-200"
+          name="brand">
+          <option value="">— Thương hiệu —</option>
+          <% (brands||[]).forEach(b=>{ %>
+            <option value="<%= b._id %>" <%=(query && query.brand)===String(b._id)?'selected':'' %>><%= b.name %>
+            </option>
+            <% }) %>
+        </select>
+      </div>
+
+      <div>
+        <label class="mb-1 block text-xs font-medium text-slate-600">Danh mục</label>
+        <select
+          class="w-full appearance-none rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm shadow-sm outline-none focus:border-slate-300 focus:ring-2 focus:ring-slate-200"
+          name="category">
+          <option value="">— Danh mục —</option>
+          <% (categories||[]).forEach(c=>{ %>
+            <option value="<%= c._id %>" <%=(query && query.category)===String(c._id)?'selected':'' %>><%= c.name %>
+            </option>
+            <% }) %>
+        </select>
+      </div>
+
+      <div>
+        <label class="mb-1 block text-xs font-medium text-slate-600">Giá từ</label>
+        <input
+          class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm shadow-sm outline-none focus:border-slate-300 focus:ring-2 focus:ring-slate-200"
+          type="number" name="min" step="1000" placeholder="Giá từ" value="<%= (query && query.min) || '' %>">
+      </div>
+
+      <div>
+        <label class="mb-1 block text-xs font-medium text-slate-600">Đến</label>
+        <input
+          class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm shadow-sm outline-none focus:border-slate-300 focus:ring-2 focus:ring-slate-200"
+          type="number" name="max" step="1000" placeholder="đến" value="<%= (query && query.max) || '' %>">
+      </div>
+
+      <div>
+        <label class="mb-1 block text-xs font-medium text-slate-600">Sắp xếp</label>
+        <select
+          class="w-full appearance-none rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm shadow-sm outline-none focus:border-slate-300 focus:ring-2 focus:ring-slate-200"
+          name="sort">
+          <option value="">— Sắp xếp —</option>
+          <option value="name_asc" <%=(query && query.sort)==='name_asc' ?'selected':'' %>>Tên A→Z</option>
+          <option value="name_desc" <%=(query && query.sort)==='name_desc' ?'selected':'' %>>Tên Z→A</option>
+          <option value="price_asc" <%=(query && query.sort)==='price_asc' ?'selected':'' %>>Giá tăng dần</option>
+          <option value="price_desc" <%=(query && query.sort)==='price_desc' ?'selected':'' %>>Giá giảm dần</option>
+          <option value="created_desc" <%=(query && query.sort)==='created_desc' ?'selected':'' %>>Mới nhất</option>
+        </select>
+      </div>
+
+      <div class="lg:col-span-6 mt-1 flex flex-wrap items-center justify-end gap-2">
+        <a href="/admin/products"
+          class="inline-flex items-center justify-center gap-2 rounded-xl border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-300">
+          Xóa lọc
+        </a>
+        <button
+          class="inline-flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400">
+          Lọc
+        </button>
+      </div>
+    </form>
+
+    <!-- Table Card -->
+    <div class="rounded-2xl border border-slate-200 bg-white/70 shadow-sm overflow-hidden">
+      <div class="flex items-center justify-between px-4 py-3 border-b border-slate-100">
+        <div class="text-sm text-slate-600"><span class="font-medium">
+            <%= (total||0).toLocaleString?.('vi-VN') || total || 0 %>
+          </span> sản phẩm</div>
+        <!-- Room for bulk actions if needed -->
+      </div>
+
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead class="bg-slate-50/80 sticky top-0 z-10">
+            <tr class="text-left text-slate-500 uppercase text-[11px] tracking-wide">
+              <th class="p-3">Sản phẩm</th>
+              <th class="p-3">Thương hiệu</th>
+              <th class="p-3">Danh mục</th>
+              <th class="p-3">Trạng thái</th>
+              <th class="p-3 text-center">Biến thể</th>
+              <th class="p-3">Giá</th>
+              <th class="p-3 text-center">Tồn kho</th>
+              <th class="p-3 w-40"></th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-100">
+            <% (items||[]).forEach(p=>{ %>
+              <% const statusName=(p.productStatus && p.productStatus.statusName) || 'New' ; %>
+                <% const statusColor={ 'New' : 'bg-sky-100 text-sky-700' , 'Active' : 'bg-emerald-100 text-emerald-700'
+                  , 'Inactive' : 'bg-slate-100 text-slate-700' , 'Draft' : 'bg-amber-100 text-amber-700'
+                  , 'Out of stock' : 'bg-rose-100 text-rose-700' }[statusName] || 'bg-slate-100 text-slate-700' ; %>
+                  <tr class="hover:bg-slate-50/70">
+                    <td class="p-3">
+                      <div class="flex items-center gap-3">
+                        <img src="<%= p.cover || '/placeholder.png' %>" alt="cover"
+                          class="h-12 w-12 rounded-xl border border-slate-200 object-cover shadow-sm">
+                        <div class="min-w-0">
+                          <div class="truncate font-medium text-slate-900">
+                            <%= p.name %>
+                          </div>
+                          <div class="truncate text-xs text-slate-500">/<%= p.slug %>
+                          </div>
+                        </div>
+                      </div>
+                    </td>
+                    <td class="p-3 text-slate-700">
+                      <%= p.brand && p.brand.name || '-' %>
+                    </td>
+                    <td class="p-3 text-slate-700">
+                      <%= p.category && p.category.name || '-' %>
+                    </td>
+                    <td class="p-3">
+                      <span
+                        class="inline-flex items-center rounded-full px-2 py-1 text-xs font-medium <%= statusColor %>">
+                        <%= statusName %>
+                      </span>
+                    </td>
+                    <td class="p-3 text-center text-slate-700">
+                      <%= p.variants_count || 0 %>
+                    </td>
+                    <td class="p-3 font-medium text-slate-900">
+                      <%= money(p.price_min || 0) %> - <%= money(p.price_max || 0) %>
+                    </td>
+                    <td class="p-3 text-center text-slate-700">
+                      <%= p.stock_total || 0 %>
+                    </td>
+                    <td class="p-3">
+                      <div class="flex items-center justify-end gap-2">
+                        <a class="inline-flex items-center gap-1.5 rounded-lg border border-blue-600 bg-blue-600 px-3 py-1.5 text-xs font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
+                          href="/admin/products/<%= p._id %>">
+                          Sửa
+                        </a>
+                        <form action="/admin/products/<%= p._id %>/delete" method="post" class="inline"
+                          onsubmit="return confirm('Xóa sản phẩm này?')">
+                          <button
+                            class="inline-flex items-center gap-1.5 rounded-lg border border-rose-600 bg-rose-600 px-3 py-1.5 text-xs font-medium text-white shadow-sm hover:bg-rose-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-400"
+                            type="submit">
+                            Xóa
+                          </button>
+                        </form>
+                      </div>
+                    </td>
+                  </tr>
+                  <% }) %>
+
+                    <% if(!items || items.length===0){ %>
+                      <tr>
+                        <td colspan="8" class="p-10 text-center">
+                          <div class="mx-auto max-w-md">
+                            <div
+                              class="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-100">
+                              <i class="lucide lucide-package-open size-6 text-slate-500"></i>
+                            </div>
+                            <div class="text-base font-medium text-slate-900">Chưa có sản phẩm phù hợp</div>
+                            <p class="mt-1 text-sm text-slate-500">Hãy điều chỉnh bộ lọc hoặc thêm sản phẩm mới.</p>
+                            <a href="/admin/products/new"
+                              class="mt-3 inline-flex items-center justify-center gap-2 rounded-xl bg-slate-900 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-slate-800">
+                              Thêm sản phẩm
+                            </a>
+                          </div>
+                        </td>
+                      </tr>
+                      <% } %>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="border-t border-slate-100 bg-white/70 px-4 py-3">
+        <%- include('partials/_pagination') %>
+      </div>
+    </div>
+  </section>

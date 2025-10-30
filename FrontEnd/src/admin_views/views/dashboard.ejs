@@ -1,143 +1,203 @@
 <% layout('layouts/admin') %>
-<section class="space-y-6" x-data="{tab: '<%= (filters && filters.mode) || 'simple' %>'}">
-  <div class="flex items-center justify-between gap-3">
-    <div class="flex items-center gap-2 bg-white border rounded-xl p-1">
-      <button @click="tab='simple'; $nextTick(()=>window.initCharts())" :class="tab==='simple' ? 'btn-tab-active' : 'btn-tab'">Cơ bản</button>
-      <button @click="tab='advanced'; $nextTick(()=>window.initCharts())" :class="tab==='advanced' ? 'btn-tab-active' : 'btn-tab'">Nâng cao</button>
-    </div>
-    <form action="/admin" method="get" class="flex items-center gap-2">
-      <input type="hidden" name="mode" :value="tab"/>
-      <input type="date" class="input" name="start" value="<%= (filters && filters.start) || '' %>"/>
-      <span class="text-slate-400">→</span>
-      <input type="date" class="input" name="end" value="<%= (filters && filters.end) || '' %>"/>
-      <select class="input" name="granularity">
-        <option value="year" <%= (filters && filters.granularity)==='year'?'selected':'' %>>Năm</option>
-        <option value="quarter" <%= (filters && filters.granularity)==='quarter'?'selected':'' %>>Quý</option>
-        <option value="month" <%= (filters && filters.granularity)==='month'?'selected':'' %>>Tháng</option>
-        <option value="week" <%= (filters && filters.granularity)==='week'?'selected':'' %>>Tuần</option>
-      </select>
-      <button class="btn-primary">Áp dụng</button>
-    </form>
-  </div>
+  <!-- (Tuỳ chọn) Form filter server-side -->
+  <form action="/admin" method="get" class="mb-4 flex flex-wrap items-center gap-2">
+    <input type="hidden" name="mode" value="<%= (filters && filters.mode) || 'simple' %>" />
+    <input type="date" class="input" name="start" value="<%= (filters && filters.start) || '' %>" />
+    <span class="text-slate-400">→</span>
+    <input type="date" class="input" name="end" value="<%= (filters && filters.end) || '' %>" />
+    <select class="input" name="granularity">
+      <option value="year" <%=(filters && filters.granularity)==='year' ?'selected':''%>>Năm</option>
+      <option value="quarter" <%=(filters && filters.granularity)==='quarter' ?'selected':''%>>Quý</option>
+      <option value="month" <%=(filters && filters.granularity)==='month' ?'selected':''%>>Tháng</option>
+      <option value="week" <%=(filters && filters.granularity)==='week' ?'selected':''%>>Tuần</option>
+    </select>
+    <button class="btn-primary">Áp dụng</button>
+  </form>
 
-  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-    <% (kpis || []).forEach(k => { %>
-    <div class="card group hover:shadow-soft transition">
-      <div class="flex items-center justify-between">
-        <div>
-          <div class="text-sm text-slate-500"><%= k.label %></div>
-          <div class="text-2xl font-semibold mt-1"><%= k.valueDisplay || k.value %></div>
-          <div class="text-xs mt-1">
-            <span class="<%= k.delta >=0 ? 'text-emerald-600' : 'text-rose-600' %> inline-flex items-center gap-1">
-              <i class="lucide <%= k.delta>=0 ? 'lucide-trending-up' : 'lucide-trending-down' %> h-3 w-3"></i>
-              <%= (k.delta>0?'+':'') + k.delta + '%' %> so với kỳ trước
-            </span>
-          </div>
-        </div>
-        <div class="h-10 w-10 rounded-xl bg-brand-100 text-brand-700 grid place-items-center">
-          <i class="lucide lucide-<%= k.icon %>"></i>
-        </div>
-      </div>
-    </div>
-    <% }) %>
-  </div>
+  <!-- React mount -->
+  <div id="recharts-root"></div>
 
-  <!-- Tab Cơ bản -->
-  <div x-show="tab==='simple'" x-cloak class="grid grid-cols-1 lg:grid-cols-3 gap-4">
-    <div class="card lg:col-span-2">
-      <h3 class="card-title mb-3">Doanh thu & Lợi nhuận</h3>
-      <div class="chart-wrap"><canvas id="revenueChart"></canvas></div>
-    </div>
-    <div class="card">
-      <h3 class="card-title mb-3">Số đơn theo kỳ</h3>
-      <div class="chart-wrap"><canvas id="ordersChart"></canvas></div>
-    </div>
-  </div>
-
-  <!-- Tab Nâng cao -->
-  <div x-show="tab==='advanced'" x-cloak class="grid grid-cols-1 lg:grid-cols-3 gap-4">
-    <div class="card lg:col-span-2">
-      <h3 class="card-title mb-3">So sánh đa chỉ số</h3>
-      <div class="chart-wrap"><canvas id="compareChart"></canvas></div>
-    </div>
-    <div class="card">
-      <h3 class="card-title mb-3">Sản phẩm bán chạy</h3>
-      <ol class="space-y-2">
-        <% (topProducts || []).slice(0,10).forEach((p,i)=>{ %>
-          <li class="flex items-center justify-between">
-            <div class="flex items-center gap-2"><span class="w-6 text-slate-400"><%= i+1 %>.</span><span class="line-clamp-1"><%= p.name %></span></div>
-            <span class="text-sm text-slate-500"><%= p.total_sold %> sp</span>
-          </li>
-        <% }) %>
-      </ol>
-    </div>
-  </div>
-</section>
-
-<script>
-  // dữ liệu từ server
-  const revenue = <%- JSON.stringify((charts && charts.revenue) || {labels:[], revenue:[], profit:[]}) %>;
-  const orders  = <%- JSON.stringify((charts && charts.orders)  || {labels:[], orders:[]}) %>;
-  const compare = <%- JSON.stringify((charts && charts.compare) || {labels:[], revenue:[], profit:[], orders:[]}) %>;
-</script>
-<script>
-  // Cấu hình Chart.js tránh kéo dài vô hạn
-  Chart.defaults.responsive = true;
-  Chart.defaults.maintainAspectRatio = false;     // quan trọng
-  Chart.defaults.resizeDelay = 120;
-
-  // registry lưu instance để destroy trước khi vẽ lại
-  window.__charts = window.__charts || {};
-  function drawChart(id, type, data, options={}){
-    const el = document.getElementById(id);
-    if(!el) return;
-    const ctx = el.getContext('2d');
-    if (window.__charts[id]) {
-      window.__charts[id].destroy();
-      delete window.__charts[id];
-    }
-    window.__charts[id] = new Chart(ctx, {
-      type,
-      data,
-      options: Object.assign({
-        responsive: true,
-        maintainAspectRatio: false,
-        animation: { duration: 250 },
-        plugins: { legend: { display: true } },
-        scales: { x: { ticks: { maxRotation: 0, autoSkip: true } } }
-      }, options)
-    });
-  }
-
-  // khởi tạo (an toàn khi chuyển tab)
-  window.initCharts = function(){
-    if (document.getElementById('revenueChart')) {
-      drawChart('revenueChart','line',{
-        labels: revenue.labels,
-        datasets:[
-          { label:'Doanh thu', data: revenue.revenue, tension:.35 },
-          { label:'Lợi nhuận', data: revenue.profit, tension:.35 }
-        ]
-      });
-    }
-    if (document.getElementById('ordersChart')) {
-      drawChart('ordersChart','bar',{
-        labels: orders.labels,
-        datasets:[ { label:'Số đơn', data: orders.orders } ]
-      }, { scales:{ y:{ beginAtZero:true } }});
-    }
-    if (document.getElementById('compareChart')) {
-      drawChart('compareChart','bar',{
-        labels: compare.labels,
-        datasets:[
-          { label:'Doanh thu', data: compare.revenue },
-          { label:'Lợi nhuận', data: compare.profit },
-          { label:'Số đơn', data: compare.orders }
-        ]
-      }, { scales:{ y:{ beginAtZero:true } }});
-    }
+  <!-- Bơm dữ liệu từ server sang client -->
+  <script>
+    window.__DASHBOARD__ = {
+      charts: <% - JSON.stringify(charts) %>,
+      kpis: <% - JSON.stringify(kpis) %>,
+      topProducts: <% - JSON.stringify(topProducts) %>,
+      filters: <% - JSON.stringify(filters) %>
   };
+  </script>
 
-  // vẽ ngay lần đầu vào trang
-  window.addEventListener('load', window.initCharts);
-</script>
+  <!-- Recharts UI (Babel + CDN) -->
+  <script type="text/babel">
+    const {
+      LineChart, Line, BarChart, Bar, PieChart, Pie, Cell,
+      XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
+      ComposedChart
+    } = Recharts;
+
+    const COLORS = ["#10b981", "#60a5fa", "#f59e0b", "#ef4444", "#8b5cf6", "#14b8a6", "#f43f5e", "#22c55e"];
+
+    function AdminDashboard() {
+      const { charts, kpis, topProducts, filters } = window.__DASHBOARD__ || {};
+
+      // Chuẩn hoá data
+      const revenueData = charts.revenue.labels.map((label, i) => ({
+        label, revenue: charts.revenue.revenue[i], profit: charts.revenue.profit[i]
+      }));
+      const ordersData = charts.orders.labels.map((label, i) => ({
+        label, orders: charts.orders.orders[i]
+      }));
+      const compareData = (charts.compare.productsCount
+        ? charts.compare.labels.map((label, i) => ({
+          label,
+          revenue: charts.compare.revenue[i],
+          profit: charts.compare.profit[i],
+          orders: charts.compare.orders[i],
+          productsCount: charts.compare.productsCount[i]
+        }))
+        : charts.compare.labels.map((label, i) => ({
+          label,
+          revenue: charts.compare.revenue[i],
+          profit: charts.compare.profit[i],
+          orders: charts.compare.orders[i],
+          productsCount: 0
+        }))
+      );
+
+      const [tab, setTab] = React.useState(filters?.mode || "simple");
+
+      return (
+        <section className="space-y-6">
+          {/* Tabs */}
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2 bg-white border rounded-xl p-1">
+              <button onClick={() => setTab("simple")} className={`btn-tab ${tab === "simple" ? "btn-tab-active" : ""}`}>Cơ bản</button>
+              <button onClick={() => setTab("advanced")} className={`btn-tab ${tab === "advanced" ? "btn-tab-active" : ""}`}>Nâng cao</button>
+            </div>
+          </div>
+
+          {/* KPI cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {kpis.map((k, idx) => (
+              <div key={idx} className="card group hover:shadow-soft transition">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="text-sm text-slate-500">{k.label}</div>
+                    <div className="text-2xl font-semibold mt-1">{k.valueDisplay ?? k.value}</div>
+                    <div className="text-xs mt-1">
+                      <span className={`${k.delta >= 0 ? "text-emerald-600" : "text-rose-600"} inline-flex items-center gap-1`}>
+                        {(k.delta > 0 ? `+${k.delta}` : k.delta)}% so với kỳ trước
+                      </span>
+                    </div>
+                  </div>
+                  <div className="h-10 w-10 rounded-xl bg-brand-100 grid place-items-center">
+                    <i className={`lucide lucide-${k.icon}`}></i>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* SIMPLE */}
+          {tab === "simple" && (
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+              <div className="card lg:col-span-2">
+                <h3 className="card-title mb-3">Doanh thu & Lợi nhuận</h3>
+                <div className="h-[320px]">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart data={revenueData}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="label" /><YAxis /><Tooltip /><Legend />
+                      <Line type="monotone" dataKey="revenue" name="Doanh thu" strokeWidth={2} dot={false} />
+                      <Line type="monotone" dataKey="profit" name="Lợi nhuận" strokeWidth={2} dot={false} />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+
+              <div className="card">
+                <h3 className="card-title mb-3">Số đơn theo kỳ</h3>
+                <div className="h-[320px]">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={ordersData}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="label" /><YAxis /><Tooltip /><Legend />
+                      <Bar dataKey="orders" name="Số đơn" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+
+              <div className="card lg:col-span-3">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="card-title">Sản phẩm bán chạy</h3>
+                  <span className="text-xs text-slate-500">Top 10</span>
+                </div>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                  {/* Bar ngang */}
+                  <div className="h-[280px]">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={topProducts} layout="vertical" margin={{ left: 16 }}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis type="number" /><YAxis type="category" dataKey="name" width={120} />
+                        <Tooltip /><Legend />
+                        <Bar dataKey="total_sold" name="Bán ra" />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                  {/* Pie */}
+                  <div className="h-[280px]">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Tooltip /><Legend />
+                        <Pie data={topProducts.slice(0, 6)} dataKey="total_sold" nameKey="name" outerRadius={100}>
+                          {topProducts.slice(0, 6).map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
+                        </Pie>
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ADVANCED */}
+          {tab === "advanced" && (
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+              <div className="card lg:col-span-2">
+                <h3 className="card-title mb-3">So sánh đa chỉ số (theo thời gian)</h3>
+                <div className="h-[340px]">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <ComposedChart data={compareData}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="label" /><YAxis /><Tooltip /><Legend />
+                      <Bar dataKey="orders" name="Số đơn" />
+                      <Line type="monotone" dataKey="revenue" name="Doanh thu" strokeWidth={2} dot={false} />
+                      <Line type="monotone" dataKey="profit" name="Lợi nhuận" strokeWidth={2} dot={false} />
+                    </ComposedChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+
+              <div className="card">
+                <h3 className="card-title mb-3">Số lượng sản phẩm bán theo kỳ</h3>
+                <div className="h-[320px]">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={compareData}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="label" /><YAxis /><Tooltip /><Legend />
+                      <Bar dataKey="productsCount" name="Số lượng SP bán" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+            </div>
+          )}
+        </section>
+      );
+    }
+
+    // Mount React
+    const root = ReactDOM.createRoot(document.getElementById("recharts-root"));
+    root.render(<AdminDashboard />);
+  </script>

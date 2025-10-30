@@ -1,17 +1,21 @@
-# FrontEnd/Dockerfile
-FROM node:20-alpine
-
+# ========= base =========
+FROM node:20-alpine AS base
 WORKDIR /app
-
+ENV CI=true
 COPY package*.json ./
-RUN npm ci --omit=dev
 
-# Copy toàn bộ mã nguồn frontend
+# ========= dev =========
+FROM base AS dev
+RUN npm install
 COPY . .
-
-ENV NODE_ENV=production
-ENV PORT=3000
+ENV NODE_ENV=development
 EXPOSE 3000
+CMD ["npm", "run", "dev"]
 
-# Nếu FE của bạn dùng file khác (app.js/server.js) thì đổi lại dòng dưới
-CMD ["node", "index.js"]
+# ========= prod =========
+FROM base AS prod
+RUN npm ci --omit=dev
+COPY . .
+ENV NODE_ENV=production
+EXPOSE 3000
+CMD ["npm", "start"]

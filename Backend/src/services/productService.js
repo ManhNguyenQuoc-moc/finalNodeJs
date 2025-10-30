@@ -41,7 +41,7 @@ async function createProduct(dto) {
 
     // 5️Save Product với session
     const createdProduct = await productRepo.createProduct(productEntity, session);
-    
+
     // 6️Map DTO → Variant entities
     const variantEntities = AddProductRequestMapper.toVariantEntities(
       dto.variants,
@@ -76,7 +76,7 @@ async function addVariant(productId, dto) {
   return handleTransaction(async (session) => {
     const product = await productRepo.findById(productId);
     if (!product) throw new Error("Product not found");
-
+    console.log(dto);
     const uploadedVariantImages = await uploadFiles(dto.uploadedFiles, "variants", `Variant ${dto.sku}`);
 
     const color = await ColorService.getColorById(dto.color);
@@ -316,7 +316,7 @@ async function updateProduct(productId, dto) {
       product.category = dto.category;
     }
 
-    // 4️⃣ Xóa ảnh cũ product
+    // Xóa ảnh cũ product
     if (dto.imagesToDelete?.length) {
       await deleteFiles(dto.imagesToDelete);
       product.images = product.images.filter(
@@ -324,15 +324,15 @@ async function updateProduct(productId, dto) {
       );
     }
 
-    // 5️⃣ Thêm ảnh mới đã upload
+    // Thêm ảnh mới đã upload
     if (uploadedProductImages.length) {
       product.images = product.images.concat(uploadedProductImages);
     }
 
-    // 6️⃣ Update product trong DB
+    // Update product trong DB
     const updatedProduct = await productRepo.updateProduct(productId, product, session);
 
-    // 7️⃣ Handle variants
+    // Handle variants
     for (let i = 0; i < (dto.variants || []).length; i++) {
       const variantDto = dto.variants[i];
       const uploadedVariantImages = uploadedVariantsMap[i] || [];
@@ -516,8 +516,24 @@ async function normalizeProductsColors(products) {
 
   return products;
 }
+async function getAllProducts() {
+  const { products, total, page, limit } = await productRepo.findAllWithStats();
+  console.log(products);
+  return {
+    products,
+    total,
+    page,
+    limit,
+  };
+}
 
-// export thêm hàm này (không làm ảnh hưởng export cũ của bạn)
+// BY ID
+async function getProductById(id) {
+  const result = await productRepo.findOneWithVariantsAndStats(id);
+  if (!result) throw new Error("Product not found");
+  return result;
+}
+
 
 module.exports = {
   createProduct,
@@ -525,5 +541,8 @@ module.exports = {
   deleteProduct,
   deleteVariant,
   updateProduct,
+  getProductById,
+  getAllProducts,
   normalizeProductsColors,
+
 };

@@ -6,7 +6,7 @@ const { normalizeProductsColors } = require("../services/productService");
 exports.health = (_req, res) => res.send("API is running...");
 
 exports.categories = async (_req, res) => {
-  const cats = await Category.find().select("_id name slug").lean();
+  const cats = await Category.find().select("_id name slug image").lean();
   res.json({ ok: true, categories: cats || [] });
 };
 
@@ -30,9 +30,9 @@ exports.minicart = async (req, res) => {
 };
 
 exports.home = async (_req, res) => {
-  const latestRaw   = await Product.find().sort({ createdAt: -1 }).limit(8).lean();
+  const latestRaw = await Product.find().sort({ createdAt: -1 }).limit(8).lean();
   const trendingRaw = await Product.find({ "productStatus.statusName": "Trending" }).limit(8).lean();
-  const popularRaw  = await Product.find({ "productStatus.statusName": "Bán chạy" }).limit(8).lean();
+  const popularRaw = await Product.find({ "productStatus.statusName": "Bán chạy" }).limit(8).lean();
 
   const [latest, trending, popular] = await Promise.all([
     normalizeProductsColors(latestRaw),
@@ -156,7 +156,7 @@ exports.productDetail = async (req, res) => {
     ...p,
     colors: (productColors.length ? productColors : [{ color_id: null, color_code: "", imageUrls: allImages }]),
   };
-  
+
 
   return res.json({
     ok: true,

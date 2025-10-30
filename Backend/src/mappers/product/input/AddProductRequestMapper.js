@@ -8,6 +8,7 @@ class AddProductRequestMapper {
       category: dto.category,
       short_description: dto.short_description || "",
       long_description: dto.long_description || "",
+      productStatus: dto.productStatus ||"New",
       images: (uploadedProductImages || []).map((img, index) => ({
         url: img.secure_url || img.url,
         public_id: img.public_id,

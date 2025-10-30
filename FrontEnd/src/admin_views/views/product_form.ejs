@@ -1,43 +1,341 @@
 <% layout('layouts/admin') %>
-<% const P = (typeof product !== 'undefined' && product) ? product : null; %>
-<section class="space-y-6" x-data="{ variants: <%- JSON.stringify(P && P.variants ? P.variants : [{sku:'', price:'', stock_quantity:''}]) %> }">
-  <div class="flex items-center justify-between">
-    <h2 class="text-xl font-semibold"><%= P ? 'Chỉnh sửa sản phẩm' : 'Thêm sản phẩm' %></h2>
-    <a class="btn ghost" href="/admin/products">Quay lại</a>
-  </div>
-
-  <form class="card space-y-4" method="post" action="<%= P ? '/admin/products/'+P._id : '/admin/products' %>">
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-      <div><label class="label">Tên sản phẩm</label><input class="input" name="name" value="<%= P ? (P.name || '') : '' %>" required></div>
-      <div><label class="label">Slug</label><input class="input" name="slug" value="<%= P ? (P.slug || '') : '' %>"></div>
-      <div><label class="label">Thương hiệu</label><select class="input" name="brand">
-        <% (brands||[]).forEach(b=>{ %><option value="<%= b._id %>" <%= (P && String(P.brand)===String(b._id)) ? 'selected' : '' %>><%= b.name %></option><% }) %>
-      </select></div>
-      <div><label class="label">Danh mục</label><select class="input" name="category">
-        <% (categories||[]).forEach(c=>{ %><option value="<%= c._id %>" <%= (P && String(P.category)===String(c._id)) ? 'selected' : '' %>><%= c.name %></option><% }) %>
-      </select></div>
-      <div class="md:col-span-2"><label class="label">Mô tả ngắn</label><textarea class="input" rows="3" name="short_description"><%= P ? (P.short_description || '') : '' %></textarea></div>
-      <div class="md:col-span-2"><label class="label">Mô tả dài</label><textarea class="input" rows="5" name="long_description"><%= P ? (P.long_description || '') : '' %></textarea></div>
-      <div><label class="label">Trạng thái</label>
-        <select class="input" name="statusName">
-          <% ['Bán chạy','Trending','New'].forEach(s=>{ %><option value="<%= s %>" <%= (P && P.productStatus && P.productStatus.statusName===s)?'selected':'' %>><%= s %></option><% }) %>
-        </select>
-      </div>
-    </div>
-
-    <div class="space-y-2">
-      <div class="font-medium">Biến thể nhanh</div>
-      <template x-for="(v,idx) in variants" :key="idx">
-        <div class="grid grid-cols-12 gap-3">
-          <input class="input col-span-3" placeholder="SKU" x-model="v.sku" :name="'variants['+idx+'][sku]'">
-          <input class="input col-span-3" placeholder="Giá" x-model="v.price" :name="'variants['+idx+'][price]'">
-          <input class="input col-span-3" placeholder="Tồn kho" x-model="v.stock_quantity" :name="'variants['+idx+'][stock_quantity]'">
-          <button type="button" class="btn col-span-3" @click="variants.splice(idx,1)" x-show="variants.length>1">Xóa</button>
+  <% const P=(typeof product !=='undefined' && product) ? product : null; %>
+    <!-- Product Create/Edit -->
+    <section class="relative"
+      x-data="productForm(<%- JSON.stringify(P && P.variants ? P.variants : [{sku:'', price:'', stock_quantity:''}]) %>)">
+      <!-- Sticky header actions -->
+      <div
+        class="sticky top-0 z-10 bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b">
+        <div class="mx-auto max-w-6xl px-4 py-3 flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <div class="size-9 grid place-items-center rounded-xl bg-green-100 text-green-600">
+              <i data-lucide="package"></i>
+            </div>
+            <div>
+              <h2 class="text-lg font-semibold">
+                <%= P ? 'Chỉnh sửa sản phẩm' : 'Thêm sản phẩm' %>
+              </h2>
+              <p class="text-xs text-muted-foreground leading-tight">Quản lý thông tin, mô tả và các biến thể sản phẩm
+              </p>
+            </div>
+          </div>
+          <div class="flex items-center gap-2">
+            <!-- Nút quay lại -->
+            <a href="/admin/products" class="btn flex items-center gap-2">
+              <span>Quay lại</span>
+            </a>
+            <!-- Nút lưu -->
+            <button form="product-form" type="submit"
+              class="rounded-lg px-4 py-2 bg-green-500 text-white hover:bg-green-700 transition-all duration-200">
+              <span>Lưu</span>
+            </button>
+          </div>
         </div>
-      </template>
-      <button type="button" class="btn" @click="variants.push({sku:'',price:'',stock_quantity:''})"><i class="lucide lucide-plus mr-2"></i>Thêm biến thể</button>
-    </div>
+      </div>
 
-    <div class="flex justify-end gap-2"><a class="btn ghost" href="/admin/products">Hủy</a><button class="btn-primary">Lưu</button></div>
-  </form>
-</section>
+      <form id="product-form" class="mx-auto max-w-6xl px-4 py-6 space-y-6" method="post" enctype="multipart/form-data"
+        action="<%= P ? '/admin/products/'+P._id : '/admin/products' %>" @submit="syncVariants()">
+        <input type="hidden" name="p[variants]" x-model="variantsJson">
+        <!-- Card: Thông tin chung -->
+        <div class="card p-6 space-y-6 card-green">
+          <!-- Header -->
+          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+            <div>
+              <h3 class="text-lg font-semibold text-slate-800">Thông tin chung</h3>
+              <p class="text-sm text-slate-500">Tên, định danh, thương hiệu và danh mục</p>
+            </div>
+            <span class="text-xs font-medium text-red-600">* Trường bắt buộc</span>
+          </div>
+
+          <!-- Form Fields -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <!-- Tên sản phẩm -->
+            <div class="space-y-1.5">
+              <label class="block text-sm font-medium text-slate-700">
+                Tên sản phẩm <span class="text-red-600">*</span>
+              </label>
+              <input class="block w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm 
+               focus:border-brand-500 focus:ring-2 focus:ring-brand-200 focus:outline-none transition" name="name"
+                value="<%= P ? (P.name || '') : '' %>" placeholder="VD: Tai nghe Bluetooth X" required>
+              <p class="text-xs text-slate-500">Tên hiển thị trên cửa hàng.</p>
+            </div>
+
+            <!-- Slug -->
+            <div class="space-y-1.5">
+              <label class="block text-sm font-medium text-slate-700">Slug</label>
+              <input class="block w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm 
+               focus:border-brand-500 focus:ring-2 focus:ring-brand-200 focus:outline-none transition" name="slug"
+                value="<%= P ? (P.slug || '') : '' %>" placeholder="tai-nghe-bluetooth-x">
+              <p class="text-xs text-slate-500">Để trống để tự tạo từ tên sản phẩm.</p>
+            </div>
+
+            <!-- Thương hiệu -->
+            <div class="space-y-1.5">
+              <label for="brand" class="block text-sm font-medium text-slate-700">Thương hiệu</label>
+              <div class="relative">
+                <select id="brand" name="brand" class="block w-full appearance-none rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm 
+                 focus:border-brand-500 focus:ring-2 focus:ring-brand-200 focus:outline-none transition">
+                  <% (brands || []).forEach(b=> { %>
+                    <option value="<%= b._id %>" <%=(P && String(P.brand)===String(b._id)) ? 'selected' : '' %>><%=
+                        b.name %>
+                    </option>
+                    <% }) %>
+                </select>
+                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-slate-400">
+                  <i data-lucide="chevron-down" class="w-4 h-4"></i>
+                </div>
+              </div>
+            </div>
+            <div class="space-y-1.5">
+              <label class="block text-sm font-medium text-slate-700">Ảnh sản phẩm</label>
+              <input type="file" name="productImages" multiple accept="image/*"
+                class="block w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm">
+              <p class="text-xs text-slate-500">Có thể chọn nhiều ảnh.</p>
+            </div>
+            <!-- Danh mục -->
+            <div class="space-y-1.5">
+              <label class="block text-sm font-medium text-slate-700">Danh mục</label>
+              <div class="relative">
+                <select class="block w-full appearance-none rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm 
+                 focus:border-brand-500 focus:ring-2 focus:ring-brand-200 focus:outline-none transition"
+                  name="category">
+                  <% (categories || []).forEach(c=> { %>
+                    <option value="<%= c._id %>" <%=(P && String(P.category)===String(c._id)) ? 'selected' : '' %>>
+                      <%= c.name %>
+                    </option>
+                    <% }) %>
+                </select>
+                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-slate-400">
+                  <i data-lucide="chevron-down" class="w-4 h-4"></i>
+                </div>
+              </div>
+            </div>
+
+            <!-- Trạng thái nổi bật -->
+            <div class="md:col-span-2 space-y-2">
+              <label class="block text-sm font-medium text-slate-700">Trạng thái nổi bật</label>
+
+              <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <% ['Bán chạy','Trending','New'].forEach(s=> { %>
+                  <label class="flex items-center gap-3 rounded-xl border border-slate-200 bg-white p-3 
+               hover:border-brand-300 hover:bg-brand-50 transition cursor-pointer
+               peer-checked:border-brand-500 peer-checked:bg-brand-100">
+                    <input type="radio" name="statusName" class="sr-only peer" value="<%= s %>" <%=(P && P.productStatus
+                      && P.productStatus.statusName===s) ? 'checked' : '' %>
+                    />
+
+                    <div class="size-9 grid place-items-center rounded-lg bg-slate-100 text-slate-600 
+                 peer-checked:bg-brand-600 peer-checked:text-white transition">
+                      <i
+                        class="lucide <%= s==='Bán chạy' ? 'lucide-flame' : (s==='Trending' ? 'lucide-trending-up' : 'lucide-sparkles') %>">
+                      </i>
+                    </div>
+
+                    <span class="text-sm font-medium text-slate-700 peer-checked:text-brand-700 transition">
+                      <%= s %>
+                    </span>
+                  </label>
+                  <% }) %>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- Card: Mô tả -->
+        <div class="rounded-2xl border bg-white p-6 shadow-sm space-y-6" x-data="{
+       shortDesc: `<%= P ? (P.short_description || '') : '' %>`,
+       longDesc:  `<%= P ? (P.long_description  || '') : '' %>`,
+       maxShort:  220
+     }">
+          <!-- Header -->
+          <div>
+            <h3 class="text-lg font-semibold text-slate-800">Mô tả</h3>
+            <p class="text-sm text-slate-500">Giới thiệu ngắn gọn và chi tiết</p>
+          </div>
+
+          <div class="space-y-5">
+            <!-- Mô tả ngắn -->
+            <div class="space-y-1.5">
+              <div class="flex items-center justify-between">
+                <label for="short_description" class="block text-sm font-medium text-slate-700">Mô tả ngắn</label>
+                <span class="text-xs text-slate-400" x-text="`${(shortDesc||'').length}/${maxShort}`"></span>
+              </div>
+
+              <textarea id="short_description" name="short_description" rows="3" class="block w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm
+               focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-200 transition min-h-24"
+                placeholder="Tóm tắt các điểm nổi bật..." x-model="shortDesc"
+                x-on:input="if (shortDesc.length > maxShort) shortDesc = shortDesc.slice(0, maxShort)"><%= P ? (P.short_description || '') : '' %></textarea>
+
+              <p class="text-xs text-slate-500">Hiển thị ở danh sách sản phẩm và dùng cho thẻ meta mô tả (tối đa
+                ~160–220 ký tự).</p>
+            </div>
+
+            <!-- Mô tả dài -->
+            <div class="space-y-1.5">
+              <label for="long_description" class="block text-sm font-medium text-slate-700">Mô tả dài</label>
+
+              <div class="relative">
+                <textarea id="long_description" name="long_description" rows="8" class="block w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm
+                 focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-200 transition min-h-40"
+                  placeholder="Thông tin chi tiết, thông số kỹ thuật..."
+                  x-model="longDesc"><%= P ? (P.long_description || '') : '' %></textarea>
+
+                <!-- Gợi ý định dạng nhỏ (tuỳ chọn) -->
+                <div
+                  class="pointer-events-none absolute -top-2 right-2 translate-y-[-100%] rounded-full bg-slate-50 px-2 py-0.5 text-[11px] text-slate-500 border">
+                  Hỗ trợ văn bản thuần
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card: Biến thể -->
+        <div class="rounded-2xl border bg-white p-6 shadow-sm space-y-5">
+
+          <!-- Header -->
+          <div class="flex items-center justify-between">
+            <div>
+              <h3 class="text-base font-semibold text-slate-800">Biến thể</h3>
+              <p class="text-sm text-slate-500">Thêm SKU, giá, tồn kho, màu và size</p>
+            </div>
+
+            <button type="button"
+              class="inline-flex items-center gap-2 rounded-lg px-3 py-2 bg-brand-600 text-white hover:bg-brand-700 transition shadow-sm"
+              @click="variants.push({sku:'', price:'', stock_quantity:'', color:'', size:''}); $nextTick(()=>window.lucide && lucide.createIcons())">
+              <i data-lucide="plus" class="w-4 h-4"></i>
+              <span>Thêm biến thể</span>
+            </button>
+          </div>
+
+          <!-- Empty -->
+          <template x-if="variants.length === 0">
+            <div class="rounded-xl border border-dashed p-6 text-center text-sm text-slate-500 bg-slate-50">
+              Chưa có biến thể nào.
+            </div>
+          </template>
+
+          <!-- List -->
+          <div class="space-y-3">
+            <template x-for="(v,idx) in variants" :key="idx">
+              <div class="grid grid-cols-12 gap-3 rounded-xl border p-3 bg-white">
+                <!-- SKU -->
+                <div class="col-span-12 md:col-span-3 space-y-1.5">
+                  <label class="block text-sm font-medium text-slate-700">SKU</label>
+                  <input class="block w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm
+  focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-200 transition" placeholder="VD: X-001"
+                    x-model="v.sku" :name="'p[variants]['+idx+'][sku]'">
+                </div>
+
+                <!-- Màu -->
+                <div class="col-span-6 md:col-span-3 space-y-1.5">
+                  <label class="block text-sm font-medium text-slate-700">Màu</label>
+                  <div class="relative">
+                    <select class="block w-full appearance-none rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm
+                     focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-200 transition"
+                      x-model="v.color" :name="'p[variants]['+idx+'][color]'">
+                      <% (productColors||[]).forEach(c=>{ %>
+                        <option value="<%= c._id %>">
+                          <%= c.color_name %>
+                        </option>
+                        <% }) %>
+                    </select>
+                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-slate-400">
+                      <i data-lucide="chevron-down" class="w-4 h-4"></i>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Size -->
+                <div class="col-span-6 md:col-span-2 space-y-1.5">
+                  <label class="block text-sm font-medium text-slate-700">Size</label>
+                  <div class="relative">
+                    <select class="block w-full appearance-none rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm
+                     focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-200 transition"
+                      x-model="v.size" :name="'variants['+idx+'][size]'">
+                      <% (productSizes||[]).forEach(s=>{ %>
+                        <option value="<%= s._id %>">
+                          <%= s.size_name %>
+                        </option>
+                        <% }) %>
+                    </select>
+                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-slate-400">
+                      <i data-lucide="chevron-down" class="w-4 h-4"></i>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Giá -->
+                <div class="col-span-6 md:col-span-2 space-y-1.5">
+                  <label class="block text-sm font-medium text-slate-700">Giá (₫)</label>
+                  <input class="block w-full rounded-lg border border-slate-300 bg-white px-3 py-2 pr-12 text-sm text-slate-700 shadow-sm
+                   focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-200 transition"
+                    placeholder="0" inputmode="numeric" x-model="v.price" :name="'variants['+idx+'][price]'">
+                </div>
+
+                <!-- Tồn kho -->
+                <div class="col-span-6 md:col-span-1 space-y-1.5">
+                  <label class="block text-sm font-medium text-slate-700">Tồn kho</label>
+                  <input class="block w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm
+                   focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-200 transition"
+                    placeholder="0" inputmode="numeric" x-model="v.stock_quantity"
+                    :name="'variants['+idx+'][stock_quantity]'">
+                </div>
+              </div>
+            </template>
+          </div>
+      </form>
+      <!-- Footer actions (non-sticky) -->
+      <div class="flex justify-end gap-2">
+        <a class="btn ghost" href="/admin/products">Hủy</a>
+        <button class="btn-primary"><i class="lucide lucide-save mr-2"></i>Lưu</button>
+      </div>
+      <!-- Alpine component factory to avoid long inline x-data string breaking HTML parsing -->
+      <script>
+        function productForm(initialVariants) {
+          return {
+            variants: Array.isArray(initialVariants) && initialVariants.length
+              ? initialVariants
+              : [{ sku: '', price: '', stock_quantity: '', color: '', size: '' }],
+            variantsJson: '[]',
+
+            addVariant() {
+              this.variants.push({ sku: '', price: '', stock_quantity: '', color: '', size: '' });
+              this.$nextTick(() => window.lucide && lucide.createIcons());
+            },
+            removeVariant(i) {
+              if (this.variants.length > 1) {
+                this.variants.splice(i, 1); this.$nextTick(() => window.lucide && lucide.createIcons());
+              }
+            },
+            syncVariants() {
+              const payload = (this.variants || []).map(v => ({
+                sku: String(v.sku || '').trim(),
+                price: Number(v.price || 0),
+                stock_quantity: Number(v.stock_quantity || 0),
+                color: v.color ? String(v.color) : null,
+                size: v.size ? String(v.size) : null,
+                images: (v.images || []).map((img, i) => ({
+                  url: img.url || '',
+                  public_id: img.public_id || '',
+                  is_primary: v.primaryIndex === i
+                }))
+              }))
+              this.variantsJson = JSON.stringify(payload)
+            },
+
+            prettyCurrency(v) {
+              if (v === '' || v == null) return '';
+              const n = String(v).replace(/[^\d]/g, '');
+              return n.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+            }
+          }
+        }
+      </script>
+      <!-- Render icons lần đầu khi trang load -->
+      <script>
+        document.addEventListener('DOMContentLoaded', () => {
+          if (window.lucide) lucide.createIcons();
+        });
+      </script>
+
+    </section>

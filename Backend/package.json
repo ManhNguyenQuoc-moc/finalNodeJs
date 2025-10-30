@@ -2,15 +2,12 @@
   "name": "backend",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "src/index.js",
   "scripts": {
     "start": "node src/index.js",
-    "dev": "kill-port 6000 &&nodemon src/index.js",
+    "dev": "nodemon --legacy-watch src/index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
   "type": "commonjs",
   "dependencies": {
     "bcryptjs": "^3.0.2",
@@ -34,7 +31,6 @@
     "streamifier": "^0.1.1"
   },
   "devDependencies": {
-    "kill-port": "^2.0.1",
     "nodemon": "^3.1.10"
   }
 }
