@@ -556,8 +556,7 @@
                         <% if (colorsSafe.length> 0) { %>
                           <% colorsSafe.forEach((productColor)=> {
                             const imgs = Array.isArray(productColor.imageUrls) ? productColor.imageUrls : [];
-                            const first = imgs.length ? imgs[0] : '/images/placeholder.png'; // đổi path placeholder nếu
-                            cần
+                            const first = imgs.length ? imgs[0] : '/images/placeholder.png';
                             const encodedImgs = imgs.map(u => encodeURI(u));
                             %>
                             <a href="#" class="swatch-color custom-swatch-color"

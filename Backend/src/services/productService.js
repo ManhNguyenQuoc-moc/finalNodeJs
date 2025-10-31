@@ -16,7 +16,7 @@ async function createProduct(dto) {
   return handleTransaction(async (session) => {
     console.log("Creating product with DTO:", dto);
 
-    // 1️Upload images trước
+    // Upload images trước
     const uploadedProductImages = await uploadFiles(dto.productImages, "products", "Product");
 
     const uploadedVariantImagesMap = [];
@@ -25,24 +25,24 @@ async function createProduct(dto) {
       uploadedVariantImagesMap.push(uploaded);
     }
 
-    // 2️Validate brand & category
+    // Validate brand & category
     const brand = await BrandService.getBrandById(dto.brand);
     if (!brand) throw new Error("Brand not found");
 
     const category = await CategoryService.getCategoryById(dto.category);
     if (!category) throw new Error("Category not found");
 
-    // 3️Check slug unique
+    // Check slug unique
     const existing = await productRepo.findOne({ slug: dto.slug });
     if (existing) throw new Error("Product already exists with this slug");
 
-    // 4️Map DTO → Product entity
+    // Map DTO → Product entity
     const productEntity = AddProductRequestMapper.toProductEntity(dto, uploadedProductImages);
 
-    // 5️Save Product với session
+    // Save Product với session
     const createdProduct = await productRepo.createProduct(productEntity, session);
 
-    // 6️Map DTO → Variant entities
+    // Map DTO → Variant entities
     const variantEntities = AddProductRequestMapper.toVariantEntities(
       dto.variants,
       uploadedVariantImagesMap,

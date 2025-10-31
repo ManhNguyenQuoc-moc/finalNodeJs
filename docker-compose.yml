@@ -1,7 +1,6 @@
 version: "3.9"
 
-# 👉 CHỈ ĐỔI DÒNG NÀY KHI MUỐN CHUYỂN MÔI TRƯỜNG
-x-mode: &MODE dev   # dev | prod
+x-mode: &MODE dev   
 
 networks:
   default:
@@ -20,13 +19,13 @@ services:
     environment:
       MONGO_INITDB_DATABASE: shop
     volumes:
+      - ./mongo-init:/docker-entrypoint-initdb.d
       - mongo_data:/data/db
     healthcheck:
       test: ["CMD", "mongosh", "--quiet", "--eval", "db.runCommand({ ping: 1 }).ok"]
       interval: 5s
       timeout: 3s
       retries: 30
-
   backend:
     build:
       context: ./Backend
@@ -40,7 +39,7 @@ services:
       - ./Backend/.env
     environment:
       NODE_ENV: *MODE
-      PORT: "5000"                 # đồng bộ với code app.listen
+      PORT: "5000"               
     depends_on:
       mongo:
         condition: service_healthy
@@ -50,7 +49,6 @@ services:
       interval: 5s
       timeout: 3s
       retries: 30
-    # Dev: hot reload; Prod: vẫn OK (chỉ đọc code đã copy sẵn)
     volumes:
       - ./Backend:/app
       - /app/node_modules

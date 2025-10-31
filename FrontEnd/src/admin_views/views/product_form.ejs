@@ -190,8 +190,8 @@
         </div>
 
         <!-- Card: Biến thể -->
-        <div class="rounded-2xl border bg-white p-6 shadow-sm space-y-5">
-
+        <div class="rounded-2xl border bg-white p-6 shadow-sm space-y-5" x-data="{ variants: [] }"
+          x-init="variants=[{sku:'', price:'', stock_quantity:'', color:'', size:''}]">
           <!-- Header -->
           <div class="flex items-center justify-between">
             <div>
@@ -222,8 +222,13 @@
                 <div class="col-span-12 md:col-span-3 space-y-1.5">
                   <label class="block text-sm font-medium text-slate-700">SKU</label>
                   <input class="block w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm
-  focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-200 transition" placeholder="VD: X-001"
-                    x-model="v.sku" :name="'p[variants]['+idx+'][sku]'">
+                   focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-200 transition"
+                    placeholder="VD: X-001" x-model="v.sku" :name="'p[variants]['+idx+'][sku]'"
+                    :name="'p[variants]['+idx+'][color]'" :name="'p[variants]['+idx+'][size]'"
+                    :name="'p[variants]['+idx+'][price]'" :name="'p[variants]['+idx+'][stock_quantity]'"
+                    :name="'p[variants]['+idx+'][primary_image]'" :name="'p[variants]['+idx+'][images]['+i+'][file]'"
+                    :name="'p[variants]['+idx+'][images]['+i+'][url]'"
+                    :name="'p[variants]['+idx+'][images]['+i+'][public_id]'">
                 </div>
 
                 <!-- Màu -->
@@ -232,7 +237,7 @@
                   <div class="relative">
                     <select class="block w-full appearance-none rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm
                      focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-200 transition"
-                      x-model="v.color" :name="'p[variants]['+idx+'][color]'">
+                      x-model="v.color" :name="'variants['+idx+'][color]'">
                       <% (productColors||[]).forEach(c=>{ %>
                         <option value="<%= c._id %>">
                           <%= c.color_name %>
@@ -280,15 +285,13 @@
                     placeholder="0" inputmode="numeric" x-model="v.stock_quantity"
                     :name="'variants['+idx+'][stock_quantity]'">
                 </div>
-              </div>
-            </template>
-          </div>
+
+                <!-- Footer actions (non-sticky) -->
+                <div class="flex justify-end gap-2">
+                  <a class="btn ghost" href="/admin/products">Hủy</a>
+                  <button class="btn-primary"><i class="lucide lucide-save mr-2"></i>Lưu</button>
+                </div>
       </form>
-      <!-- Footer actions (non-sticky) -->
-      <div class="flex justify-end gap-2">
-        <a class="btn ghost" href="/admin/products">Hủy</a>
-        <button class="btn-primary"><i class="lucide lucide-save mr-2"></i>Lưu</button>
-      </div>
       <!-- Alpine component factory to avoid long inline x-data string breaking HTML parsing -->
       <script>
         function productForm(initialVariants) {
