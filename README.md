@@ -27,14 +27,14 @@ CLOUDINARY_CLOUD_NAME=djsp2cxfl
 CLOUDINARY_API_KEY=523695858461134
 CLOUDINARY_API_SECRET=-aS8sI_dTzXFQCcL3DMwvUpdSyY
 JWT_SECRET=supersecret123
-GOOGLE_CLIENT_ID=885064049777-nldk321tl2ft0g9fbq6puobhu4dtjbrc.apps.googleusercontent.com
-GOOGLE_CLIENT_SECRET=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
+GOOGLE_CLIENT_ID=
+GOOGLE_CLIENT_SECRET=
 GOOGLE_REDIRECT_URI=http://localhost:5000/api/auth/google/login
-FACEBOOK_CLIENT_ID=1331764434997972 
-FACEBOOK_CLIENT_SECRET=0a6dd1f859c6b37b418dfa6ab82ceeaf
-FACEBOOK_REDIRECT_URI=http://localhost:5000/api/auth/facebook/login
+FACEBOOK_CLIENT_ID=
+FACEBOOK_CLIENT_SECRET=
+FACEBOOK_REDIRECT_URI=
 EMAIL_USER=huynhtannha54@gmail.com
-EMAIL_PASS=pwkxdiitrzixmfdi
+EMAIL_PASS=
 Trong container, hostname của Mongo là mongo (tên service), không phải `localhost`.
 Compose đã set các biến `NODE_ENV`, `BACKEND_ORIGIN`, `PUBLIC_BACKEND_ORIGIN` cho `frontend`. 
 3.3 Dùng MongoDB Atlas thay cho Mongo local
