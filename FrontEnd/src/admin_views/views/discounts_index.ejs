@@ -1,44 +1,138 @@
 <% layout('layouts/admin') %>
-<section class="space-y-6" x-data="{ open:false }">
-  <div class="flex items-center justify-between">
-    <h2 class="text-xl font-semibold">Mã giảm giá</h2>
-    <button @click="open=true" class="btn-primary"><i class="lucide lucide-plus mr-2"></i>Tạo mã</button>
-  </div>
+  <section class="space-y-6" x-data="{ open:false }">
+    <!-- Header -->
+    <div class="flex items-center justify-between">
+      <h2 class="text-xl font-semibold tracking-tight text-slate-900">Mã giảm giá</h2>
+      <button @click="open=true"
+        class="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-3.5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-700">
+        <i class="lucide lucide-plus"></i>
+        <span>Tạo mã</span>
+      </button>
+    </div>
 
-  <div class="card overflow-x-auto">
-    <table class="w-full text-sm">
-      <thead><tr class="text-left text-slate-500 uppercase text-[11px]">
-        <th class="p-2">Mã</th><th class="p-2">Giá trị</th><th class="p-2">Số lần dùng</th><th class="p-2">Trạng thái</th><th class="p-2">Ngày tạo</th><th class="p-2 w-24"></th>
-      </tr></thead>
-      <tbody>
-        <% (items||[]).forEach(d=>{ %>
-        <tr class="border-t hover:bg-slate-50/70">
-          <td class="p-2 font-mono"><%= d.code %></td>
-          <td class="p-2"><%= d.discount_value %>%</td>
-          <td class="p-2"><%= d.usage_count %>/<%= d.usage_limit %></td>
-          <td class="p-2"><span class="px-2 py-1 rounded text-xs <%= d.is_active ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-500' %>"><%= d.is_active ? 'Active' : 'Inactive' %></span></td>
-          <td class="p-2"><%= new Date(d.createdAt).toLocaleString('vi-VN') %></td>
-          <td class="p-2 text-right">
-            <form action="/admin/discounts/<%= d.code %>/delete" method="post" onsubmit="return confirm('Xóa mã này?')">
-              <button class="btn sm" type="submit">Xóa</button>
-            </form>
-          </td>
-        </tr>
-        <% }) %>
-      </tbody>
-    </table>
-  </div>
+    <!-- Table -->
+    <div class="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead class="sticky top-0 z-10 bg-slate-50/95 backdrop-blur supports-[backdrop-filter]:bg-slate-50/80">
+            <tr class="text-left text-slate-500 uppercase text-[11px]">
+              <th class="p-3">Mã</th>
+              <th class="p-3 text-right">Giá trị</th>
+              <th class="p-3 text-right">Số lần dùng</th>
+              <th class="p-3">Trạng thái</th>
+              <th class="p-3">Ngày tạo</th>
+              <th class="p-3 w-24"></th>
+            </tr>
+          </thead>
+          <tbody>
+            <% (items||[]).forEach(d=>{ const used=d.usage_count||0; const limit=d.usage_limit||0; const pct = limit ?
+              Math.min(100, Math.round(used*100/limit)) : 0; %>
+              <tr class="border-t odd:bg-white even:bg-slate-50/40 hover:bg-indigo-50/40 transition-colors">
+                <!-- Code -->
+                <td class="p-3 whitespace-nowrap">
+                  <span class="font-mono text-xs rounded-md bg-slate-50 px-2 py-1 ring-1 ring-slate-200">
+                    <%= d.code %>
+                  </span>
+                </td>
 
-  <div x-show="open" x-cloak class="fixed inset-0 bg-black/30 grid place-items-center p-4">
-    <form method="post" action="/admin/discounts" class="bg-white rounded-2xl w-full max-w-lg p-6 space-y-4">
-      <div class="text-lg font-semibold">Tạo mã giảm giá</div>
-      <div class="grid grid-cols-2 gap-3">
-        <div><label class="label">Mã (5 ký tự)</label><input class="input" required minlength="5" maxlength="5" name="code" placeholder="ABCDE"></div>
-        <div><label class="label">Giá trị (%)</label><input class="input" name="discount_value" type="number" min="1" max="100" required></div>
-        <div><label class="label">Giới hạn dùng</label><input class="input" name="usage_limit" type="number" min="1" max="10" required></div>
-        <div class="flex items-end"><label class="inline-flex items-center gap-2"><input type="checkbox" name="is_active" checked><span>Kích hoạt</span></label></div>
+                <!-- Value -->
+                <td class="p-3 text-right whitespace-nowrap">
+                  <span class="tabular-nums font-medium text-slate-900">
+                    <%= d.discount_value %>%
+                  </span>
+                </td>
+
+                <!-- Usage with tiny progress -->
+                <td class="p-3 text-right whitespace-nowrap">
+                  <div class="inline-flex flex-col items-end gap-1">
+                    <div class="tabular-nums text-slate-700">
+                      <%= used %>/<%= limit %>
+                    </div>
+                    <div class="h-1.5 w-24 rounded-full bg-slate-100 ring-1 ring-slate-200">
+                      <div class="h-full rounded-full bg-indigo-500" style="width:<%= pct %>%"></div>
+                    </div>
+                  </div>
+                </td>
+
+                <!-- Status -->
+                <td class="p-3">
+                  <span
+                    class="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium ring-1
+                <%= d.is_active ? 'bg-emerald-50 text-emerald-700 ring-emerald-200' : 'bg-slate-100 text-slate-600 ring-slate-200' %>">
+                    <i class="lucide <%= d.is_active ? 'lucide-check' : 'lucide-minus' %> text-[12px]"></i>
+                    <%= d.is_active ? 'Active' : 'Inactive' %>
+                  </span>
+                </td>
+
+                <!-- Created at -->
+                <td class="p-3 whitespace-nowrap"><span class="text-slate-700">
+                    <%= new Date(d.createdAt).toLocaleString('vi-VN') %>
+                  </span></td>
+
+                <!-- Actions -->
+                <td class="p-3 text-right">
+                  <form action="/admin/discounts/<%= d.code %>/delete" method="post"
+                    onsubmit="return confirm('Xóa mã này?')" class="inline">
+                    <button type="submit"
+                      class="inline-flex items-center justify-center rounded-lg bg-rose-600 px-2.5 py-1.5 text-xs font-medium text-white shadow-sm hover:bg-rose-700">
+                      Xóa
+                    </button>
+                  </form>
+                </td>
+              </tr>
+              <% }) %>
+          </tbody>
+        </table>
       </div>
-      <div class="flex justify-end gap-2"><button type="button" @click="open=false" class="btn ghost">Hủy</button><button class="btn-primary">Tạo</button></div>
-    </form>
-  </div>
-</section>
+    </div>
+
+    <!-- Modal -->
+    <div x-show="open" x-cloak class="fixed inset-0 z-50 grid place-items-center bg-black/30 p-4" x-transition.opacity>
+      <form method="post" action="/admin/discounts"
+        class="w-full max-w-lg space-y-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-lg" x-transition.scale>
+        <div class="text-lg font-semibold text-slate-900">Tạo mã giảm giá</div>
+
+        <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <div>
+            <label class="mb-1 block text-xs font-medium text-slate-500">Mã (5 ký tự)</label>
+            <input
+              class="h-9 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-700 shadow-sm outline-none focus:border-indigo-300 focus:ring-4 focus:ring-indigo-100"
+              required minlength="5" maxlength="5" name="code" placeholder="ABCDE">
+          </div>
+
+          <div>
+            <label class="mb-1 block text-xs font-medium text-slate-500">Giá trị (%)</label>
+            <input
+              class="h-9 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-700 shadow-sm outline-none focus:border-indigo-300 focus:ring-4 focus:ring-indigo-100"
+              name="discount_value" type="number" min="1" max="100" required>
+          </div>
+
+          <div>
+            <label class="mb-1 block text-xs font-medium text-slate-500">Giới hạn dùng</label>
+            <input
+              class="h-9 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-700 shadow-sm outline-none focus:border-indigo-300 focus:ring-4 focus:ring-indigo-100"
+              name="usage_limit" type="number" min="1" max="10" required>
+          </div>
+
+          <div class="flex items-end">
+            <label class="inline-flex items-center gap-2 text-sm text-slate-700">
+              <input type="checkbox" name="is_active" checked
+                class="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500">
+              <span>Kích hoạt</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="flex justify-end gap-2 pt-2">
+          <button type="button" @click="open=false"
+            class="inline-flex items-center justify-center rounded-xl px-3.5 py-2 text-sm font-medium text-slate-700 ring-1 ring-slate-200 hover:bg-slate-50">
+            Hủy
+          </button>
+          <button
+            class="inline-flex items-center justify-center rounded-xl bg-indigo-600 px-3.5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-700">
+            Tạo
+          </button>
+        </div>
+      </form>
+    </div>
+  </section>

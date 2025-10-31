@@ -1,51 +1,94 @@
 <% layout('layouts/admin') %>
   <section class="space-y-6">
+    <!-- Header -->
     <div class="flex items-center justify-between">
-      <h2 class="text-xl font-semibold">Người dùng</h2>
+      <h2 class="text-xl font-semibold tracking-tight text-slate-900">Người dùng</h2>
     </div>
-    <div class="card overflow-x-auto">
-      <table class="w-full text-sm">
-        <thead>
-          <tr class="text-left text-slate-500 uppercase text-[11px]">
-            <th class="p-2">Tên</th>
-            <th class="p-2">Email</th>
-            <th class="p-2">Role</th>
-            <th class="p-2">Verified</th>
-            <th class="p-2">Điểm</th>
-            <th class="p-2">Ngày tạo</th>
-            <th class="p-2 w-28"></th>
-          </tr>
-        </thead>
-        <tbody>
-          <% (items||[]).forEach(u=>{ %>
-            <tr class="border-t hover:bg-slate-50/70">
-              <td class="p-2 font-medium">
-                <%= u.full_name || '-' %>
-              </td>
-              <td class="p-2">
-                <%= u.email || '—' %>
-              </td>
-              <td class="p-2"><span class="px-2 py-1 rounded bg-slate-100 text-slate-700 text-xs">
-                  <%= u.role %>
-                </span></td>
-              <td class="p-2">
-                <%= u.is_verified ? '✅' : '—' %>
-              </td>
-              <td class="p-2">
-                <%= u.loyalty_points || 0 %>
-              </td>
-              <td class="p-2">
-                <%= new Date(u.createdAt).toLocaleString('vi-VN') %>
-              </td>
-              <td class="p-2 text-right space-x-1">
-                <form action="/admin/users/<%= u._id %>/delete" method="post" class="inline"
-                  onsubmit="return confirm('Xóa user này?')">
-                  <button class="btn sm" type="submit">Xóa</button>
-                </form>
-              </td>
+
+    <!-- Table Card -->
+    <div class="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead class="sticky top-0 z-10 bg-slate-50/95 backdrop-blur supports-[backdrop-filter]:bg-slate-50/80">
+            <tr class="text-left text-slate-500 uppercase text-[11px]">
+              <th class="p-3">Tên</th>
+              <th class="p-3">Email</th>
+              <th class="p-3">Role</th>
+              <th class="p-3">Verified</th>
+              <th class="p-3 text-right">Điểm</th>
+              <th class="p-3">Ngày tạo</th>
+              <th class="p-3 w-24"></th>
             </tr>
-            <% }) %>
-        </tbody>
-      </table>
+          </thead>
+
+          <tbody>
+            <% (items||[]).forEach(u=>{ %>
+              <tr class="border-t odd:bg-white even:bg-slate-50/40 hover:bg-indigo-50/40 transition-colors">
+                <!-- Name -->
+                <td class="p-3 font-medium text-slate-900 whitespace-nowrap max-w-[320px]">
+                  <div class="truncate">
+                    <%= u.full_name || '-' %>
+                  </div>
+                </td>
+
+                <!-- Email -->
+                <td class="p-3 text-slate-700 whitespace-nowrap">
+                  <div class="truncate">
+                    <%= u.email || '—' %>
+                  </div>
+                </td>
+
+                <!-- Role -->
+                <td class="p-3">
+                  <span
+                    class="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-700 ring-1 ring-slate-200">
+                    <i data-lucide="shield"></i>
+                    <%= u.role %>
+                  </span>
+                </td>
+
+                <!-- Verified -->
+                <td class="p-3">
+                  <% if (u.is_verified) { %>
+                    <span
+                      class="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-medium text-emerald-700 ring-1 ring-emerald-200">
+                      <i data-lucide="check-circle-2" class="text-[12px]"></i> Verified
+                    </span>
+                    <% } else { %>
+                      <span
+                        class="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-600 ring-1 ring-slate-200">
+                        <i data-lucide="x" class="text-[12px]"></i> —
+                      </span>
+                      <% } %>
+                </td>
+
+                <!-- Points -->
+                <td class="p-3 text-right tabular-nums">
+                  <%= u.loyalty_points || 0 %>
+                </td>
+
+                <!-- Created at -->
+                <td class="p-3 whitespace-nowrap">
+                  <span class="text-slate-700">
+                    <%= new Date(u.createdAt).toLocaleString('vi-VN') %>
+                  </span>
+                </td>
+
+                <!-- Actions -->
+                <td class="p-3 text-right">
+                  <form action="/admin/users/<%= u._id %>/delete" method="post" class="inline"
+                    onsubmit="return confirm('Xóa user này?')">
+                    <button type="submit"
+                      class="inline-flex items-center gap-1 rounded-lg bg-rose-600 px-2.5 py-1.5 text-xs font-medium text-white shadow-sm hover:bg-rose-700">
+                      <i data-lucide="trash-2"></i>
+                      <span class="hidden sm:inline">Xóa</span>
+                    </button>
+                  </form>
+                </td>
+              </tr>
+              <% }) %>
+          </tbody>
+        </table>
+      </div>
     </div>
   </section>

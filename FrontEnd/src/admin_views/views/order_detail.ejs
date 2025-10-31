@@ -1,52 +1,148 @@
 <% layout('layouts/admin') %>
-<section class="space-y-6">
-  <div class="flex items-center justify-between"><h2 class="text-xl font-semibold">Chi tiết đơn #<%= order._id %></h2><a href="/admin/orders" class="btn ghost">Quay lại</a></div>
-  <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
-    <div class="card lg:col-span-2">
-      <h3 class="card-title mb-3">Sản phẩm</h3>
-      <table class="w-full text-sm">
-        <thead><tr class="text-left text-slate-500 uppercase text-[11px]"><th class="p-2">Sản phẩm</th><th class="p-2">SKU</th><th class="p-2">SL</th><th class="p-2">Giá</th><th class="p-2">Tổng</th></tr></thead>
-        <tbody>
-          <% order.items.forEach(it=>{ %>
-          <tr class="border-t">
-            <td class="p-2"><%= it.name_snapshot || it.product_name || '-' %></td>
-            <td class="p-2"><%= it.product_variant_sku || it.variant_sku %></td>
-            <td class="p-2"><%= it.quantity %></td>
-            <td class="p-2"><%= (it.price_at_purchase || it.price_at_time).toLocaleString('vi-VN',{style:'currency',currency:'VND'}) %></td>
-            <td class="p-2 font-medium"><%= ((it.price_at_purchase||it.price_at_time)*it.quantity).toLocaleString('vi-VN',{style:'currency',currency:'VND'}) %></td>
-          </tr>
-          <% }) %>
-        </tbody>
-      </table>
+  <section class="space-y-6">
+    <!-- Header -->
+    <div class="flex items-center justify-between">
+      <h2 class="text-xl font-semibold tracking-tight text-slate-900">
+        Chi tiết đơn <span class="font-mono text-base text-slate-500">#<%= order._id %></span>
+      </h2>
+      <a href="/admin/orders"
+        class="inline-flex items-center rounded-lg px-3 py-1.5 text-sm font-medium text-slate-700 ring-1 ring-slate-200 hover:bg-slate-50">
+        Quay lại
+      </a>
     </div>
-    <div class="card space-y-3">
-      <div><div class="text-sm text-slate-500">Khách hàng</div><div class="font-medium"><%= (order.user && order.user.full_name) || 'Guest' %></div><div class="text-sm text-slate-500"><%= (order.user && order.user.email) || '' %></div></div>
-      <div><div class="text-sm text-slate-500">Địa chỉ</div><div><%= (order.address && order.address.address_line) || '-' %></div></div>
-      <div class="grid grid-cols-2 gap-3">
-        <div class="bg-slate-50 rounded-xl p-3"><div class="text-xs text-slate-500">Tổng tạm tính</div><div class="font-semibold"><%= (order.total_amount||0).toLocaleString('vi-VN',{style:'currency',currency:'VND'}) %></div></div>
-        <div class="bg-slate-50 rounded-xl p-3"><div class="text-xs text-slate-500">Thành tiền</div><div class="font-semibold"><%= (order.final_amount||0).toLocaleString('vi-VN',{style:'currency',currency:'VND'}) %></div></div>
+
+    <!-- Main content -->
+    <div class="grid grid-cols-1 gap-4 lg:grid-cols-3">
+      <!-- Items -->
+      <div class="rounded-2xl border border-slate-200 bg-white shadow-sm lg:col-span-2">
+        <div class="flex items-center justify-between border-b px-4 py-3">
+          <h3 class="text-sm font-semibold tracking-wide text-slate-800">Sản phẩm</h3>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead class="sticky top-0 z-10 bg-slate-50/95 backdrop-blur supports-[backdrop-filter]:bg-slate-50/80">
+              <tr class="text-left text-slate-500 uppercase text-[11px]">
+                <th class="p-3">Sản phẩm</th>
+                <th class="p-3">SKU</th>
+                <th class="p-3 text-center">SL</th>
+                <th class="p-3 text-right">Giá</th>
+                <th class="p-3 text-right">Tổng</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% order.items.forEach(it=>{ %>
+                <tr class="border-t odd:bg-white even:bg-slate-50/40">
+                  <td class="p-3 align-middle whitespace-nowrap max-w-[360px]">
+                    <div class="truncate text-slate-800">
+                      <%= it.name_snapshot || it.product_name || '-' %>
+                    </div>
+                  </td>
+                  <td class="p-3 align-middle">
+                    <span class="font-mono text-xs rounded-md bg-slate-50 px-2 py-1 ring-1 ring-slate-200">
+                      <%= it.product_variant_sku || it.variant_sku || '—' %>
+                    </span>
+                  </td>
+                  <td class="p-3 text-center tabular-nums">
+                    <%= it.quantity %>
+                  </td>
+                  <td class="p-3 text-right tabular-nums">
+                    <%= (it.price_at_purchase ||
+                      it.price_at_time).toLocaleString('vi-VN',{style:'currency',currency:'VND'}) %>
+                  </td>
+                  <td class="p-3 text-right tabular-nums font-semibold text-slate-900">
+                    <%=
+                      ((it.price_at_purchase||it.price_at_time)*it.quantity).toLocaleString('vi-VN',{style:'currency',currency:'VND'})
+                      %>
+                  </td>
+                </tr>
+                <% }) %>
+            </tbody>
+          </table>
+        </div>
       </div>
-      <div><div class="text-sm text-slate-500 mb-1">Trạng thái</div><%- include('partials/_statusBadge', {status:order.current_status}) %></div>
-      <form method="post" action="/admin/orders/<%= order._id %>/status" class="flex items-center gap-2">
-        <select class="input flex-1" name="status">
-          <% ['pending','confirmed','shipping','delivered','cancelled'].forEach(s=>{ %>
-            <option value="<%= s %>" <%= order.current_status===s?'selected':'' %>><%= s %></option>
-          <% }) %>
-        </select>
-        <button class="btn-primary">Cập nhật</button>
-      </form>
+
+      <!-- Summary / Customer -->
+      <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm space-y-4">
+        <div>
+          <div class="text-xs font-medium uppercase text-slate-500">Khách hàng</div>
+          <div class="mt-1 font-medium text-slate-900">
+            <%= (order.user && order.user.full_name) || 'Guest' %>
+          </div>
+          <div class="text-sm text-slate-500">
+            <%= (order.user && order.user.email) || '' %>
+          </div>
+        </div>
+
+        <div class="border-t pt-3">
+          <div class="text-xs font-medium uppercase text-slate-500">Địa chỉ</div>
+          <div class="mt-1 text-slate-800">
+            <%= (order.address && order.address.address_line) || '-' %>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div class="rounded-xl bg-slate-50 p-3 ring-1 ring-slate-200">
+            <div class="text-[11px] uppercase tracking-wide text-slate-500">Tổng tạm tính</div>
+            <div class="mt-1 font-semibold tabular-nums">
+              <%= (order.total_amount||0).toLocaleString('vi-VN',{style:'currency',currency:'VND'}) %>
+            </div>
+          </div>
+          <div class="rounded-xl bg-indigo-50 p-3 ring-1 ring-indigo-200">
+            <div class="text-[11px] uppercase tracking-wide text-indigo-700">Thành tiền</div>
+            <div class="mt-1 font-semibold text-indigo-900 tabular-nums">
+              <%= (order.final_amount||0).toLocaleString('vi-VN',{style:'currency',currency:'VND'}) %>
+            </div>
+          </div>
+        </div>
+
+        <div class="border-t pt-3">
+          <div class="mb-1 text-sm text-slate-500">Trạng thái</div>
+          <%- include('partials/_statusBadge', {status:order.current_status}) %>
+        </div>
+
+        <form method="post" action="/admin/orders/<%= order._id %>/status" class="flex items-center gap-2">
+          <select
+            class="h-9 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-700 shadow-sm outline-none focus:border-indigo-300 focus:ring-4 focus:ring-indigo-100"
+            name="status">
+            <% ['pending','confirmed','shipping','delivered','cancelled'].forEach(s=>{ %>
+              <option value="<%= s %>" <%=order.current_status===s?'selected':'' %>><%= s %>
+              </option>
+              <% }) %>
+          </select>
+          <button
+            class="h-9 inline-flex items-center justify-center whitespace-nowrap rounded-xl bg-indigo-600 px-4 text-xs font-medium text-white shadow-sm hover:bg-indigo-700">
+            Cập nhật
+          </button>
+        </form>
+      </div>
     </div>
-  </div>
-  <div class="card">
-    <h3 class="card-title mb-3">Lịch sử trạng thái</h3>
-    <table class="w-full text-sm">
-      <thead><tr class="text-left text-slate-500 uppercase text-[11px]"><th class="p-2">Thời gian</th><th class="p-2">Trạng thái</th></tr></thead>
-      <tbody>
-        <% (order.status_history||[]).slice().reverse().forEach(s=>{ %>
-          <tr class="border-t"><td class="p-2"><%= new Date(s.timestamp).toLocaleString('vi-VN') %></td><td class="p-2"><%- include('partials/_statusBadge', {status:s.status}) %></td></tr>
-        <% }) %>
-      </tbody>
-    </table>
-  </div>
-</section>
-    
+
+    <!-- Timeline -->
+    <div class="rounded-2xl border border-slate-200 bg-white shadow-sm">
+      <div class="flex items-center justify-between border-b px-4 py-3">
+        <h3 class="text-sm font-semibold tracking-wide text-slate-800">Lịch sử trạng thái</h3>
+      </div>
+
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead class="sticky top-0 z-10 bg-slate-50/95 backdrop-blur supports-[backdrop-filter]:bg-slate-50/80">
+            <tr class="text-left text-slate-500 uppercase text-[11px]">
+              <th class="p-3">Thời gian</th>
+              <th class="p-3">Trạng thái</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% (order.status_history||[]).slice().reverse().forEach(s=>{ %>
+              <tr class="border-t odd:bg-white even:bg-slate-50/40">
+                <td class="p-3 whitespace-nowrap">
+                  <%= new Date(s.timestamp).toLocaleString('vi-VN') %>
+                </td>
+                <td class="p-3"><%- include('partials/_statusBadge', {status:s.status}) %></td>
+              </tr>
+              <% }) %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
