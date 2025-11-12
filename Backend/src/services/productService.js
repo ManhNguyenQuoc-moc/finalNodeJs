@@ -284,96 +284,284 @@ async function addVariant(productId, dto) {
 //     return toAddProductResponse(updatedProduct, variants);
 //   });
 // }
+// async function updateProduct(productId, dto) {
+//   return handleTransaction(async (session) => {
+//     // 1️⃣ Lấy product
+//     const product = await productRepo.findById(productId);
+//     if (!product) throw new Error("Product not found");
+
+//     // 2️⃣ Upload tất cả ảnh mới trước (product + variant)
+//     const uploadedProductImages = await uploadFiles(dto.newProductImages || [], "products", "Product");
+//     const uploadedVariantsMap = [];
+//     for (const variantDto of dto.variants || []) {
+//       const uploadedVariantImages = await uploadFiles(variantDto.newImages || [], "variants", `Variant ${variantDto.sku}`);
+//       uploadedVariantsMap.push(uploadedVariantImages);
+//     }
+
+//     // 3️⃣ Update basic product fields
+//     if (dto.name) product.name = dto.name;
+//     if (dto.slug) product.slug = dto.slug;
+//     if (dto.short_description) product.short_description = dto.short_description;
+//     if (dto.long_description) product.long_description = dto.long_description;
+
+//     if (dto.brand) {
+//       const brand = await BrandService.getBrandById(dto.brand);
+//       if (!brand) throw new Error("Brand not found");
+//       product.brand = dto.brand;
+//     }
+
+//     if (dto.category) {
+//       const category = await CategoryService.getCategoryById(dto.category);
+//       if (!category) throw new Error("Category not found");
+//       product.category = dto.category;
+//     }
+
+//     // Xóa ảnh cũ product
+//     if (dto.imagesToDelete?.length) {
+//       await deleteFiles(dto.imagesToDelete);
+//       product.images = product.images.filter(
+//         (img) => !dto.imagesToDelete.includes(img.public_id)
+//       );
+//     }
+
+//     // Thêm ảnh mới đã upload
+//     if (uploadedProductImages.length) {
+//       product.images = product.images.concat(uploadedProductImages);
+//     }
+
+//     // Update product trong DB
+//     const updatedProduct = await productRepo.updateProduct(productId, product, session);
+
+//     // Handle variants
+//     for (let i = 0; i < (dto.variants || []).length; i++) {
+//       const variantDto = dto.variants[i];
+//       const uploadedVariantImages = uploadedVariantsMap[i] || [];
+
+//       if (variantDto.id) {
+//         // Update variant cũ
+//         const variant = await productRepo.findVariantById(variantDto.id);
+//         if (!variant) throw new Error(`Variant not found: ${variantDto.id}`);
+
+//         if (variantDto.sku) variant.sku = variantDto.sku;
+//         if (variantDto.price != null) variant.price = variantDto.price;
+//         if (variantDto.stock_quantity != null) variant.stock_quantity = variantDto.stock_quantity;
+
+//         if (variantDto.color) {
+//           const color = await ColorService.getColorById(variantDto.color);
+//           if (!color) throw new Error(`Color not found: ${variantDto.color}`);
+//           variant.color = variantDto.color;
+//         }
+
+//         if (variantDto.size) {
+//           const size = await SizeService.getSizeById(variantDto.size);
+//           if (!size) throw new Error(`Size not found: ${variantDto.size}`);
+//           variant.size = variantDto.size;
+//         }
+
+//         // Xoá ảnh cũ
+//         if (variantDto.imagesToDelete?.length) {
+//           await deleteFiles(variantDto.imagesToDelete);
+//           variant.images = variant.images.filter(
+//             (img) => !variantDto.imagesToDelete.includes(img.public_id)
+//           );
+//         }
+
+//         // Thêm ảnh mới đã upload
+//         variant.images = variant.images.concat(uploadedVariantImages);
+
+//         await productRepo.updateVariant(variant._id, variant, session);
+//       } else {
+//         // Tạo variant mới
+//         const newVariant = {
+//           product: product._id,
+//           sku: variantDto.sku,
+//           price: variantDto.price,
+//           stock_quantity: variantDto.stock_quantity,
+//           color: variantDto.color,
+//           size: variantDto.size,
+//           images: uploadedVariantImages,
+//         };
+
+//         await productRepo.createVariant(newVariant, session);
+//       }
+//     }
+
+//     // 8️⃣ Lấy variants mới nhất để trả về response
+//     const variants = await productRepo.findVariantsByProduct(product._id, session);
+
+//     return toAddProductResponse(updatedProduct, variants);
+//   });
+// }
 async function updateProduct(productId, dto) {
   return handleTransaction(async (session) => {
-    // 1️⃣ Lấy product
-    const product = await productRepo.findById(productId);
-    if (!product) throw new Error("Product not found");
+    // 1) Lấy product (nếu repo của bạn đã nhận {session} thì sẽ dùng, nếu chưa vẫn chạy ổn)
+    const product = await productRepo.findById(productId, { session });
+    if (!product) throw new NotFoundError("Product not found");
 
-    // 2️⃣ Upload tất cả ảnh mới trước (product + variant)
-    const uploadedProductImages = await uploadFiles(dto.newProductImages || [], "products", "Product");
-    const uploadedVariantsMap = [];
-    for (const variantDto of dto.variants || []) {
-      const uploadedVariantImages = await uploadFiles(variantDto.newImages || [], "variants", `Variant ${variantDto.sku}`);
-      uploadedVariantsMap.push(uploadedVariantImages);
+    // 2) Ép kiểu và validate cơ bản cho variants
+    const toNum = (v) => (v === null || v === undefined ? v : Number(v));
+    for (const v of dto.variants || []) {
+      if (v.price !== undefined) v.price = toNum(v.price);
+      if (v.stock_quantity !== undefined) v.stock_quantity = toNum(v.stock_quantity);
+      if (v.price !== undefined && Number.isNaN(v.price)) {
+        throw new ValidationError("Invalid price");
+      }
+      if (v.stock_quantity !== undefined && Number.isNaN(v.stock_quantity)) {
+        throw new ValidationError("Invalid stock_quantity");
+      }
     }
 
-    // 3️⃣ Update basic product fields
-    if (dto.name) product.name = dto.name;
-    if (dto.slug) product.slug = dto.slug;
-    if (dto.short_description) product.short_description = dto.short_description;
-    if (dto.long_description) product.long_description = dto.long_description;
+    // 3) Kiểm tra brand/category (nếu có)
+    let brandId = product.brand && product.brand._id ? product.brand._id : product.brand;
+    let categoryId = product.category && product.category._id ? product.category._id : product.category;
 
     if (dto.brand) {
-      const brand = await BrandService.getBrandById(dto.brand);
-      if (!brand) throw new Error("Brand not found");
-      product.brand = dto.brand;
+      const brand = await BrandService.getBrandById(dto.brand, { session });
+      if (!brand) throw new NotFoundError("Brand not found");
+      brandId = dto.brand;
     }
-
     if (dto.category) {
-      const category = await CategoryService.getCategoryById(dto.category);
-      if (!category) throw new Error("Category not found");
-      product.category = dto.category;
+      const category = await CategoryService.getCategoryById(dto.category, { session });
+      if (!category) throw new NotFoundError("Category not found");
+      categoryId = dto.category;
     }
 
-    // Xóa ảnh cũ product
-    if (dto.imagesToDelete?.length) {
-      await deleteFiles(dto.imagesToDelete);
-      product.images = product.images.filter(
-        (img) => !dto.imagesToDelete.includes(img.public_id)
-      );
-    }
+    // 4) Update trường text cơ bản trên biến local (chưa ghi DB)
+    let name = product.name;
+    let slug = product.slug;
+    let short_description = product.short_description;
+    let long_description = product.long_description;
 
-    // Thêm ảnh mới đã upload
+    if (dto.name) name = dto.name;
+    if (dto.slug) {
+      slug = await productRepo.normalizeAndEnsureUniqueSlug(dto.slug, productId, { session });
+    }
+    if (dto.short_description) short_description = dto.short_description;
+    if (dto.long_description) long_description = dto.long_description;
+
+    // 5) ẢNH — upload mới trước, nhưng KHÔNG xóa cũ ngay (đánh dấu để xoá post-commit)
+    const productImagesToDelete = Array.isArray(dto.imagesToDelete) ? dto.imagesToDelete : [];
+
+    const uploadedToCleanup = []; // nếu transaction fail sẽ xoá những cái vừa upload
+
+    const uploadedProductImages = await uploadFiles(dto.newProductImages || [], "products", "Product")
+      .then((res) => {
+        uploadedToCleanup.push(...res.map((x) => x.public_id));
+        return res;
+      });
+
+    const uploadedVariantsMap = [];
+    for (const variantDto of dto.variants || []) {
+      const filesForVariant =
+        variantDto.newImages ||
+        variantDto.files ||
+        variantDto.uploadedFiles ||
+        [];
+
+      const res = await uploadFiles(filesForVariant, "variants", `Variant ${variantDto.sku || ""}`)
+        .then(r => { uploadedToCleanup.push(...r.map(x => x.public_id)); return r; });
+
+      uploadedVariantsMap.push(res);
+    }
+    // 6) Tính mảng images mới cho PRODUCT (lọc xoá + merge dedupe)
+    const currentImages = Array.isArray(product.images) ? product.images : [];
+    let nextProductImages = currentImages;
+
+    if (productImagesToDelete.length) {
+      nextProductImages = nextProductImages.filter((img) => !productImagesToDelete.includes(img.public_id));
+    }
     if (uploadedProductImages.length) {
-      product.images = product.images.concat(uploadedProductImages);
+      const map = new Map(nextProductImages.map((i) => [i.public_id, i]));
+      for (const img of uploadedProductImages) map.set(img.public_id, img);
+      nextProductImages = Array.from(map.values());
     }
 
-    // Update product trong DB
-    const updatedProduct = await productRepo.updateProduct(productId, product, session);
+    // 7) Ghi PRODUCT (payload tường minh, tránh truyền document đã populate)
+    const productPayload = {
+      name,
+      slug,
+      short_description,
+      long_description,
+      brand: brandId,
+      category: categoryId,
+      images: nextProductImages,
+    };
 
-    // Handle variants
+    const updatedProduct = await productRepo.updateProduct(productId, productPayload, session);
+
+    // 8) VARIANTS
+    const existingVariants = await productRepo.findVariantsByProduct(updatedProduct._id, session);
+    const seen = new Set();
+    let createdVariants = [];
     for (let i = 0; i < (dto.variants || []).length; i++) {
       const variantDto = dto.variants[i];
       const uploadedVariantImages = uploadedVariantsMap[i] || [];
 
       if (variantDto.id) {
-        // Update variant cũ
-        const variant = await productRepo.findVariantById(variantDto.id);
-        if (!variant) throw new Error(`Variant not found: ${variantDto.id}`);
+        const variant = await productRepo.findVariantById(variantDto.id, { session });
+        if (!variant || String(variant.product) !== String(updatedProduct._id)) {
+          throw new NotFoundError(`Variant not found: ${variantDto.id}`);
+        }
 
-        if (variantDto.sku) variant.sku = variantDto.sku;
-        if (variantDto.price != null) variant.price = variantDto.price;
-        if (variantDto.stock_quantity != null) variant.stock_quantity = variantDto.stock_quantity;
+        let colorId = variant.color && variant.color._id ? variant.color._id : variant.color;
+        let sizeId = variant.size && variant.size._id ? variant.size._id : variant.size;
 
         if (variantDto.color) {
-          const color = await ColorService.getColorById(variantDto.color);
-          if (!color) throw new Error(`Color not found: ${variantDto.color}`);
-          variant.color = variantDto.color;
+          const color = await ColorService.getColorById(variantDto.color, { session });
+          if (!color) throw new NotFoundError(`Color not found: ${variantDto.color}`);
+          colorId = variantDto.color;
         }
-
         if (variantDto.size) {
-          const size = await SizeService.getSizeById(variantDto.size);
-          if (!size) throw new Error(`Size not found: ${variantDto.size}`);
-          variant.size = variantDto.size;
+          const size = await SizeService.getSizeById(variantDto.size, { session });
+          if (!size) throw new NotFoundError(`Size not found: ${variantDto.size}`);
+          sizeId = variantDto.size;
         }
 
-        // Xoá ảnh cũ
-        if (variantDto.imagesToDelete?.length) {
-          await deleteFiles(variantDto.imagesToDelete);
-          variant.images = variant.images.filter(
-            (img) => !variantDto.imagesToDelete.includes(img.public_id)
-          );
+        // ảnh
+        const currentVImgs = Array.isArray(variant.images) ? variant.images : [];
+        let nextVImgs = currentVImgs;
+        if (Array.isArray(variantDto.imagesToDelete) && variantDto.imagesToDelete.length) {
+          nextVImgs = nextVImgs.filter(img => !variantDto.imagesToDelete.includes(img.public_id));
+        }
+        const uploadedVariantImages = uploadedVariantsMap[i] || [];
+        if (uploadedVariantImages.length) {
+          const vmap = new Map(nextVImgs.map(i => [i.public_id, i]));
+          for (const img of uploadedVariantImages) vmap.set(img.public_id, img);
+          nextVImgs = Array.from(vmap.values());
         }
 
-        // Thêm ảnh mới đã upload
-        variant.images = variant.images.concat(uploadedVariantImages);
+        const variantPayload = {
+          sku: variantDto.sku ?? variant.sku,
+          price: variantDto.price ?? variant.price,
+          stock_quantity: variantDto.stock_quantity ?? variant.stock_quantity,
+          color: colorId,
+          size: sizeId,
+          images: nextVImgs,
+        };
 
-        await productRepo.updateVariant(variant._id, variant, session);
-      } else {
-        // Tạo variant mới
+        console.log("Updating variant", variant._id.toString(), "payload:", {
+          price: variantPayload.price,
+          stock_quantity: variantPayload.stock_quantity,
+          del: variantDto.imagesToDelete,
+          add: uploadedVariantImages.map(x => x.public_id),
+        });
+
+        await productRepo.updateVariant(variant._id, variantPayload, session);
+        seen.add(String(variant._id));
+      }
+      else {
+        // CREATE
+        if (variantDto.color) {
+          const color = await ColorService.getColorById(variantDto.color, { session });
+          if (!color) throw new NotFoundError(`Color not found: ${variantDto.color}`);
+        }
+        if (variantDto.size) {
+          const size = await SizeService.getSizeById(variantDto.size, { session });
+          if (!size) throw new NotFoundError(`Size not found: ${variantDto.size}`);
+        }
+
         const newVariant = {
-          product: product._id,
+          product: updatedProduct._id,
           sku: variantDto.sku,
           price: variantDto.price,
           stock_quantity: variantDto.stock_quantity,
@@ -382,17 +570,46 @@ async function updateProduct(productId, dto) {
           images: uploadedVariantImages,
         };
 
-        await productRepo.createVariant(newVariant, session);
+        const created = await productRepo.createVariant(newVariant, session);
+        console.log("Created variant:", created?._id?.toString());
+        createdVariants.push(created);
       }
     }
 
-    // 8️⃣ Lấy variants mới nhất để trả về response
-    const variants = await productRepo.findVariantsByProduct(product._id, session);
+    // (Tuỳ chọn) Xoá các variant không còn trong DTO:
+    // for (const v of existingVariants) {
+    //   if (!seen.has(String(v._id))) {
+    //     await productRepo.deleteVariant(v._id, session);
+    //   }
+    // }
 
-    return toAddProductResponse(updatedProduct, variants);
+    // 9) Lấy variants mới nhất để trả response
+    const variants = await productRepo.findVariantsByProduct(updatedProduct._id, session);
+
+    // 10) Trả về response + dọn ảnh sau commit
+    return {
+      response: toAddProductResponse(updatedProduct, variants),
+      postCommit: async () => {
+        // XÓA ẢNH CŨ (product)
+        if (productImagesToDelete.length) {
+          await deleteFiles(productImagesToDelete);
+        }
+        // XÓA ẢNH CŨ (variants)
+        for (const v of dto.variants || []) {
+          if (Array.isArray(v.imagesToDelete) && v.imagesToDelete.length) {
+            await deleteFiles(v.imagesToDelete);
+          }
+        }
+      },
+      onRollback: async () => {
+        // Nếu transaction fail → xoá các ảnh vừa upload để tránh rác
+        if (uploadedToCleanup.length) {
+          await deleteFiles(uploadedToCleanup);
+        }
+      },
+    };
   });
 }
-
 // -------------------- DELETE PRODUCT --------------------
 async function deleteProduct(productId) {
   return handleTransaction(async (session) => {
