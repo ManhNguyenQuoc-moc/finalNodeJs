@@ -156,10 +156,11 @@ module.exports = function createAdminRouter({ BACKEND, proxy } = {}) {
       // Trường hợp dùng upload.any(), req.files là mảng:
       if (Array.isArray(req.files)) {
         for (const f of req.files) {
-          const fname = f.originalname || "file";
-          const blob = new Blob([f.buffer], { type: f.mimetype || "application/octet-stream" });
-          // fieldname giữ nguyên để khớp key Postman (vd: productImages, variantImages[0][], variantImages[1][])
-          form.append(f.fieldname, blob, fname);
+          form.append(
+            f.fieldname,
+            new Blob([f.buffer], { type: f.mimetype || "application/octet-stream" }),
+            f.originalname || "file"
+          );
         }
       }
       // (Nếu bạn dùng upload.fields, bạn có thể loop object tương tự)
@@ -318,6 +319,7 @@ module.exports = function createAdminRouter({ BACKEND, proxy } = {}) {
     if (BACKEND) {
       try {
         const data = await fetchJSONAuth(req, `${BACKEND}/api/product/${req.params.id}`);
+        console.log("Load product by id data:", data);
         // chấp nhận nhiều dạng payload phổ biến
         if (data?.success && data?.data?.product) product = data.data.product;
         else if ((data?.ok || data?.status === "ok") && data?.product) product = data.product;
@@ -391,6 +393,11 @@ module.exports = function createAdminRouter({ BACKEND, proxy } = {}) {
   });
 
   router.post("/products", upload.any(), async (req, res) => {
+    console.log("[ADMIN IN] fields:", Object.keys(req.body));
+    console.log("[ADMIN IN] variants(raw):", typeof req.body.variants, String(req.body.variants).slice(0, 200));
+    console.log("[ADMIN IN] files:", (req.files || []).map(f => ({
+      fieldname: f.fieldname, name: f.originalname, size: f.size
+    })));
     const r = await fetchCreateProduct(req);
     const q = new URLSearchParams(r.ok ? { s: r.message } : { e: r.message });
     return res.redirect(`/admin/products?${q.toString()}`);

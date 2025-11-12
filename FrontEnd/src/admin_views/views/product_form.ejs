@@ -1,11 +1,9 @@
 <% layout('layouts/admin') %>
   <% const P=(typeof product !=='undefined' && product) ? product : null; %>
-    <!-- Product Create/Edit -->
-    <section class="relative"
-      x-data="productForm(<%- JSON.stringify(P && P.variants ? P.variants : [{sku:'', price:'', stock_quantity:''}]) %>)">
-      <!-- Sticky header actions -->
-      <div
-        class="sticky top-0 z-10 bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b">
+
+    <section class="relative">
+      <!-- Sticky header -->
+      <div class="sticky top-0 z-10 bg-white/80 backdrop-blur border-b">
         <div class="mx-auto max-w-6xl px-4 py-3 flex items-center justify-between">
           <div class="flex items-center gap-3">
             <div class="size-9 grid place-items-center rounded-xl bg-green-100 text-green-600">
@@ -15,123 +13,85 @@
               <h2 class="text-lg font-semibold">
                 <%= P ? 'Chỉnh sửa sản phẩm' : 'Thêm sản phẩm' %>
               </h2>
-              <p class="text-xs text-muted-foreground leading-tight">Quản lý thông tin, mô tả và các biến thể sản phẩm
-              </p>
+              <p class="text-xs text-slate-500">Quản lý thông tin, mô tả và các biến thể sản phẩm</p>
             </div>
           </div>
           <div class="flex items-center gap-2">
-            <!-- Nút quay lại -->
-            <a href="/admin/products" class="btn flex items-center gap-2">
-              <span>Quay lại</span>
-            </a>
-            <!-- Nút lưu -->
-            <button form="product-form" type="submit"
-              class="rounded-lg px-4 py-2 bg-green-500 text-white hover:bg-green-700 transition-all duration-200">
-              <span>Lưu</span>
-            </button>
+            <a href="/admin/products" class="btn">Quay lại</a>
+            <button form="product-form" type="submit" class="rounded-lg px-4 py-2 bg-green-600 text-white">Lưu</button>
           </div>
         </div>
       </div>
 
       <form id="product-form" class="mx-auto max-w-6xl px-4 py-6 space-y-6" method="post" enctype="multipart/form-data"
-        action="<%= P ? '/admin/products/'+P._id : '/admin/products' %>" @submit="syncVariants()">
-        <input type="hidden" name="p[variants]" x-model="variantsJson">
-        <!-- Card: Thông tin chung -->
-        <div class="card p-6 space-y-6 card-green">
-          <!-- Header -->
-          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+        action="<%= P ? '/admin/products/' + P._id : '/admin/products' %>">
+        <!-- Thông tin chung -->
+        <div class="rounded-2xl border bg-white p-6 space-y-6">
+          <div class="flex items-center justify-between">
             <div>
               <h3 class="text-lg font-semibold text-slate-800">Thông tin chung</h3>
               <p class="text-sm text-slate-500">Tên, định danh, thương hiệu và danh mục</p>
             </div>
-            <span class="text-xs font-medium text-red-600">* Trường bắt buộc</span>
+            <span class="text-xs font-medium text-red-600">* Bắt buộc</span>
           </div>
 
-          <!-- Form Fields -->
           <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-            <!-- Tên sản phẩm -->
-            <div class="space-y-1.5">
-              <label class="block text-sm font-medium text-slate-700">
-                Tên sản phẩm <span class="text-red-600">*</span>
-              </label>
-              <input class="block w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm 
-               focus:border-brand-500 focus:ring-2 focus:ring-brand-200 focus:outline-none transition" name="name"
-                value="<%= P ? (P.name || '') : '' %>" placeholder="VD: Tai nghe Bluetooth X" required>
-              <p class="text-xs text-slate-500">Tên hiển thị trên cửa hàng.</p>
+            <div>
+              <label class="block text-sm font-medium">Tên sản phẩm *</label>
+              <input name="name" required class="w-full border rounded-lg px-3 py-2"
+                value="<%= P ? (P.name || '') : '' %>" placeholder="VD: Áo thun nam" />
             </div>
 
-            <!-- Slug -->
-            <div class="space-y-1.5">
-              <label class="block text-sm font-medium text-slate-700">Slug</label>
-              <input class="block w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm 
-               focus:border-brand-500 focus:ring-2 focus:ring-brand-200 focus:outline-none transition" name="slug"
-                value="<%= P ? (P.slug || '') : '' %>" placeholder="tai-nghe-bluetooth-x">
-              <p class="text-xs text-slate-500">Để trống để tự tạo từ tên sản phẩm.</p>
+            <div>
+              <label class="block text-sm font-medium">Slug</label>
+              <input name="slug" class="w-full border rounded-lg px-3 py-2" value="<%= P ? (P.slug || '') : '' %>"
+                placeholder="ao-thun-nam" />
             </div>
 
-            <!-- Thương hiệu -->
-            <div class="space-y-1.5">
-              <label for="brand" class="block text-sm font-medium text-slate-700">Thương hiệu</label>
-              <div class="relative">
-                <select id="brand" name="brand" class="block w-full appearance-none rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm 
-                 focus:border-brand-500 focus:ring-2 focus:ring-brand-200 focus:outline-none transition">
-                  <% (brands || []).forEach(b=> { %>
-                    <option value="<%= b._id %>" <%=(P && String(P.brand)===String(b._id)) ? 'selected' : '' %>><%=
-                        b.name %>
-                    </option>
-                    <% }) %>
-                </select>
-                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-slate-400">
-                  <i data-lucide="chevron-down" class="w-4 h-4"></i>
-                </div>
-              </div>
+            <div>
+              <label class="block text-sm font-medium">Thương hiệu</label>
+              <select name="brand" class="w-full border rounded-lg px-3 py-2">
+                <% (brands||[]).forEach(b=>{ %>
+                  <option value="<%= b._id %>" <%=(P && String(P.brand)===String(b._id))?'selected':'' %>><%= b.name %>
+                  </option>
+                  <% }) %>
+              </select>
             </div>
-            <div class="space-y-1.5">
-              <label class="block text-sm font-medium text-slate-700">Ảnh sản phẩm</label>
+
+            <div>
+              <label class="block text-sm font-medium">Danh mục</label>
+              <select name="category" class="w-full border rounded-lg px-3 py-2">
+                <% (categories||[]).forEach(c=>{ %>
+                  <option value="<%= c._id %>" <%=(P && String(P.category)===String(c._id))?'selected':'' %>><%= c.name
+                      %>
+                  </option>
+                  <% }) %>
+              </select>
+            </div>
+
+            <div class="md:col-span-2">
+              <label class="block text-sm font-medium">Ảnh sản phẩm</label>
               <input type="file" name="productImages" multiple accept="image/*"
-                class="block w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm">
-              <p class="text-xs text-slate-500">Có thể chọn nhiều ảnh.</p>
-            </div>
-            <!-- Danh mục -->
-            <div class="space-y-1.5">
-              <label class="block text-sm font-medium text-slate-700">Danh mục</label>
-              <div class="relative">
-                <select class="block w-full appearance-none rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm 
-                 focus:border-brand-500 focus:ring-2 focus:ring-brand-200 focus:outline-none transition"
-                  name="category">
-                  <% (categories || []).forEach(c=> { %>
-                    <option value="<%= c._id %>" <%=(P && String(P.category)===String(c._id)) ? 'selected' : '' %>>
-                      <%= c.name %>
-                    </option>
+                class="w-full border rounded-lg px-3 py-2" />
+              <p class="text-xs text-slate-500 mt-1">Có thể chọn nhiều ảnh.</p>
+
+              <% if (P && Array.isArray(P.images) && P.images.length) { %>
+                <div class="flex flex-wrap gap-2 mt-2">
+                  <% P.images.forEach(img=> { %>
+                    <img src="<%= img.url %>" class="w-16 h-16 object-cover rounded border" />
                     <% }) %>
-                </select>
-                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-slate-400">
-                  <i data-lucide="chevron-down" class="w-4 h-4"></i>
                 </div>
-              </div>
+                <% } %>
             </div>
 
-            <!-- Trạng thái nổi bật -->
-            <div class="md:col-span-2 space-y-2">
-              <label class="block text-sm font-medium text-slate-700">Trạng thái nổi bật</label>
-
-              <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <% ['Bán chạy','Trending','New'].forEach(s=> { %>
-                  <label class="flex items-center gap-3 rounded-xl border border-slate-200 bg-white p-3 
-               hover:border-brand-300 hover:bg-brand-50 transition cursor-pointer
-               peer-checked:border-brand-500 peer-checked:bg-brand-100">
-                    <input type="radio" name="statusName" class="sr-only peer" value="<%= s %>" <%=(P && P.productStatus
-                      && P.productStatus.statusName===s) ? 'checked' : '' %>
-                    />
-
-                    <div class="size-9 grid place-items-center rounded-lg bg-slate-100 text-slate-600 
-                 peer-checked:bg-brand-600 peer-checked:text-white transition">
-                      <i
-                        class="lucide <%= s==='Bán chạy' ? 'lucide-flame' : (s==='Trending' ? 'lucide-trending-up' : 'lucide-sparkles') %>">
-                      </i>
-                    </div>
-
-                    <span class="text-sm font-medium text-slate-700 peer-checked:text-brand-700 transition">
+            <div class="md:col-span-2">
+              <label class="block text-sm font-medium">Trạng thái nổi bật</label>
+              <div class="flex gap-4">
+                <% ['Bán chạy','Trending','New'].forEach(s=>{ %>
+                  <label class="inline-flex items-center gap-2">
+                    <input type="radio" name="statusName" value="<%= s %>" <%=(P && P.productStatus &&
+                      P.productStatus.statusName===s)?'checked':'' %> />
+                    <span>
                       <%= s %>
                     </span>
                   </label>
@@ -140,205 +100,263 @@
             </div>
           </div>
         </div>
-        <!-- Card: Mô tả -->
-        <div class="rounded-2xl border bg-white p-6 shadow-sm space-y-6" x-data="{
-       shortDesc: `<%= P ? (P.short_description || '') : '' %>`,
-       longDesc:  `<%= P ? (P.long_description  || '') : '' %>`,
-       maxShort:  220
-     }">
-          <!-- Header -->
+
+        <!-- Mô tả -->
+        <div class="rounded-2xl border bg-white p-6 space-y-5">
           <div>
             <h3 class="text-lg font-semibold text-slate-800">Mô tả</h3>
             <p class="text-sm text-slate-500">Giới thiệu ngắn gọn và chi tiết</p>
           </div>
 
-          <div class="space-y-5">
-            <!-- Mô tả ngắn -->
-            <div class="space-y-1.5">
-              <div class="flex items-center justify-between">
-                <label for="short_description" class="block text-sm font-medium text-slate-700">Mô tả ngắn</label>
-                <span class="text-xs text-slate-400" x-text="`${(shortDesc||'').length}/${maxShort}`"></span>
-              </div>
-
-              <textarea id="short_description" name="short_description" rows="3" class="block w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm
-               focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-200 transition min-h-24"
-                placeholder="Tóm tắt các điểm nổi bật..." x-model="shortDesc"
-                x-on:input="if (shortDesc.length > maxShort) shortDesc = shortDesc.slice(0, maxShort)"><%= P ? (P.short_description || '') : '' %></textarea>
-
-              <p class="text-xs text-slate-500">Hiển thị ở danh sách sản phẩm và dùng cho thẻ meta mô tả (tối đa
-                ~160–220 ký tự).</p>
+          <div class="space-y-4">
+            <div>
+              <label class="block text-sm font-medium">Mô tả ngắn</label>
+              <textarea name="short_description" rows="3"
+                class="w-full border rounded-lg px-3 py-2"><%= P ? (P.short_description||'') : '' %></textarea>
             </div>
 
-            <!-- Mô tả dài -->
-            <div class="space-y-1.5">
-              <label for="long_description" class="block text-sm font-medium text-slate-700">Mô tả dài</label>
-
-              <div class="relative">
-                <textarea id="long_description" name="long_description" rows="8" class="block w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm
-                 focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-200 transition min-h-40"
-                  placeholder="Thông tin chi tiết, thông số kỹ thuật..."
-                  x-model="longDesc"><%= P ? (P.long_description || '') : '' %></textarea>
-
-                <!-- Gợi ý định dạng nhỏ (tuỳ chọn) -->
-                <div
-                  class="pointer-events-none absolute -top-2 right-2 translate-y-[-100%] rounded-full bg-slate-50 px-2 py-0.5 text-[11px] text-slate-500 border">
-                  Hỗ trợ văn bản thuần
-                </div>
-              </div>
+            <div>
+              <label class="block text-sm font-medium">Mô tả dài</label>
+              <textarea name="long_description" rows="8"
+                class="w-full border rounded-lg px-3 py-2"><%= P ? (P.long_description||'') : '' %></textarea>
             </div>
           </div>
         </div>
 
-        <!-- Card: Biến thể -->
-        <div class="rounded-2xl border bg-white p-6 shadow-sm space-y-5" x-data="{ variants: [] }"
-          x-init="variants=[{sku:'', price:'', stock_quantity:'', color:'', size:''}]">
-          <!-- Header -->
+        <!-- Biến thể -->
+        <div class="rounded-2xl border bg-white p-6 space-y-4" id="variantsRoot">
           <div class="flex items-center justify-between">
             <div>
               <h3 class="text-base font-semibold text-slate-800">Biến thể</h3>
-              <p class="text-sm text-slate-500">Thêm SKU, giá, tồn kho, màu và size</p>
+              <p class="text-sm text-slate-500">SKU, giá, tồn kho, màu, size & ảnh riêng từng biến thể</p>
             </div>
-
-            <button type="button"
-              class="inline-flex items-center gap-2 rounded-lg px-3 py-2 bg-brand-600 text-white hover:bg-brand-700 transition shadow-sm"
-              @click="variants.push({sku:'', price:'', stock_quantity:'', color:'', size:''}); $nextTick(()=>window.lucide && lucide.createIcons())">
-              <i data-lucide="plus" class="w-4 h-4"></i>
-              <span>Thêm biến thể</span>
-            </button>
+            <button type="button" id="btnAddVariant" class="rounded-lg px-3 py-2 border">+ Thêm biến thể</button>
           </div>
 
-          <!-- Empty -->
-          <template x-if="variants.length === 0">
-            <div class="rounded-xl border border-dashed p-6 text-center text-sm text-slate-500 bg-slate-50">
-              Chưa có biến thể nào.
+          <!-- Hidden JSON để BE đọc -->
+          <input type="hidden" name="variants" id="variantsJson" value="[]">
+
+          <div id="variantsList" class="space-y-3"></div>
+
+          <div class="flex justify-end gap-2 pt-2">
+            <a class="btn" href="/admin/products">Hủy</a>
+            <button type="submit" class="rounded-lg px-4 py-2 bg-green-600 text-white">Lưu</button>
+          </div>
+
+          <details class="mt-2">
+            <summary class="cursor-pointer text-sm text-slate-600">Debug</summary>
+            <pre id="debug" class="text-xs bg-slate-900 text-slate-100 p-3 rounded-lg overflow-auto"></pre>
+          </details>
+        </div>
+
+        <!-- Template 1 hàng biến thể (có ô chọn ảnh). __INDEX__ sẽ được thay bằng chỉ số thật -->
+        <template id="tplVariantRow">
+          <div class="variant-row grid grid-cols-12 gap-3 rounded-xl border p-3 bg-white">
+            <div class="col-span-12 md:col-span-3">
+              <label class="block text-sm font-medium">SKU</label>
+              <input class="v-sku w-full border rounded-lg px-3 py-2" placeholder="SKU001">
             </div>
-          </template>
 
-          <!-- List -->
-          <div class="space-y-3">
-            <template x-for="(v,idx) in variants" :key="idx">
-              <div class="grid grid-cols-12 gap-3 rounded-xl border p-3 bg-white">
-                <!-- SKU -->
-                <div class="col-span-12 md:col-span-3 space-y-1.5">
-                  <label class="block text-sm font-medium text-slate-700">SKU</label>
-                  <input class="block w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm
-                   focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-200 transition"
-                    placeholder="VD: X-001" x-model="v.sku" :name="'p[variants]['+idx+'][sku]'"
-                    :name="'p[variants]['+idx+'][color]'" :name="'p[variants]['+idx+'][size]'"
-                    :name="'p[variants]['+idx+'][price]'" :name="'p[variants]['+idx+'][stock_quantity]'"
-                    :name="'p[variants]['+idx+'][primary_image]'" :name="'p[variants]['+idx+'][images]['+i+'][file]'"
-                    :name="'p[variants]['+idx+'][images]['+i+'][url]'"
-                    :name="'p[variants]['+idx+'][images]['+i+'][public_id]'">
-                </div>
+            <div class="col-span-6 md:col-span-3">
+              <label class="block text-sm font-medium">Màu (id)</label>
+              <select class="v-color w-full border rounded-lg px-3 py-2">
+                <option value="">-- chọn màu --</option>
+                <% (productColors||[]).forEach(c=>{ %>
+                  <option value="<%= c._id %>">
+                    <%= c.color_name %>
+                  </option>
+                  <% }) %>
+              </select>
+            </div>
 
-                <!-- Màu -->
-                <div class="col-span-6 md:col-span-3 space-y-1.5">
-                  <label class="block text-sm font-medium text-slate-700">Màu</label>
-                  <div class="relative">
-                    <select class="block w-full appearance-none rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm
-                     focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-200 transition"
-                      x-model="v.color" :name="'variants['+idx+'][color]'">
-                      <% (productColors||[]).forEach(c=>{ %>
-                        <option value="<%= c._id %>">
-                          <%= c.color_name %>
-                        </option>
-                        <% }) %>
-                    </select>
-                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-slate-400">
-                      <i data-lucide="chevron-down" class="w-4 h-4"></i>
-                    </div>
-                  </div>
-                </div>
+            <div class="col-span-6 md:col-span-2">
+              <label class="block text-sm font-medium">Size (id)</label>
+              <select class="v-size w-full border rounded-lg px-3 py-2">
+                <option value="">-- chọn size --</option>
+                <% (productSizes||[]).forEach(s=>{ %>
+                  <option value="<%= s._id %>">
+                    <%= s.size_name %>
+                  </option>
+                  <% }) %>
+              </select>
+            </div>
 
-                <!-- Size -->
-                <div class="col-span-6 md:col-span-2 space-y-1.5">
-                  <label class="block text-sm font-medium text-slate-700">Size</label>
-                  <div class="relative">
-                    <select class="block w-full appearance-none rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm
-                     focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-200 transition"
-                      x-model="v.size" :name="'variants['+idx+'][size]'">
-                      <% (productSizes||[]).forEach(s=>{ %>
-                        <option value="<%= s._id %>">
-                          <%= s.size_name %>
-                        </option>
-                        <% }) %>
-                    </select>
-                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-slate-400">
-                      <i data-lucide="chevron-down" class="w-4 h-4"></i>
-                    </div>
-                  </div>
-                </div>
+            <div class="col-span-6 md:col-span-2">
+              <label class="block text-sm font-medium">Giá (₫)</label>
+              <input type="number" min="0" step="1" class="v-price w-full border rounded-lg px-3 py-2" placeholder="0">
+            </div>
 
-                <!-- Giá -->
-                <div class="col-span-6 md:col-span-2 space-y-1.5">
-                  <label class="block text-sm font-medium text-slate-700">Giá (₫)</label>
-                  <input class="block w-full rounded-lg border border-slate-300 bg-white px-3 py-2 pr-12 text-sm text-slate-700 shadow-sm
-                   focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-200 transition"
-                    placeholder="0" inputmode="numeric" x-model="v.price" :name="'variants['+idx+'][price]'">
-                </div>
+            <div class="col-span-6 md:col-span-1">
+              <label class="block text-sm font-medium">Tồn kho</label>
+              <input type="number" min="0" step="1" class="v-stock w-full border rounded-lg px-3 py-2" placeholder="0">
+            </div>
 
-                <!-- Tồn kho -->
-                <div class="col-span-6 md:col-span-1 space-y-1.5">
-                  <label class="block text-sm font-medium text-slate-700">Tồn kho</label>
-                  <input class="block w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm
-                   focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-200 transition"
-                    placeholder="0" inputmode="numeric" x-model="v.stock_quantity"
-                    :name="'variants['+idx+'][stock_quantity]'">
-                </div>
+            <!-- Ảnh riêng của biến thể: name sẽ thành variantImagesMap[i][] -->
+            <div class="col-span-12 md:col-span-7">
+              <label class="block text-sm font-medium">Ảnh biến thể (nhiều ảnh)</label>
+              <input type="file" class="v-images w-full border rounded-lg px-3 py-2" name="variantImagesMap[__INDEX__]"
+                multiple accept="image/*">
+              <p class="text-xs text-slate-500 mt-1">Sẽ gửi theo key <code>variantImagesMap[i]</code> (theo thứ tự biến
+                thể).</p>
+            </div>
 
-                <!-- Footer actions (non-sticky) -->
-                <div class="flex justify-end gap-2">
-                  <a class="btn ghost" href="/admin/products">Hủy</a>
-                  <button class="btn-primary"><i class="lucide lucide-save mr-2"></i>Lưu</button>
-                </div>
+            <div class="col-span-12 md:col-span-5 flex items-end justify-end">
+              <button type="button" class="v-remove rounded-lg px-3 py-2 bg-red-600 text-white">Xoá</button>
+            </div>
+          </div>
+        </template>
       </form>
-      <!-- Alpine component factory to avoid long inline x-data string breaking HTML parsing -->
-      <script>
-        function productForm(initialVariants) {
-          return {
-            variants: Array.isArray(initialVariants) && initialVariants.length
-              ? initialVariants
-              : [{ sku: '', price: '', stock_quantity: '', color: '', size: '' }],
-            variantsJson: '[]',
+    </section>
 
-            addVariant() {
-              this.variants.push({ sku: '', price: '', stock_quantity: '', color: '', size: '' });
-              this.$nextTick(() => window.lucide && lucide.createIcons());
-            },
-            removeVariant(i) {
-              if (this.variants.length > 1) {
-                this.variants.splice(i, 1); this.$nextTick(() => window.lucide && lucide.createIcons());
-              }
-            },
-            syncVariants() {
-              const payload = (this.variants || []).map(v => ({
-                sku: String(v.sku || '').trim(),
-                price: Number(v.price || 0),
-                stock_quantity: Number(v.stock_quantity || 0),
-                color: v.color ? String(v.color) : null,
-                size: v.size ? String(v.size) : null,
-                images: (v.images || []).map((img, i) => ({
-                  url: img.url || '',
-                  public_id: img.public_id || '',
-                  is_primary: v.primaryIndex === i
-                }))
-              }))
-              this.variantsJson = JSON.stringify(payload)
-            },
+    <!-- ✅ JSON init an toàn (không cần escape dấu nháy) -->
+    <script id="variants-init" type="application/json">
+<%- JSON.stringify(
+  (P && Array.isArray(P.variants) && P.variants.length
+    ? P.variants.map(v => ({
+        color: v && v.color ? String(v.color) : '',
+        size:  v && v.size  ? String(v.size)  : '',
+        sku: String((v && v.sku) || ''),
+        price: Number((v && v.price) || 0),
+        stock_quantity: Number((v && v.stock_quantity) || 0)
+      }))
+    : [{ sku:'', price:0, stock_quantity:0, color:'', size:'' }]
+), null, 0) %>
+</script>
 
-            prettyCurrency(v) {
-              if (v === '' || v == null) return '';
-              const n = String(v).replace(/[^\d]/g, '');
-              return n.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-            }
+    <!-- Logic biến thể (khởi tạo, đồng bộ hidden, đánh số input file) -->
+    <script>
+      (function () {
+        const form = document.getElementById('product-form');
+        const root = document.getElementById('variantsRoot');
+        const list = document.getElementById('variantsList');
+        const tpl = document.getElementById('tplVariantRow');
+        const debug = document.getElementById('debug');
+
+        const getVariantInputs = () => Array.from(document.querySelectorAll('input[name="variants"]'));
+
+        const log = (...a) => {
+          console.log('[variants]', ...a);
+          if (debug) debug.textContent = JSON.stringify(a, null, 2) + '\n' + (debug.textContent || '');
+        };
+
+        function readVariants() {
+          return Array.from(list.querySelectorAll('.variant-row')).map(row => ({
+            sku: (row.querySelector('.v-sku').value || '').trim(),
+            color: (row.querySelector('.v-color').value || '').trim(),
+            size: (row.querySelector('.v-size').value || '').trim(),
+            price: Number(row.querySelector('.v-price').value || 0),
+            stock_quantity: Number(row.querySelector('.v-stock').value || 0),
+          }));
+        }
+
+        function syncHidden() {
+          const arr = readVariants();
+          const json = JSON.stringify(arr);
+          getVariantInputs().forEach(i => i.value = json);
+          log('sync -> variants JSON', arr);
+        }
+
+        function renumberVariantRows() {
+          const rows = Array.from(list.querySelectorAll('.variant-row'));
+          rows.forEach((row, i) => {
+            row.dataset.index = String(i);
+            const file = row.querySelector('.v-images');
+            if (file) file.setAttribute('name', `variantImagesMap[${i}]`);
+          });
+        }
+
+        function attachRowEvents(rowEl) {
+          rowEl.querySelectorAll('input[type="text"], input[type="number"], select')
+            .forEach(i => i.addEventListener('input', syncHidden));
+          rowEl.querySelector('.v-remove').addEventListener('click', () => {
+            rowEl.remove();
+            renumberVariantRows();
+            syncHidden();
+          });
+          const fileInput = rowEl.querySelector('.v-images');
+          if (fileInput) {
+            fileInput.addEventListener('change', () => {
+              const holder = fileInput.closest('.col-span-12') || fileInput.parentElement;
+              const previews = holder.querySelectorAll('[data-variant-preview]');
+              previews.forEach(p => p.remove());
+            });
           }
         }
-      </script>
-      <!-- Render icons lần đầu khi trang load -->
-      <script>
-        document.addEventListener('DOMContentLoaded', () => {
-          if (window.lucide) lucide.createIcons();
-        });
-      </script>
 
-    </section>
+        function addVariantRow(initial = { sku: '', color: '', size: '', price: 0, stock_quantity: 0 }) {
+          const fragment = tpl.content.cloneNode(true);
+          const el = fragment.querySelector('.variant-row');
+
+          el.querySelector('.v-sku').value = initial.sku ?? '';
+          el.querySelector('.v-color').value = initial.color ?? '';
+          el.querySelector('.v-size').value = initial.size ?? '';
+          el.querySelector('.v-price').value = initial.price ?? 0;
+          el.querySelector('.v-stock').value = initial.stock_quantity ?? 0;
+
+          const nextIndex = list.querySelectorAll('.variant-row').length;
+          el.querySelector('.v-images').setAttribute('name', `variantImagesMap[${nextIndex}]`);
+
+          attachRowEvents(el);
+          list.appendChild(fragment);
+          renumberVariantRows();
+          syncHidden();
+        }
+
+        // ✅ Đọc init từ <script type="application/json">
+        let init = [];
+        try {
+          const el = document.getElementById('variants-init');
+          init = el && el.textContent ? JSON.parse(el.textContent) : [];
+        } catch (e) {
+          console.warn('[variants] init parse failed:', e);
+          init = [];
+        }
+
+        if (Array.isArray(init) && init.length) init.forEach(v => addVariantRow(v));
+        else addVariantRow();
+        log('mounted with init', init);
+
+        document.getElementById('btnAddVariant').addEventListener('click', () => addVariantRow());
+
+        form.addEventListener('submit', () => {
+          renumberVariantRows();
+          syncHidden();
+
+          const filesDebug = Array.from(list.querySelectorAll('.v-images')).map((f, i) => ({
+            index: i,
+            name: f.getAttribute('name'),
+            filesCount: f.files ? f.files.length : 0,
+            fileNames: f.files ? Array.from(f.files).map(x => x.name) : []
+          }));
+          log('final file inputs:', filesDebug);
+          log('final variants hidden values:', getVariantInputs().map(i => i.value));
+        });
+      })();
+    </script>
+
+    <!-- Preview ảnh của từng biến thể (chỉ khi EDIT có P.variants) -->
+    <% if (P && Array.isArray(P.variants)) { %>
+      <script>
+        (function () {
+          const variantsFromApi = <%- JSON.stringify(P.variants || []) %>;
+          setTimeout(() => {
+            const rows = document.querySelectorAll('#variantsList .variant-row');
+            rows.forEach((row, i) => {
+              const v = variantsFromApi[i];
+              if (!v || !Array.isArray(v.images) || !v.images.length) return;
+              const wrap = document.createElement('div');
+              wrap.className = 'mt-2 flex gap-2 flex-wrap';
+              wrap.setAttribute('data-variant-preview', '1');
+              v.images.forEach(img => {
+                const el = document.createElement('img');
+                el.src = img.url;
+                el.className = 'w-14 h-14 object-cover rounded border';
+                wrap.appendChild(el);
+              });
+              const fileCell = row.querySelector('.v-images')?.closest('.col-span-12, .md\\:col-span-7') || row.querySelector('.v-images')?.parentElement;
+              if (fileCell) fileCell.appendChild(wrap);
+            });
+          }, 0);
+        })();
+      </script>
+      <% } %>

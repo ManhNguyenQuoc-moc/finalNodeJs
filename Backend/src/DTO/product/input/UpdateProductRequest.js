@@ -1,10 +1,7 @@
+// DTO/product/input/UpdateProductRequest.js
 const { UpdateVariantRequest } = require("./UpdateVariantRequest");
 
 class UpdateProductRequest {
-  /**
-   * @param {object} body - req.body
-   * @param {Array} files - req.files từ multer
-   */
   constructor(body, files = []) {
     this.name = body.name;
     this.slug = body.slug;
@@ -13,17 +10,17 @@ class UpdateProductRequest {
     this.short_description = body.short_description;
     this.long_description = body.long_description;
 
-    // Product images mới upload
-    this.newProductImages = files.filter(f => f.fieldname === "productImages");
-
-    // Xoá ảnh product cũ
-    try {
-      this.imagesToDelete = body.imagesToDelete ? JSON.parse(body.imagesToDelete) : [];
-    } catch (err) {
-      this.imagesToDelete = [];
+    // Nhận imagesToDelete dạng mảng / chuỗi JSON
+    let rawDel = body.imagesToDelete ?? body['imagesToDelete[]'] ?? null;
+    if (typeof rawDel === 'string') {
+      try { rawDel = JSON.parse(rawDel); } catch { rawDel = [rawDel]; }
     }
+    this.imagesToDelete = Array.isArray(rawDel) ? rawDel : [];
 
-    // Variants
+    // Ảnh product mới
+    this.newProductImages = (files || []).filter(f => f.fieldname === "productImages");
+
+    // Variants (parse JSON text)
     let rawVariants = [];
     try {
       if (body.variants) {
@@ -31,17 +28,19 @@ class UpdateProductRequest {
         if (!Array.isArray(rawVariants)) rawVariants = [];
       }
     } catch (e) {
+      console.error("Parse variants failed:", e, "raw:", body.variants);
       rawVariants = [];
     }
 
-    this.variants = rawVariants.map((variant, idx) => {
-      // File variant images mới upload
-      const uploadedFiles = files.filter(
-        f => f.fieldname === `variantImagesMap[${idx}]`
-      );
-      return new UpdateVariantRequest(variant, uploadedFiles);
+    this.variants = rawVariants.map((v, idx) => {
+      const vf = (files || []).filter(f => f.fieldname === `variantImagesMap[${idx}]`);
+      return new UpdateVariantRequest(v, vf);
     });
+
+    // Debug hữu ích (xóa nếu không cần)
+    console.log("DTO variants summary:",
+      this.variants.map((x, i) => ({ i, id: x.id, newImages: x.newImages?.length || 0, del: x.imagesToDelete?.length || 0 }))
+    );
   }
 }
-
 module.exports = { UpdateProductRequest };

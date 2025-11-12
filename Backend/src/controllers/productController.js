@@ -51,20 +51,29 @@ exports.updateProduct = async (req, res) => {
   try {
     const productId = req.params.id;
 
-    // Tạo DTO từ req.body + req.files
-    const dto = new UpdateProductRequest(req.body, req.files);
+    // Multer đã chạy ở router, nên ở đây chỉ đọc:
+    const dto = new UpdateProductRequest(req.body, req.files || []);
 
-    // Call service update
-    const updatedProduct = await productService.updateProduct(productId, dto);
-
-    return res.status(200).json({
+    const { response, postCommit } = await productService.updateProduct(productId, dto);
+    // 1) Trả về NGAY cho nhanh
+    res.status(200).json({
       success: true,
       message: "Product updated successfully",
-      data: updatedProduct,
+      data: response,
     });
+    // 2) Xoá ảnh cũ sau khi DB ok — chạy nền, không chặn request
+    if (typeof postCommit === "function") {
+      Promise.resolve(postCommit()).catch(err => {
+        console.error("postCommit failed:", err);
+      });
+    }
   } catch (error) {
+    // Nếu service trả kèm onRollback để dọn upload khi lỗi
+    if (typeof error?.onRollback === "function") {
+      try { await error.onRollback(); } catch (e) { console.error("onRollback failed:", e); }
+    }
     console.error("Update product failed:", error);
-    return res.status(400).json({
+    res.status(400).json({
       success: false,
       message: error.message || "Update product failed",
     });

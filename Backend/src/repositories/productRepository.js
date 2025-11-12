@@ -3,6 +3,7 @@ const Product = require("../models/Product");
 const ProductVariant = require("../models/ProductVariant");
 const ProductColor = require("../models/ProductColor");
 const ProductSize = require("../models/ProductSize");
+const { toSlug } = require("../utils/slug");
 
 class ProductRepository {
   // -------------------- PRODUCT --------------------
@@ -10,9 +11,15 @@ class ProductRepository {
     const product = new Product(productData);
     return await product.save({ session });
   }
-
-  async findById(productId) {
-    return Product.findById(productId).populate("brand category");
+  async existsSlug(slug, excludeId = null, { session } = {}) {
+    const filter = excludeId ? { slug, _id: { $ne: excludeId } } : { slug };
+    const doc = await Product.findOne(filter).select("_id").session(session || null);
+    return !!doc;
+  }
+  async findById(productId, { session } = {}) {
+    let q = Product.findById(productId).populate("brand category");
+    if (session) q = q.session(session);
+    return q;
   }
 
   async findOne(query) {
@@ -32,11 +39,25 @@ class ProductRepository {
   }
 
   async updateProduct(productId, updateData, session) {
-    return Product.findByIdAndUpdate(productId, updateData, { new: true, session }).populate(
-      "brand category"
-    );
+    const plain = updateData.toObject ? updateData.toObject() : updateData;
+    return Product.findByIdAndUpdate(
+      productId,
+      { $set: plain },
+      { new: true, session, runValidators: true }
+    ).populate("brand category");
   }
+  async normalizeAndEnsureUniqueSlug(inputSlug, excludeId = null, { session } = {}) {
+    const base = toSlug(inputSlug || "");
+    if (!base) throw new Error("Slug is required");
 
+    let candidate = base;
+    let suffix = 2;
+
+    while (await this.existsSlug(candidate, excludeId, { session })) {
+      candidate = `${base}-${suffix++}`;
+    }
+    return candidate;
+  }
   async deleteProduct(productId, session) {
     return Product.findByIdAndDelete(productId, { session });
   }
@@ -54,20 +75,42 @@ class ProductRepository {
   }
 
 
-  async findVariantById(variantId) {
-    return ProductVariant.findById(variantId).populate("color size");
+  async findVariantById(variantId, { session } = {}) {
+    let q = ProductVariant.findById(variantId).populate("color size");
+    if (session) q = q.session(session);
+    return q;
   }
 
   async updateVariant(variantId, updateData, session) {
-    return ProductVariant.findByIdAndUpdate(variantId, updateData, { new: true, session }).populate(
-      "color size"
-    );
+    const plain = updateData.toObject ? updateData.toObject() : updateData;
+    return ProductVariant.findByIdAndUpdate(
+      variantId,
+      { $set: plain },
+      { new: true, session, runValidators: true }
+    ).populate("color size");
   }
 
   async deleteVariant(variantId, session) {
     return ProductVariant.findByIdAndDelete(variantId, { session });
   }
+  async pullProductImages(productId, publicIds = [], session) {
+    if (!publicIds.length) return;
+    return Product.updateOne(
+      { _id: productId },
+      { $pull: { images: { public_id: { $in: publicIds } } } },
+      { session }
+    );
+  }
 
+  async pushProductImages(productId, images = [], session) {
+    if (!images.length) return;
+    // nếu muốn tránh trùng hoàn toàn object:
+    return Product.updateOne(
+      { _id: productId },
+      { $push: { images: { $each: images } } },
+      { session }
+    );
+  }
   // -------------------- COLOR --------------------
   async findColorByName(color_name) {
     return ProductColor.findOne({ color_name });
