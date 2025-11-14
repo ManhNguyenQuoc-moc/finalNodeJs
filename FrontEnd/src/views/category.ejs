@@ -594,8 +594,7 @@
 
                       <div class="product-card__price d-flex">
                         <span class="money price" style="color: blue;">
-                          <%= product.price.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0
-                            }) %>
+                          <%= product.price ? Number(product.price).toLocaleString("en-US") : "0" %>
                         </span>
                       </div>
 

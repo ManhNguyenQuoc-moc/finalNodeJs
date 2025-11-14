@@ -52,7 +52,8 @@
               <label class="block text-sm font-medium">Thương hiệu</label>
               <select name="brand" class="w-full border rounded-lg px-3 py-2">
                 <% (brands||[]).forEach(b=>{ %>
-                  <option value="<%= b._id %>" <%=(P && String(P.brand)===String(b._id))?'selected':'' %>><%= b.name %>
+                  <option value="<%= b._id %>" <%=(P && String(P.brand)===String(b._id))?'selected':'' %>>
+                    <%= b.name %>
                   </option>
                   <% }) %>
               </select>
@@ -62,8 +63,8 @@
               <label class="block text-sm font-medium">Danh mục</label>
               <select name="category" class="w-full border rounded-lg px-3 py-2">
                 <% (categories||[]).forEach(c=>{ %>
-                  <option value="<%= c._id %>" <%=(P && String(P.category)===String(c._id))?'selected':'' %>><%= c.name
-                      %>
+                  <option value="<%= c._id %>" <%=(P && String(P.category)===String(c._id))?'selected':'' %>>
+                    <%= c.name %>
                   </option>
                   <% }) %>
               </select>
@@ -73,12 +74,27 @@
               <label class="block text-sm font-medium">Ảnh sản phẩm</label>
               <input type="file" name="productImages" multiple accept="image/*"
                 class="w-full border rounded-lg px-3 py-2" />
-              <p class="text-xs text-slate-500 mt-1">Có thể chọn nhiều ảnh.</p>
+              <p class="text-xs text-slate-500 mt-1">
+                Có thể chọn nhiều ảnh. Tick vào ảnh để đánh dấu xoá.
+              </p>
+
+              <!-- hidden tổng product.imagesToDelete -->
+              <input type="hidden" name="imagesToDelete" id="imagesToDeleteInput" value="[]">
 
               <% if (P && Array.isArray(P.images) && P.images.length) { %>
-                <div class="flex flex-wrap gap-2 mt-2">
+                <div class="mt-3 grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-3">
                   <% P.images.forEach(img=> { %>
-                    <img src="<%= img.url %>" class="w-16 h-16 object-cover rounded border" />
+                    <label class="group relative block cursor-pointer">
+                      <img src="<%= img.url %>" class="w-full aspect-square object-cover rounded-lg border border-slate-200
+                           group-has-[input:checked]:opacity-40" />
+                      <input type="checkbox"
+                        class="img-delete-checkbox absolute top-1 left-1 size-4 rounded border bg-white/90"
+                        data-public-id="<%= img.public_id %>" />
+                      <span class="absolute bottom-1 left-1 right-1 rounded-md bg-black/60 px-1 py-0.5
+                           text-[10px] text-white text-center">
+                        <%= img.is_primary ? 'Primary' : 'Ảnh' %>
+                      </span>
+                    </label>
                     <% }) %>
                 </div>
                 <% } %>
@@ -90,7 +106,8 @@
                 <% ['Bán chạy','Trending','New'].forEach(s=>{ %>
                   <label class="inline-flex items-center gap-2">
                     <input type="radio" name="statusName" value="<%= s %>" <%=(P && P.productStatus &&
-                      P.productStatus.statusName===s)?'checked':'' %> />
+                      P.productStatus.statusName===s)?'checked':'' %>
+                    />
                     <span>
                       <%= s %>
                     </span>
@@ -149,214 +166,328 @@
           </details>
         </div>
 
-        <!-- Template 1 hàng biến thể (có ô chọn ảnh). __INDEX__ sẽ được thay bằng chỉ số thật -->
+        <!-- Template 1 hàng biến thể -->
         <template id="tplVariantRow">
-          <div class="variant-row grid grid-cols-12 gap-3 rounded-xl border p-3 bg-white">
-            <div class="col-span-12 md:col-span-3">
-              <label class="block text-sm font-medium">SKU</label>
-              <input class="v-sku w-full border rounded-lg px-3 py-2" placeholder="SKU001">
+          <div class="variant-row rounded-2xl border border-slate-200 bg-slate-50/60 p-4 space-y-3 shadow-sm">
+            <div class="flex items-center justify-between gap-3 pb-2 border-b border-slate-200">
+              <div class="flex items-center gap-2">
+                <span
+                  class="inline-flex size-7 items-center justify-center rounded-xl bg-slate-800 text-xs font-semibold text-white variant-index">
+                  #1
+                </span>
+                <div class="text-sm">
+                  <div class="font-semibold text-slate-800">Biến thể</div>
+                  <div class="text-xs text-slate-500">SKU, màu, size, giá & tồn kho</div>
+                </div>
+              </div>
+              <button type="button"
+                class="v-remove inline-flex items-center gap-1 rounded-lg bg-red-50 px-3 py-1.5 text-xs font-medium text-red-600 hover:bg-red-100">
+                <i data-lucide="trash-2" class="size-3.5"></i>
+                Xoá
+              </button>
             </div>
 
-            <div class="col-span-6 md:col-span-3">
-              <label class="block text-sm font-medium">Màu (id)</label>
-              <select class="v-color w-full border rounded-lg px-3 py-2">
-                <option value="">-- chọn màu --</option>
-                <% (productColors||[]).forEach(c=>{ %>
-                  <option value="<%= c._id %>">
-                    <%= c.color_name %>
-                  </option>
-                  <% }) %>
-              </select>
-            </div>
+            <div class="grid grid-cols-12 gap-3">
+              <div class="col-span-12 md:col-span-3">
+                <label class="block text-sm font-medium">SKU</label>
+                <input class="v-sku w-full border rounded-lg px-3 py-2" placeholder="SKU001">
+              </div>
 
-            <div class="col-span-6 md:col-span-2">
-              <label class="block text-sm font-medium">Size (id)</label>
-              <select class="v-size w-full border rounded-lg px-3 py-2">
-                <option value="">-- chọn size --</option>
-                <% (productSizes||[]).forEach(s=>{ %>
-                  <option value="<%= s._id %>">
-                    <%= s.size_name %>
-                  </option>
-                  <% }) %>
-              </select>
-            </div>
+              <div class="col-span-6 md:col-span-3">
+                <label class="block text-sm font-medium">Màu (id)</label>
+                <select class="v-color w-full border rounded-lg px-3 py-2">
+                  <option value="">-- chọn màu --</option>
+                  <% (productColors||[]).forEach(c=>{ %>
+                    <option value="<%= c._id %>">
+                      <%= c.color_name %>
+                    </option>
+                    <% }) %>
+                </select>
+              </div>
 
-            <div class="col-span-6 md:col-span-2">
-              <label class="block text-sm font-medium">Giá (₫)</label>
-              <input type="number" min="0" step="1" class="v-price w-full border rounded-lg px-3 py-2" placeholder="0">
-            </div>
+              <div class="col-span-6 md:col-span-2">
+                <label class="block text-sm font-medium">Size (id)</label>
+                <select class="v-size w-full border rounded-lg px-3 py-2">
+                  <option value="">-- chọn size --</option>
+                  <% (productSizes||[]).forEach(s=>{ %>
+                    <option value="<%= s._id %>">
+                      <%= s.size_name %>
+                    </option>
+                    <% }) %>
+                </select>
+              </div>
 
-            <div class="col-span-6 md:col-span-1">
-              <label class="block text-sm font-medium">Tồn kho</label>
-              <input type="number" min="0" step="1" class="v-stock w-full border rounded-lg px-3 py-2" placeholder="0">
-            </div>
+              <div class="col-span-6 md:col-span-2">
+                <label class="block text-sm font-medium">Giá (₫)</label>
+                <input type="number" min="0" step="1" class="v-price w-full border rounded-lg px-3 py-2"
+                  placeholder="0">
+              </div>
 
-            <!-- Ảnh riêng của biến thể: name sẽ thành variantImagesMap[i][] -->
-            <div class="col-span-12 md:col-span-7">
-              <label class="block text-sm font-medium">Ảnh biến thể (nhiều ảnh)</label>
-              <input type="file" class="v-images w-full border rounded-lg px-3 py-2" name="variantImagesMap[__INDEX__]"
-                multiple accept="image/*">
-              <p class="text-xs text-slate-500 mt-1">Sẽ gửi theo key <code>variantImagesMap[i]</code> (theo thứ tự biến
-                thể).</p>
-            </div>
+              <div class="col-span-6 md:col-span-1">
+                <label class="block text-sm font-medium">Tồn kho</label>
+                <input type="number" min="0" step="1" class="v-stock w-full border rounded-lg px-3 py-2"
+                  placeholder="0">
+              </div>
 
-            <div class="col-span-12 md:col-span-5 flex items-end justify-end">
-              <button type="button" class="v-remove rounded-lg px-3 py-2 bg-red-600 text-white">Xoá</button>
+              <!-- Ảnh riêng của biến thể -->
+              <div class="col-span-12 md:col-span-7">
+                <label class="block text-sm font-medium">Ảnh biến thể (nhiều ảnh)</label>
+                <input type="file" class="v-images w-full border rounded-lg px-3 py-2"
+                  name="variantImagesMap[__INDEX__]" multiple accept="image/*">
+                <p class="text-xs text-slate-500 mt-1">
+                  Sẽ gửi theo key <code>variantImagesMap[i]</code> (theo thứ tự biến thể).
+                </p>
+
+                <!-- hidden cho imagesToDelete từng variant -->
+                <input type="hidden" class="v-imagesToDelete" value="[]">
+
+                <!-- nơi render preview ảnh cũ -->
+                <div class="mt-2 flex flex-wrap gap-2" data-variant-preview></div>
+              </div>
             </div>
           </div>
         </template>
       </form>
     </section>
 
-    <!-- ✅ JSON init an toàn (không cần escape dấu nháy) -->
+    <!-- JSON init an toàn (không cần escape dấu nháy) -->
     <script id="variants-init" type="application/json">
 <%- JSON.stringify(
   (P && Array.isArray(P.variants) && P.variants.length
     ? P.variants.map(v => ({
+        id: v && (v.id || v._id) ? String(v.id || v._id) : '',
         color: v && v.color ? String(v.color) : '',
         size:  v && v.size  ? String(v.size)  : '',
         sku: String((v && v.sku) || ''),
         price: Number((v && v.price) || 0),
-        stock_quantity: Number((v && v.stock_quantity) || 0)
+        stock_quantity: Number((v && v.stock_quantity) || 0),
       }))
-    : [{ sku:'', price:0, stock_quantity:0, color:'', size:'' }]
+    : [{ id: '', sku:'', price:0, stock_quantity:0, color:'', size:'' }]
 ), null, 0) %>
 </script>
 
-    <!-- Logic biến thể (khởi tạo, đồng bộ hidden, đánh số input file) -->
-    <script>
-      (function () {
-        const form = document.getElementById('product-form');
-        const root = document.getElementById('variantsRoot');
-        const list = document.getElementById('variantsList');
-        const tpl = document.getElementById('tplVariantRow');
-        const debug = document.getElementById('debug');
-
-        const getVariantInputs = () => Array.from(document.querySelectorAll('input[name="variants"]'));
-
-        const log = (...a) => {
-          console.log('[variants]', ...a);
-          if (debug) debug.textContent = JSON.stringify(a, null, 2) + '\n' + (debug.textContent || '');
-        };
-
-        function readVariants() {
-          return Array.from(list.querySelectorAll('.variant-row')).map(row => ({
-            sku: (row.querySelector('.v-sku').value || '').trim(),
-            color: (row.querySelector('.v-color').value || '').trim(),
-            size: (row.querySelector('.v-size').value || '').trim(),
-            price: Number(row.querySelector('.v-price').value || 0),
-            stock_quantity: Number(row.querySelector('.v-stock').value || 0),
-          }));
-        }
-
-        function syncHidden() {
-          const arr = readVariants();
-          const json = JSON.stringify(arr);
-          getVariantInputs().forEach(i => i.value = json);
-          log('sync -> variants JSON', arr);
-        }
-
-        function renumberVariantRows() {
-          const rows = Array.from(list.querySelectorAll('.variant-row'));
-          rows.forEach((row, i) => {
-            row.dataset.index = String(i);
-            const file = row.querySelector('.v-images');
-            if (file) file.setAttribute('name', `variantImagesMap[${i}]`);
-          });
-        }
-
-        function attachRowEvents(rowEl) {
-          rowEl.querySelectorAll('input[type="text"], input[type="number"], select')
-            .forEach(i => i.addEventListener('input', syncHidden));
-          rowEl.querySelector('.v-remove').addEventListener('click', () => {
-            rowEl.remove();
-            renumberVariantRows();
-            syncHidden();
-          });
-          const fileInput = rowEl.querySelector('.v-images');
-          if (fileInput) {
-            fileInput.addEventListener('change', () => {
-              const holder = fileInput.closest('.col-span-12') || fileInput.parentElement;
-              const previews = holder.querySelectorAll('[data-variant-preview]');
-              previews.forEach(p => p.remove());
-            });
-          }
-        }
-
-        function addVariantRow(initial = { sku: '', color: '', size: '', price: 0, stock_quantity: 0 }) {
-          const fragment = tpl.content.cloneNode(true);
-          const el = fragment.querySelector('.variant-row');
-
-          el.querySelector('.v-sku').value = initial.sku ?? '';
-          el.querySelector('.v-color').value = initial.color ?? '';
-          el.querySelector('.v-size').value = initial.size ?? '';
-          el.querySelector('.v-price').value = initial.price ?? 0;
-          el.querySelector('.v-stock').value = initial.stock_quantity ?? 0;
-
-          const nextIndex = list.querySelectorAll('.variant-row').length;
-          el.querySelector('.v-images').setAttribute('name', `variantImagesMap[${nextIndex}]`);
-
-          attachRowEvents(el);
-          list.appendChild(fragment);
-          renumberVariantRows();
-          syncHidden();
-        }
-
-        // ✅ Đọc init từ <script type="application/json">
-        let init = [];
-        try {
-          const el = document.getElementById('variants-init');
-          init = el && el.textContent ? JSON.parse(el.textContent) : [];
-        } catch (e) {
-          console.warn('[variants] init parse failed:', e);
-          init = [];
-        }
-
-        if (Array.isArray(init) && init.length) init.forEach(v => addVariantRow(v));
-        else addVariantRow();
-        log('mounted with init', init);
-
-        document.getElementById('btnAddVariant').addEventListener('click', () => addVariantRow());
-
-        form.addEventListener('submit', () => {
-          renumberVariantRows();
-          syncHidden();
-
-          const filesDebug = Array.from(list.querySelectorAll('.v-images')).map((f, i) => ({
-            index: i,
-            name: f.getAttribute('name'),
-            filesCount: f.files ? f.files.length : 0,
-            fileNames: f.files ? Array.from(f.files).map(x => x.name) : []
-          }));
-          log('final file inputs:', filesDebug);
-          log('final variants hidden values:', getVariantInputs().map(i => i.value));
-        });
-      })();
-    </script>
-
-    <!-- Preview ảnh của từng biến thể (chỉ khi EDIT có P.variants) -->
     <% if (P && Array.isArray(P.variants)) { %>
-      <script>
-        (function () {
-          const variantsFromApi = <%- JSON.stringify(P.variants || []) %>;
-          setTimeout(() => {
-            const rows = document.querySelectorAll('#variantsList .variant-row');
-            rows.forEach((row, i) => {
-              const v = variantsFromApi[i];
-              if (!v || !Array.isArray(v.images) || !v.images.length) return;
-              const wrap = document.createElement('div');
-              wrap.className = 'mt-2 flex gap-2 flex-wrap';
-              wrap.setAttribute('data-variant-preview', '1');
-              v.images.forEach(img => {
-                const el = document.createElement('img');
-                el.src = img.url;
-                el.className = 'w-14 h-14 object-cover rounded border';
-                wrap.appendChild(el);
-              });
-              const fileCell = row.querySelector('.v-images')?.closest('.col-span-12, .md\\:col-span-7') || row.querySelector('.v-images')?.parentElement;
-              if (fileCell) fileCell.appendChild(wrap);
-            });
-          }, 0);
-        })();
-      </script>
+      <script id="variants-from-api" type="application/json">
+<%- JSON.stringify(P.variants || [], null, 0) %>
+  </script>
       <% } %>
+
+        <!-- Logic biến thể + xoá ảnh product/variant -->
+        <script>
+          (function () {
+            const form = document.getElementById('product-form');
+            const list = document.getElementById('variantsList');
+            const tpl = document.getElementById('tplVariantRow');
+            const debug = document.getElementById('debug');
+
+            const getVariantInputs = () => Array.from(document.querySelectorAll('input[name="variants"]'));
+
+            const log = (...a) => {
+              console.log('[variants]', ...a);
+              if (debug) debug.textContent = JSON.stringify(a, null, 2) + '\n' + (debug.textContent || '');
+            };
+
+            function readVariants() {
+              return Array.from(list.querySelectorAll('.variant-row')).map(row => {
+                const rawImagesDel = row.querySelector('.v-imagesToDelete')?.value || '[]';
+                let imagesToDelete = [];
+                try { imagesToDelete = JSON.parse(rawImagesDel); } catch { imagesToDelete = []; }
+
+                return {
+                  id: (row.dataset.variantId || '').trim(),
+                  sku: (row.querySelector('.v-sku').value || '').trim(),
+                  color: (row.querySelector('.v-color').value || '').trim(),
+                  size: (row.querySelector('.v-size').value || '').trim(),
+                  price: Number(row.querySelector('.v-price').value || 0),
+                  stock_quantity: Number(row.querySelector('.v-stock').value || 0),
+                  imagesToDelete,
+                };
+              });
+            }
+
+            function syncHidden() {
+              const arr = readVariants();
+              const json = JSON.stringify(arr);
+              getVariantInputs().forEach(i => i.value = json);
+              log('sync -> variants JSON', arr);
+            }
+
+            function renumberVariantRows() {
+              const rows = Array.from(list.querySelectorAll('.variant-row'));
+              rows.forEach((row, i) => {
+                row.dataset.index = String(i);
+                const file = row.querySelector('.v-images');
+                if (file) file.setAttribute('name', `variantImagesMap[${i}]`);
+
+                const badge = row.querySelector('.variant-index');
+                if (badge) badge.textContent = `#${i + 1}`;
+              });
+            }
+
+            // đọc init từ <script type="application/json">
+            let init = [];
+            try {
+              const el = document.getElementById('variants-init');
+              init = el && el.textContent ? JSON.parse(el.textContent) : [];
+            } catch (e) {
+              console.warn('[variants] init parse failed:', e);
+              init = [];
+            }
+
+            // đọc full variants (có images) để render preview
+            let variantsFromApi = [];
+            try {
+              const el2 = document.getElementById('variants-from-api');
+              variantsFromApi = el2 && el2.textContent ? JSON.parse(el2.textContent) : [];
+            } catch (e) {
+              variantsFromApi = [];
+            }
+
+            function renderVariantPreviews() {
+              if (!Array.isArray(variantsFromApi) || !variantsFromApi.length) return;
+
+              const rows = list.querySelectorAll('.variant-row');
+
+              rows.forEach(row => {
+                const rowId = row.dataset.variantId || '';
+                if (!rowId) return;
+
+                const v = variantsFromApi.find(x =>
+                  String(x.id || x._id || '') === rowId
+                );
+                if (!v || !Array.isArray(v.images) || !v.images.length) return;
+
+                const wrap = row.querySelector('[data-variant-preview]');
+                const hiddenInput = row.querySelector('.v-imagesToDelete');
+                if (!wrap || !hiddenInput) return;
+
+                wrap.innerHTML = '';
+
+                v.images.forEach(img => {
+                  const label = document.createElement('label');
+                  label.className = 'group relative block cursor-pointer';
+
+                  const image = document.createElement('img');
+                  image.src = img.url;
+                  image.className =
+                    'w-14 h-14 object-cover rounded border border-slate-300 group-has-[input:checked]:opacity-40';
+
+                  const checkbox = document.createElement('input');
+                  checkbox.type = 'checkbox';
+                  checkbox.className =
+                    'v-img-delete-checkbox absolute top-0.5 left-0.5 size-4 rounded border bg-white/90';
+                  checkbox.dataset.publicId = img.public_id;
+
+                  checkbox.addEventListener('change', () => {
+                    const ids = [];
+                    wrap.querySelectorAll('.v-img-delete-checkbox').forEach(cb => {
+                      if (cb.checked && cb.dataset.publicId) ids.push(cb.dataset.publicId);
+                    });
+                    hiddenInput.value = JSON.stringify(ids);
+                    syncHidden();
+                  });
+
+                  label.appendChild(image);
+                  label.appendChild(checkbox);
+                  wrap.appendChild(label);
+                });
+              });
+            }
+
+            function attachRowEvents(rowEl) {
+              rowEl.querySelectorAll('input[type="text"], input[type="number"], select')
+                .forEach(i => i.addEventListener('input', syncHidden));
+
+              const removeBtn = rowEl.querySelector('.v-remove');
+              if (removeBtn) {
+                removeBtn.addEventListener('click', () => {
+                  rowEl.remove();
+                  renumberVariantRows();
+                  syncHidden();
+                });
+              }
+
+              const fileInput = rowEl.querySelector('.v-images');
+              if (fileInput) {
+                fileInput.addEventListener('change', () => {
+                  // Khi chọn file mới, vẫn giữ preview cũ (vì xoá ảnh cũ đang do checkbox handle)
+                  // Nếu muốn clear preview cũ thì có thể uncomment 2 dòng dưới:
+                  // const wrap = rowEl.querySelector('[data-variant-preview]');
+                  // if (wrap) wrap.innerHTML = '';
+                });
+              }
+            }
+
+            function addVariantRow(initial = { id: '', sku: '', color: '', size: '', price: 0, stock_quantity: 0 }) {
+              const fragment = tpl.content.cloneNode(true);
+              const el = fragment.querySelector('.variant-row');
+
+              el.dataset.variantId = initial.id || '';
+
+              el.querySelector('.v-sku').value = initial.sku ?? '';
+              el.querySelector('.v-color').value = initial.color ?? '';
+              el.querySelector('.v-size').value = initial.size ?? '';
+              el.querySelector('.v-price').value = initial.price ?? 0;
+              el.querySelector('.v-stock').value = initial.stock_quantity ?? 0;
+
+              const nextIndex = list.querySelectorAll('.variant-row').length;
+              el.querySelector('.v-images').setAttribute('name', `variantImagesMap[${nextIndex}]`);
+
+              attachRowEvents(el);
+              list.appendChild(fragment);
+              renumberVariantRows();
+              syncHidden();
+            }
+
+            // Khởi tạo rows
+            if (Array.isArray(init) && init.length) init.forEach(v => addVariantRow(v));
+            else addVariantRow();
+            log('mounted with init', init);
+
+            // Render preview ảnh cho tất cả variants đã có trong API
+            renderVariantPreviews();
+
+            // Thêm mới biến thể
+            document.getElementById('btnAddVariant').addEventListener('click', () => {
+              addVariantRow();
+              renderVariantPreviews(); // variant mới không có ảnh cũ, nhưng gọi cũng không sao
+            });
+
+            // Submit: sync lại lần cuối
+            form.addEventListener('submit', () => {
+              renumberVariantRows();
+              syncHidden();
+
+              const filesDebug = Array.from(list.querySelectorAll('.v-images')).map((f, i) => ({
+                index: i,
+                name: f.getAttribute('name'),
+                filesCount: f.files ? f.files.length : 0,
+                fileNames: f.files ? Array.from(f.files).map(x => x.name) : []
+              }));
+              log('final file inputs:', filesDebug);
+              log('final variants hidden values:', getVariantInputs().map(i => i.value));
+            });
+
+            // Xử lý tick xoá ảnh product-level
+            function setupProductImagesDelete() {
+              const hidden = document.getElementById('imagesToDeleteInput');
+              if (!hidden) return;
+              const checkboxes = document.querySelectorAll('.img-delete-checkbox');
+              if (!checkboxes.length) return;
+
+              const update = () => {
+                const ids = [];
+                document.querySelectorAll('.img-delete-checkbox').forEach(cb => {
+                  if (cb.checked && cb.dataset.publicId) ids.push(cb.dataset.publicId);
+                });
+                hidden.value = JSON.stringify(ids);
+              };
+
+              checkboxes.forEach(cb => {
+                cb.addEventListener('change', update);
+              });
+            }
+
+            setupProductImagesDelete();
+          })();
+        </script>

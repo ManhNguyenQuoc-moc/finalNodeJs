@@ -275,57 +275,134 @@ module.exports = function createPagesRouter({ BACKEND, proxy }) {
 
     router.post("/login", async (req, res) => {
         try {
-            const resp = await postFormAndForwardCookies(req, res, `${BACKEND}/login`, {
-                username: req.body.username || req.body.email,
-                password: req.body.password,
+            const resp = await fetch(`${BACKEND}/api/auth/login`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    cookie: req.headers.cookie || "",
+                },
+                body: JSON.stringify({
+                    email: req.body.username || req.body.email,
+                    password: req.body.password,
+                }),
+                redirect: "manual",
             });
-            let data = null; try { data = await resp.json(); } catch { }
-            if (resp.status === 200 && data && (data.ok || data.user)) return res.redirect("/my-account");
-            if (resp.status === 302 || resp.status === 301) return res.redirect("/my-account");
+
+            const setCookie = getSetCookie(resp);
+            console.log("setCookie:", setCookie);
+            if (setCookie?.length) res.set("set-cookie", setCookie);
+
+            let data = null;
+            try { data = await resp.json(); } catch { }
+
+            if (resp.ok && data) {
+                return res.redirect("/my-account");
+            }
+
             const mini = await fetchJSONAuth(req, `${BACKEND}/api/page/minicart`).catch(() => ({}));
-            return res.status(401).render("login_register", {
+            return res.status(resp.status || 401).render("login_register", {
                 title: "Đăng nhập & Đăng ký",
-                error: (data && (data.error || data.message)) || "Email hoặc mật khẩu không đúng!",
-                success: null, activeTab: "login", ...mini,
+                error: (data && data.message) || "Email hoặc mật khẩu không đúng!",
+                success: null,
+                activeTab: "login",
+                ...mini,
             });
         } catch {
             const mini = await fetchJSONAuth(req, `${BACKEND}/api/page/minicart`).catch(() => ({}));
-            return res.status(500).render("login_register", { title: "Đăng nhập & Đăng ký", error: "Có lỗi khi đăng nhập. Vui lòng thử lại.", success: null, activeTab: "login", ...mini });
+            return res.status(500).render("login_register", {
+                title: "Đăng nhập & Đăng ký",
+                error: "Có lỗi khi đăng nhập. Vui lòng thử lại.",
+                success: null,
+                activeTab: "login",
+                ...mini,
+            });
         }
     });
 
     router.post("/api/auth/login", async (req, res) => {
         try {
-            const resp = await postFormAndForwardCookies(req, res, `${BACKEND}/login`, {
-                username: req.body.email || req.body.username,
-                password: req.body.password,
+            const resp = await fetch(`${BACKEND}/api/auth/login`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    cookie: req.headers.cookie || "",
+                },
+                body: JSON.stringify({
+                    email: req.body.email || req.body.username,
+                    password: req.body.password,
+                }),
+                redirect: "manual",
             });
-            let data = null; try { data = await resp.json(); } catch { }
-            if (resp.status === 200 && data && (data.ok || data.user)) return res.status(200).json({ ok: true, redirect: "/my-account" });
-            return res.status(401).json({ ok: false, error: (data && (data.error || data.message)) || "Email hoặc mật khẩu không đúng!" });
-        } catch { return res.status(500).json({ ok: false, error: "Login failed" }); }
-    });
 
-    router.post("/register", async (req, res) => {
-        try {
-            const resp = await postFormAndForwardCookies(req, res, `${BACKEND}/register`, {
-                register_name: req.body.register_name,
-                register_email: req.body.register_email,
-                register_phone: req.body.register_phone,
-                register_address: req.body.register_address,
-                register_password: req.body.register_password,
-                register_confirmPassword: req.body.register_confirmPassword,
+            const setCookie = getSetCookie(resp);
+            if (setCookie?.length) res.set("set-cookie", setCookie);
+
+            let data = null;
+            try { data = await resp.json(); } catch { }
+
+            if (resp.ok && data) {
+                return res.status(200).json({ ok: true, redirect: "/my-account", ...data });
+            }
+
+            return res.status(resp.status || 401).json({
+                ok: false,
+                error: (data && data.message) || "Email hoặc mật khẩu không đúng!",
             });
-            let data = null; try { data = await resp.json(); } catch { }
-            if (resp.status === 200 && data && (data.ok || data.success)) return res.redirect("/login");
-            const mini = await fetchJSONAuth(req, `${BACKEND}/api/page/minicart`).catch(() => ({}));
-            return res.status(400).render("login_register", { title: "Đăng nhập & Đăng ký", error: (data && (data.error || data.message)) || "Đăng ký thất bại", success: null, activeTab: "register", ...mini });
         } catch {
-            const mini = await fetchJSONAuth(req, `${BACKEND}/api/page/minicart`).catch(() => ({}));
-            return res.status(500).render("login_register", { title: "Đăng nhập & Đăng ký", error: "Có lỗi khi đăng ký. Vui lòng thử lại.", success: null, activeTab: "register", ...mini });
+            return res.status(500).json({ ok: false, error: "Login failed" });
         }
     });
 
+
+    router.post("/register", async (req, res) => {
+        try {
+            const resp = await fetch(`${BACKEND}/api/auth/register`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    cookie: req.headers.cookie || "",
+                },
+                body: JSON.stringify({
+                    email: req.body.register_email,   // map vào email
+                    full_name: req.body.register_name,    // map vào full_name
+                    address_line: req.body.register_address, // map vào address_line
+                }),
+                redirect: "manual",
+            });
+
+            const data = await resp.json().catch(() => null);
+
+            // Backend register trả 201 khi thành công
+            if (resp.status === 201 && data) {
+                const mini = await fetchJSONAuth(req, `${BACKEND}/api/page/minicart`).catch(() => ({}));
+                return res.status(200).render("login_register", {
+                    title: "Đăng nhập & Đăng ký",
+                    error: null,
+                    success: data.message || "Đăng ký thành công. Vui lòng kiểm tra email để xác thực.",
+                    activeTab: "login", // sau khi đăng ký xong cho user về tab login
+                    ...mini,
+                });
+            }
+
+            const mini = await fetchJSONAuth(req, `${BACKEND}/api/page/minicart`).catch(() => ({}));
+            return res.status(400).render("login_register", {
+                title: "Đăng nhập & Đăng ký",
+                error: (data && data.message) || "Đăng ký thất bại",
+                success: null,
+                activeTab: "register",
+                ...mini,
+            });
+        } catch {
+            const mini = await fetchJSONAuth(req, `${BACKEND}/api/page/minicart`).catch(() => ({}));
+            return res.status(500).render("login_register", {
+                title: "Đăng nhập & Đăng ký",
+                error: "Có lỗi khi đăng ký. Vui lòng thử lại.",
+                success: null,
+                activeTab: "register",
+                ...mini,
+            });
+        }
+    });
     router.get("/logout", async (req, res) => {
         try {
             const resp = await fetch(`${BACKEND}/logout`, { headers: { cookie: req.headers.cookie || "" }, redirect: "manual" });

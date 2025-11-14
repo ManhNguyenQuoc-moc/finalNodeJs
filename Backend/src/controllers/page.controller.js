@@ -14,7 +14,7 @@ exports.minicart = async (req, res) => {
   const user = req.currentUser;
   const where = user ? { user_id: user._id } : { session_id: req.cookies.sid };
   const cart = await require("../models").Cart.findOne(where).lean().catch(() => null);
-
+  
   const items = cart?.items || [];
   const cartCount = items.reduce((s, it) => s + (it.quantity || 0), 0);
   const total = items.reduce((s, it) => s + (it.price_at_time * it.quantity), 0);
@@ -177,7 +177,6 @@ exports.accountProfile = async (req, res) => {
   const { _id, email, full_name, role, loyalty_points, createdAt } = req.currentUser;
   res.json({ ok: true, user: { id: _id, email, full_name, role, loyalty_points, createdAt } });
 };
-
 exports.accountAddresses = async (req, res) => {
   if (!req.currentUser) return res.json({ redirectToLogin: true });
   const Address = require("../models/Address");
