@@ -1,84 +1,121 @@
 <% layout('layouts/admin') %>
-  <section class="space-y-6" x-data="{ open:false }">
-    <!-- Header -->
+
+  <section class="space-y-6" x-data='discountPage(<%- JSON.stringify(flash || {}) %>)'>
+
+    <!-- Page Header -->
     <div class="flex items-center justify-between">
-      <h2 class="text-xl font-semibold tracking-tight text-slate-900">Mã giảm giá</h2>
-      <button @click="open=true"
-        class="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-3.5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-700">
-        <i class="lucide lucide-plus"></i>
-        <span>Tạo mã</span>
+      <h2 class="text-2xl font-bold text-slate-900 tracking-tight">
+        Mã giảm giá
+      </h2>
+
+      <button type="button" @click="openCreate()"
+        class="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-700 focus:ring-4 focus:ring-indigo-300">
+        <i class="lucide lucide-plus text-sm"></i>
+        <span>Tạo mã mới</span>
       </button>
     </div>
 
+    <!-- FLASH DIALOG -->
+    <div x-show="notifyOpen" x-cloak x-transition.opacity
+      class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm px-4">
+
+      <div class="w-full max-w-sm rounded-2xl bg-white p-5 shadow-xl">
+        <div class="flex items-start gap-3">
+          <div class="h-8 w-8 flex items-center justify-center rounded-full" :class="notifyType === 'success'
+                      ? 'bg-emerald-100 text-emerald-600'
+                      : 'bg-rose-100 text-rose-600'">
+            <i class="lucide" :class="notifyType === 'success'
+                      ? 'lucide-check'
+                      : 'lucide-alert-circle'"></i>
+          </div>
+
+          <div class="flex-1">
+            <h4 class="text-sm font-semibold text-slate-900"
+              x-text="notifyType === 'success' ? 'Thành công' : 'Có lỗi xảy ra'"></h4>
+            <p class="mt-1 text-sm text-slate-600" x-text="notifyMessage"></p>
+          </div>
+        </div>
+
+        <div class="mt-4 flex justify-end">
+          <button @click="notifyOpen = false"
+            class="px-4 py-2 rounded-xl bg-indigo-600 text-sm font-semibold text-white hover:bg-indigo-700">
+            Đóng
+          </button>
+        </div>
+      </div>
+    </div>
+
     <!-- Table -->
-    <div class="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+    <div class="rounded-2xl border border-slate-200 bg-white shadow">
       <div class="overflow-x-auto">
         <table class="w-full text-sm">
-          <thead class="sticky top-0 z-10 bg-slate-50/95 backdrop-blur supports-[backdrop-filter]:bg-slate-50/80">
-            <tr class="text-left text-slate-500 uppercase text-[11px]">
-              <th class="p-3">Mã</th>
+          <thead class="bg-slate-50 text-slate-500 uppercase text-[11px]">
+            <tr>
+              <th class="p-3 text-left">Mã</th>
               <th class="p-3 text-right">Giá trị</th>
-              <th class="p-3 text-right">Số lần dùng</th>
+              <th class="p-3 text-right">Đã dùng</th>
               <th class="p-3">Trạng thái</th>
               <th class="p-3">Ngày tạo</th>
-              <th class="p-3 w-24"></th>
+              <th class="p-3 text-right w-32"></th>
             </tr>
           </thead>
+
           <tbody>
-            <% (items||[]).forEach(d=>{ const used=d.usage_count||0; const limit=d.usage_limit||0; const pct = limit ?
-              Math.min(100, Math.round(used*100/limit)) : 0; %>
-              <tr class="border-t odd:bg-white even:bg-slate-50/40 hover:bg-indigo-50/40 transition-colors">
+            <% (items || []).forEach(d=> { %>
+              <tr class="border-t bg-white hover:bg-indigo-50/40 transition">
+
                 <!-- Code -->
-                <td class="p-3 whitespace-nowrap">
-                  <span class="font-mono text-xs rounded-md bg-slate-50 px-2 py-1 ring-1 ring-slate-200">
+                <td class="p-3 font-mono text-xs">
+                  <span class="rounded bg-slate-100 px-2 py-1 border border-slate-200">
                     <%= d.code %>
                   </span>
                 </td>
 
                 <!-- Value -->
-                <td class="p-3 text-right whitespace-nowrap">
-                  <span class="tabular-nums font-medium text-slate-900">
-                    <%= d.discount_value %>%
-                  </span>
+                <td class="p-3 text-right font-semibold tracking-tight">
+                  <%= d.discount_value %>%
                 </td>
 
-                <!-- Usage with tiny progress -->
-                <td class="p-3 text-right whitespace-nowrap">
-                  <div class="inline-flex flex-col items-end gap-1">
-                    <div class="tabular-nums text-slate-700">
-                      <%= used %>/<%= limit %>
-                    </div>
-                    <div class="h-1.5 w-24 rounded-full bg-slate-100 ring-1 ring-slate-200">
-                      <div class="h-full rounded-full bg-indigo-500" style="width:<%= pct %>%"></div>
-                    </div>
-                  </div>
+                <!-- Usage -->
+                <td class="p-3 text-right">
+                  <%= d.usage_count %> / <%= d.usage_limit %>
                 </td>
 
-                <!-- Status -->
+                <!-- Active -->
                 <td class="p-3">
-                  <span
-                    class="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium ring-1
-                <%= d.is_active ? 'bg-emerald-50 text-emerald-700 ring-emerald-200' : 'bg-slate-100 text-slate-600 ring-slate-200' %>">
+                  <span class="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-medium border
+                  <%= d.is_active
+                    ? 'bg-emerald-100 text-emerald-700 border-emerald-200'
+                    : 'bg-slate-200 text-slate-600 border-slate-300' %>">
                     <i class="lucide <%= d.is_active ? 'lucide-check' : 'lucide-minus' %> text-[12px]"></i>
                     <%= d.is_active ? 'Active' : 'Inactive' %>
                   </span>
                 </td>
 
-                <!-- Created at -->
-                <td class="p-3 whitespace-nowrap"><span class="text-slate-700">
-                    <%= new Date(d.createdAt).toLocaleString('vi-VN') %>
-                  </span></td>
+                <!-- Date -->
+                <td class="p-3 whitespace-nowrap text-slate-700">
+                  <%= new Date(d.createdAt).toLocaleString('vi-VN') %>
+                </td>
 
                 <!-- Actions -->
-                <td class="p-3 text-right">
-                  <form action="/admin/discounts/<%= d.code %>/delete" method="post"
-                    onsubmit="return confirm('Xóa mã này?')" class="inline">
-                    <button type="submit"
-                      class="inline-flex items-center justify-center rounded-lg bg-rose-600 px-2.5 py-1.5 text-xs font-medium text-white shadow-sm hover:bg-rose-700">
+                <td class="p-3 text-right space-x-2">
+
+                  <!-- OPEN EDIT MODAL -->
+                  <button @click='openEdit(<%- JSON.stringify(d) %>)'
+                    class="px-3 py-1.5 text-xs rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 shadow">
+                    Sửa
+                  </button>
+
+                  <!-- DELETE -->
+                  <form action="/admin/discounts/<%= d._id %>/delete" method="post" class="inline"
+                    onsubmit="return confirm('Xóa mã này?');">
+                    <button class="px-3 py-1.5 text-xs rounded-lg bg-rose-600 text-white hover:bg-rose-700 shadow">
                       Xóa
                     </button>
                   </form>
+
                 </td>
+
               </tr>
               <% }) %>
           </tbody>
@@ -86,53 +123,117 @@
       </div>
     </div>
 
-    <!-- Modal -->
-    <div x-show="open" x-cloak class="fixed inset-0 z-50 grid place-items-center bg-black/30 p-4" x-transition.opacity>
-      <form method="post" action="/admin/discounts"
-        class="w-full max-w-lg space-y-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-lg" x-transition.scale>
-        <div class="text-lg font-semibold text-slate-900">Tạo mã giảm giá</div>
+    <!-- CREATE / EDIT MODAL -->
+    <div x-show="modalOpen" x-cloak x-transition.opacity
+      class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm px-4">
 
-        <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <div>
-            <label class="mb-1 block text-xs font-medium text-slate-500">Mã (5 ký tự)</label>
-            <input
-              class="h-9 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-700 shadow-sm outline-none focus:border-indigo-300 focus:ring-4 focus:ring-indigo-100"
-              required minlength="5" maxlength="5" name="code" placeholder="ABCDE">
-          </div>
+      <form method="post" :action="formAction"
+        class="w-full max-w-xl rounded-2xl border bg-white shadow-xl p-6 space-y-5 transform transition-all"
+        x-transition.scale.origin.center>
 
-          <div>
-            <label class="mb-1 block text-xs font-medium text-slate-500">Giá trị (%)</label>
-            <input
-              class="h-9 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-700 shadow-sm outline-none focus:border-indigo-300 focus:ring-4 focus:ring-indigo-100"
-              name="discount_value" type="number" min="1" max="100" required>
-          </div>
+        <!-- Title -->
+        <div class="flex items-center justify-between mb-1">
+          <h3 class="text-xl font-semibold text-slate-900 flex items-center gap-2">
+            <i class="lucide lucide-badge-percent text-slate-500"></i>
+            <span x-text="isEdit ? 'Cập nhật mã giảm giá' : 'Tạo mã giảm giá'"></span>
+          </h3>
 
-          <div>
-            <label class="mb-1 block text-xs font-medium text-slate-500">Giới hạn dùng</label>
-            <input
-              class="h-9 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-700 shadow-sm outline-none focus:border-indigo-300 focus:ring-4 focus:ring-indigo-100"
-              name="usage_limit" type="number" min="1" max="10" required>
-          </div>
-
-          <div class="flex items-end">
-            <label class="inline-flex items-center gap-2 text-sm text-slate-700">
-              <input type="checkbox" name="is_active" checked
-                class="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500">
-              <span>Kích hoạt</span>
-            </label>
-          </div>
+          <button type="button" @click="modalOpen=false"
+            class="rounded-full p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100">
+            <i class="lucide lucide-x text-sm"></i>
+          </button>
         </div>
 
-        <div class="flex justify-end gap-2 pt-2">
-          <button type="button" @click="open=false"
-            class="inline-flex items-center justify-center rounded-xl px-3.5 py-2 text-sm font-medium text-slate-700 ring-1 ring-slate-200 hover:bg-slate-50">
+        <!-- Form fields -->
+        <div class="grid grid-cols-2 gap-4">
+
+          <!-- Code -->
+          <div class="col-span-2">
+            <label class="block mb-1 text-xs font-medium text-slate-600">Mã giảm giá (5 ký tự)</label>
+            <input name="code" x-model="form.code" minlength="5" maxlength="5" :readonly="isEdit"
+              class="w-full h-10 px-3 rounded-xl border border-slate-300 shadow-sm text-sm focus:ring-4 focus:ring-indigo-200 focus:border-indigo-500 readonly:bg-slate-100">
+          </div>
+
+          <div>
+            <label class="block mb-1 text-xs font-medium text-slate-600">Giá trị giảm (%)</label>
+            <input name="discount_value" x-model="form.discount_value" type="number" min="1" max="100"
+              class="w-full h-10 px-3 rounded-xl border border-slate-300 shadow-sm text-sm focus:ring-4 focus:ring-indigo-200 focus:border-indigo-500">
+          </div>
+
+          <div>
+            <label class="block mb-1 text-xs font-medium text-slate-600">Giới hạn sử dụng</label>
+            <input name="usage_limit" x-model="form.usage_limit" type="number" min="1"
+              class="w-full h-10 px-3 rounded-xl border border-slate-300 shadow-sm text-sm focus:ring-4 focus:ring-indigo-200 focus:border-indigo-500">
+          </div>
+
+          <div class="col-span-2 flex items-center gap-2">
+            <input type="checkbox" name="is_active" x-model="form.is_active"
+              class="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500">
+            <span class="text-sm text-slate-700">Kích hoạt mã giảm giá</span>
+          </div>
+
+        </div>
+
+        <!-- Buttons -->
+        <div class="flex justify-end gap-3 pt-2">
+          <button type="button" @click="modalOpen=false"
+            class="px-4 py-2 rounded-xl border text-sm font-medium text-slate-700 hover:bg-slate-100">
             Hủy
           </button>
+
           <button
-            class="inline-flex items-center justify-center rounded-xl bg-indigo-600 px-3.5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-700">
-            Tạo
+            class="px-4 py-2 rounded-xl bg-indigo-600 text-sm font-semibold text-white shadow hover:bg-indigo-700">
+            Lưu
           </button>
         </div>
+
       </form>
     </div>
+
   </section>
+
+  <script>
+    function discountPage(flash) {
+      const hasFlash = !!(flash && (flash.success || flash.error));
+      const type = flash && flash.success
+        ? 'success'
+        : (flash && flash.error ? 'error' : '');
+
+      return {
+        // dialog thông báo
+        notifyOpen: hasFlash,
+        notifyMessage: flash && (flash.success || flash.error) ? (flash.success || flash.error) : '',
+        notifyType: type,
+
+        // modal tạo / sửa
+        modalOpen: false,
+        isEdit: false,
+        formAction: "/admin/discounts", // mặc định create
+        form: {
+          code: "",
+          discount_value: "",
+          usage_limit: "",
+          is_active: true,
+        },
+
+        openCreate() {
+          this.isEdit = false;
+          this.formAction = "/admin/discounts";
+          this.form = { code: "", discount_value: "", usage_limit: "", is_active: true };
+          this.modalOpen = true;
+        },
+
+        openEdit(data) {
+          this.isEdit = true;
+          this.formAction = `/admin/discounts/${data._id}`; // Router POST update
+          this.form = {
+            code: data.code,
+            discount_value: data.discount_value,
+            usage_limit: data.usage_limit,
+            is_active: data.is_active,
+          };
+          this.modalOpen = true;
+        }
+      }
+    }
+  </script>

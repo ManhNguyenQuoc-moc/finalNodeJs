@@ -9,7 +9,9 @@ class UpdateProductRequest {
     this.category = body.category;
     this.short_description = body.short_description;
     this.long_description = body.long_description;
-
+    this.productStatus = {
+      statusName: body.statusName || "New",
+    };
     // Nhận imagesToDelete dạng mảng / chuỗi JSON
     let rawDel = body.imagesToDelete ?? body['imagesToDelete[]'] ?? null;
     if (typeof rawDel === 'string') {

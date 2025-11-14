@@ -11,6 +11,8 @@ const productRouter = require("./product");//import
 router.use("/product", productRouter);
 const brandRouter = require("./brand");//import
 router.use("/brand", brandRouter);
+const discountCodeRouter = require("./discountCodeRouter");
+router.use("/discount-code", discountCodeRouter);
 // const pageRouter = require("./page.routes");
 // router.use("/", pageRouter);
 // const authRouter = require("./auth");//import

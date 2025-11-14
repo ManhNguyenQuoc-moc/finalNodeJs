@@ -1,25 +1,26 @@
-const Color = require("../models/ProductColor");
+const ProductColor = require("../models/ProductColor");
 
 class ColorRepository {
+
   async create(data) {
-    const Color = new ProductColor(data);
-    return Color.save();
+    const color = new ProductColor(data);
+    return color.save();
   }
 
   async findAll() {
-    return Color.find();
+    return ProductColor.find();
   }
 
   async findById(id) {
-    return Color.findById(id);
+    return ProductColor.findById(id);
   }
 
   async update(id, data) {
-    return Color.findByIdAndUpdate(id, data, { new: true });
+    return ProductColor.findByIdAndUpdate(id, data, { new: true });
   }
 
   async delete(id) {
-    return Color.findByIdAndDelete(id);
+    return ProductColor.findByIdAndDelete(id);
   }
 }
 

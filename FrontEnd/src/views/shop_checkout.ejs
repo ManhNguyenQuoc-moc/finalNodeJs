@@ -2,183 +2,205 @@
 <html dir="ltr" lang="zxx">
 <style>
   .checkout-page {
-  margin-top: 30px;
-  margin-bottom: 50px;
-}
-
-.order-summary {
-  background: #fafafa;
-}
-
-.shipping-box img {
-  opacity: 0.6;
-}
-
-.checkout-heading{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:12px;           /* khoảng cách nhỏ giữa 2 bên */
-  margin-bottom:16px; /* khoảng dưới giống mb-3 */
-}
-.checkout-heading h3{ margin:0; }
-.checkout-heading p{ margin:0; color:#6b7280; }
-
-/* Mobile: cho xuống hàng, canh trái nhìn gọn */
-@media (max-width:576px){
-  .checkout-heading{
-    flex-direction:column;
-    align-items:flex-start;
-    gap:6px;
+    margin-top: 30px;
+    margin-bottom: 50px;
   }
-}
 
+  .order-summary {
+    background: #fafafa;
+  }
+
+  .shipping-box img {
+    opacity: 0.6;
+  }
+
+  .checkout-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    /* khoảng cách nhỏ giữa 2 bên */
+    margin-bottom: 16px;
+    /* khoảng dưới giống mb-3 */
+  }
+
+  .checkout-heading h3 {
+    margin: 0;
+  }
+
+  .checkout-heading p {
+    margin: 0;
+    color: #6b7280;
+  }
+
+  /* Mobile: cho xuống hàng, canh trái nhìn gọn */
+  @media (max-width:576px) {
+    .checkout-heading {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 6px;
+    }
+  }
 </style>
 
 <%- include('partials/head') %>
 
-<body>
-  <%- include('partials/icons') %>
+  <body>
+    <%- include('partials/icons') %>
 
-  <!-- Mobile Header -->
+      <!-- Mobile Header -->
 
-  <!-- Header Type 1 -->
-  <%- include('partials/header', { headerType: 'header' }) %>
+      <!-- Header Type 1 -->
+      <%- include('partials/header', { headerType: 'header' }) %>
 
-  <main>
-  <section class="container checkout-page">
-    <div class="row">
-      
-      <!-- Bên trái: Form giao hàng -->
-      <div class="col-lg-7">
-        <!-- THAY 2 dòng h3 + p hiện tại bằng block này -->
-        <div class="checkout-heading">
-          <h3 class="mb-0">Thông tin giao hàng</h3>
-          <p class="mb-0">
-            Bạn đã có tài khoản? <a href="/login-register">Đăng nhập</a>
-          </p>
-        </div>
+        <main>
+          <section class="container checkout-page">
+            <div class="row">
 
-        <form action="/checkout/submit" method="POST">
-          <div class="mb-3">
-            <input type="text" class="form-control" name="name" placeholder="Họ và tên" required>
-          </div>
-          <div class="row">
-            <div class="col-md-6 mb-3">
-              <input type="email" class="form-control" name="email" placeholder="Email" required>
+              <!-- Bên trái: Form giao hàng -->
+              <div class="col-lg-7">
+                <!-- THAY 2 dòng h3 + p hiện tại bằng block này -->
+                <div class="checkout-heading">
+                  <h3 class="mb-0">Thông tin giao hàng</h3>
+                  <p class="mb-0">
+                    Bạn đã có tài khoản? <a href="/login-register">Đăng nhập</a>
+                  </p>
+                </div>
+
+                <form action="/checkout/submit" method="POST">
+                  <div class="mb-3">
+                    <input type="text" class="form-control" name="name" placeholder="Họ và tên" required>
+                  </div>
+                  <div class="row">
+                    <div class="col-md-6 mb-3">
+                      <input type="email" class="form-control" name="email" placeholder="Email" required>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                      <input type="text" class="form-control" name="phone" placeholder="Số điện thoại" required>
+                    </div>
+                  </div>
+                  <div class="mb-3">
+                    <input type="text" class="form-control" name="address" placeholder="Địa chỉ" required>
+                  </div>
+                  <div class="row">
+                    <div class="col-md-4 mb-3">
+                      <select class="form-select" name="province" required>
+                        <option value="">Chọn tỉnh / thành</option>
+                      </select>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                      <select class="form-select" name="district" required>
+                        <option value="">Chọn quận / huyện</option>
+                      </select>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                      <select class="form-select" name="ward" required>
+                        <option value="">Chọn phường / xã</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <h5 class="mt-4">Phương thức vận chuyển</h5>
+                  <div class="shipping-box border rounded p-4 text-center">
+                    <img src="/mixishop/images/box.png" width="60" class="mb-2">
+                    <p class="text-muted mb-0">Vui lòng chọn tỉnh/thành để có danh sách phương thức vận chuyển.</p>
+                  </div>
+                </form>
+              </div>
+
+              <!-- Bên phải: Tóm tắt đơn hàng -->
+              <div class="col-lg-5">
+                <div class="order-summary border rounded p-4">
+                  <% carts.forEach(cart=> { %>
+                    <div class="d-flex align-items-center mb-3">
+                      <img src="<%= cart.img_snapshot %>" width="64" class="me-3">
+
+                      <div class="flex-grow-1">
+                        <div>
+                          <%= cart.name_snapshot %>
+                        </div>
+                        <small>
+                          <%= cart.color_name_snapshot %> / <%= cart.size_name_snapshot %>
+                        </small>
+                      </div>
+
+                      <div>
+                        <%= formatPrice(cart.price_at_time * cart.quantity) %>
+                          <%= (cart.price_at_time * cart.quantity).toLocaleString('vi-VN') %>
+                      </div>
+                    </div>
+                    <% }) %>
+
+                      <div class="mb-3">
+                        <input type="text" class="form-control" placeholder="Mã giảm giá">
+                      </div>
+                      <button class="btn btn-secondary w-100 mb-3">Sử dụng</button>
+
+                      <div class="d-flex justify-content-between mb-2">
+                        <span>Tạm tính</span>
+                        <span>
+                          <%= formattedTotal %>
+                        </span>
+                      </div>
+                      <div class="d-flex justify-content-between mb-2">
+                        <span>Phí vận chuyển</span>
+                        <span>-</span>
+                      </div>
+                      <div class="d-flex justify-content-between fw-bold fs-5 border-top pt-2">
+                        <span>Tổng cộng</span>
+                        <span>
+                          <%= formattedTotal %>
+                        </span>
+                      </div>
+
+                      <button type="submit" class="btn btn-danger w-100 mt-4">ĐẶT HÀNG</button>
+                </div>
+              </div>
+
             </div>
-            <div class="col-md-6 mb-3">
-              <input type="text" class="form-control" name="phone" placeholder="Số điện thoại" required>
-            </div>
-          </div>
-          <div class="mb-3">
-            <input type="text" class="form-control" name="address" placeholder="Địa chỉ" required>
-          </div>
-          <div class="row">
-            <div class="col-md-4 mb-3">
-              <select class="form-select" name="province" required>
-                <option value="">Chọn tỉnh / thành</option>
-              </select>
-            </div>
-            <div class="col-md-4 mb-3">
-              <select class="form-select" name="district" required>
-                <option value="">Chọn quận / huyện</option>
-              </select>
-            </div>
-            <div class="col-md-4 mb-3">
-              <select class="form-select" name="ward" required>
-                <option value="">Chọn phường / xã</option>
-              </select>
-            </div>
-          </div>
-          
-          <h5 class="mt-4">Phương thức vận chuyển</h5>
-          <div class="shipping-box border rounded p-4 text-center">
-            <img src="/mixishop/images/box.png" width="60" class="mb-2">
-            <p class="text-muted mb-0">Vui lòng chọn tỉnh/thành để có danh sách phương thức vận chuyển.</p>
-          </div>
-        </form>
-      </div>
-
-      <!-- Bên phải: Tóm tắt đơn hàng -->
-      <div class="col-lg-5">
-        <div class="order-summary border rounded p-4">
-          <% carts.forEach(cart => { %>
-          <div class="d-flex align-items-center mb-3">
-            <img src="<%= cart.productColor.imageUrls[0] %>" width="64" class="me-3">
-            <div class="flex-grow-1">
-              <div><%= cart.productColor.product.name %></div>
-              <small><%= cart.productColor.color %> / <%= cart.size %></small>
-            </div>
-            <div><%= (cart.productColor.product.price * cart.quantity).toLocaleString() %>đ</div>
-          </div>
-          <% }) %>
-
-          <div class="mb-3">
-            <input type="text" class="form-control" placeholder="Mã giảm giá">
-          </div>
-          <button class="btn btn-secondary w-100 mb-3">Sử dụng</button>
-
-          <div class="d-flex justify-content-between mb-2">
-            <span>Tạm tính</span>
-            <span><%= formattedTotal %></span>
-          </div>
-          <div class="d-flex justify-content-between mb-2">
-            <span>Phí vận chuyển</span>
-            <span>-</span>
-          </div>
-          <div class="d-flex justify-content-between fw-bold fs-5 border-top pt-2">
-            <span>Tổng cộng</span>
-            <span><%= formattedTotal %></span>
-          </div>
-
-          <button type="submit" class="btn btn-danger w-100 mt-4">ĐẶT HÀNG</button>
-        </div>
-      </div>
-
-    </div>
-  </section>
-</main>
+          </section>
+        </main>
 
 
-  <div class="mb-5 pb-xl-5"></div>
-  
-    <%- include('partials/footer') %>
+        <div class="mb-5 pb-xl-5"></div>
 
-  <!-- Mobile Fixed Footer -->
-  <!-- Customer Login Form -->
-  <%- include('partials/login_form') %>
+        <%- include('partials/footer') %>
 
-  <!-- Cart Drawer -->
-  <%- include('partials/cart_drawer') %>
+          <!-- Mobile Fixed Footer -->
+          <!-- Customer Login Form -->
+          <%- include('partials/login_form') %>
 
-  <!-- Sitemap -->
-  <%- include('partials/sitemap') %>
+            <!-- Cart Drawer -->
+            <%- include('partials/cart_drawer') %>
 
-  <!-- Quick View -->
-  <%- include('partials/quick_view') %>
-  <div id="scrollTop" class="visually-hidden end-0"></div>
+              <!-- Sitemap -->
+              <%- include('partials/sitemap') %>
 
-  <!-- Page Overlay -->
-  <div class="page-overlay"></div><!-- /.page-overlay -->
+                <!-- Quick View -->
+                <%- include('partials/quick_view') %>
+                  <div id="scrollTop" class="visually-hidden end-0"></div>
 
- <!-- External JavaScripts -->
-  <script src="/mixishop/js/plugins/jquery.min.js"></script>
-  <script src="/mixishop/js/plugins/bootstrap.bundle.min.js"></script>
-  <script src="/mixishop/js/plugins/bootstrap-slider.min.js"></script>
+                  <!-- Page Overlay -->
+                  <div class="page-overlay"></div><!-- /.page-overlay -->
 
-  <script src="/mixishop/js/plugins/swiper.min.js"></script>
-  <script src="/mixishop/js/plugins/countdown.js"></script>
-  <script src="/mixishop/js/plugins/jquery.fancybox.js"></script>
+                  <!-- External JavaScripts -->
+                  <script src="/mixishop/js/plugins/jquery.min.js"></script>
+                  <script src="/mixishop/js/plugins/bootstrap.bundle.min.js"></script>
+                  <script src="/mixishop/js/plugins/bootstrap-slider.min.js"></script>
 
-
-  <!-- Footer Scripts -->
-  <script src="/mixishop/js/theme.js"></script>
-
- 
+                  <script src="/mixishop/js/plugins/swiper.min.js"></script>
+                  <script src="/mixishop/js/plugins/countdown.js"></script>
+                  <script src="/mixishop/js/plugins/jquery.fancybox.js"></script>
 
 
-</body>
+                  <!-- Footer Scripts -->
+                  <script src="/mixishop/js/theme.js"></script>
 
-<!-- Mirrored from uomo-html.flexkitux.com/Demo3/shop_checkout.html by HTTrack Website Copier/3.x [XR&CO'2014], Sat, 19 Oct 2024 06:54:12 GMT -->
+
+
+
+  </body>
+
+  <!-- Mirrored from uomo-html.flexkitux.com/Demo3/shop_checkout.html by HTTrack Website Copier/3.x [XR&CO'2014], Sat, 19 Oct 2024 06:54:12 GMT -->
+
 </html>

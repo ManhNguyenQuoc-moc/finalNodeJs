@@ -1,4 +1,4 @@
-// src/server_admin.js — Admin UI (mock CRUD) export Express.Router (refactored to use FE-style fetch helpers)
+
 
 const express = require("express");
 const multer = require("multer");
@@ -108,6 +108,229 @@ module.exports = function createAdminRouter({ BACKEND, proxy } = {}) {
     } catch { }
     return PRODUCT_COLORS;
   }
+  async function fetchDiscountCodes(req) {
+    // Nếu chưa cấu hình BACKEND → dùng mock DISCOUNTS + paginate local
+    if (!BACKEND) {
+      const { page = 1 } = req.query || {};
+      const p = paginate(DISCOUNTS, page, 20); // page size tuỳ bạn
+      return {
+        items: p.items,
+        pagination: {
+          page: p.page,
+          totalPages: p.totalPages,
+          totalItems: p.totalItems,
+          pageSize: 20,
+        },
+      };
+    }
+
+    try {
+      // build query (page, limit, search nếu cần)
+      const { page = 1, limit = 20 } = req.query || {};
+      const qs = new URLSearchParams({ page: String(page), limit: String(limit) }).toString();
+      const url = `${BACKEND}/api/discount-code?${qs}`;
+
+      const data = await fetchJSONAuth(req, url);
+
+      // Chuẩn payload theo controller bạn đã viết:
+      // {
+      //   success: true,
+      //   items: [...],
+      //   pagination: { page, totalPages, totalItems, pageSize }
+      // }
+      if (data && data.success && Array.isArray(data.items)) {
+        return {
+          items: data.items,
+          pagination: data.pagination || {
+            page: Number(page) || 1,
+            totalPages: 1,
+            totalItems: data.items.length,
+            pageSize: Number(limit) || data.items.length,
+          },
+        };
+      }
+
+      // fallback: nếu BE trả array trực tiếp
+      if (Array.isArray(data)) {
+        return {
+          items: data,
+          pagination: {
+            page: Number(page) || 1,
+            totalPages: 1,
+            totalItems: data.length,
+            pageSize: data.length,
+          },
+        };
+      }
+
+      throw new Error("Unexpected discount codes payload shape");
+    } catch (err) {
+      console.error("Fetch DISCOUNT CODES failed:", err.message);
+      // lỗi thì trả rỗng để UI vẫn render được
+      return {
+        items: [],
+        pagination: {
+          page: 1,
+          totalPages: 1,
+          totalItems: 0,
+          pageSize: 20,
+        },
+      };
+    }
+  }
+  // Tạo mã giảm giá
+  async function fetchCreateDiscountCode(req) {
+    try {
+      // Fallback local khi chưa có BACKEND
+      if (!BACKEND) {
+        const { code, discount_value, usage_limit, is_active } = req.body || {};
+        if (!code || String(code).length !== 5) {
+          return { ok: false, message: "Mã code phải đủ 5 ký tự" };
+        }
+
+        const upper = String(code).toUpperCase();
+        const exist = DISCOUNTS.find(d => d.code === upper);
+        if (exist) {
+          return { ok: false, message: "Mã giảm giá đã tồn tại" };
+        }
+
+        DISCOUNTS.unshift({
+          code: upper,
+          discount_value: Number(discount_value || 0),
+          usage_limit: Number(usage_limit || 1),
+          usage_count: 0,
+          is_active: Boolean(is_active),
+          createdAt: new Date(),
+        });
+
+        return { ok: true, message: "Tạo mã giảm giá (mock) thành công!" };
+      }
+
+      const url = `${BACKEND}/api/discount-code`;
+      const payload = {
+        code: req.body.code,
+        discount_value: Number(req.body.discount_value || 0),
+        usage_limit: Number(req.body.usage_limit || 1),
+        is_active: Boolean(req.body.is_active),
+      };
+
+      const data = await fetchJSONAuth(req, url, {
+        method: "POST",
+        body: JSON.stringify(payload),
+      });
+
+      if (!data?.success) {
+        throw new Error(data?.message || "Create discount failed");
+      }
+
+      return {
+        ok: true,
+        message: "Tạo mã giảm giá thành công!",
+        data: data.data,
+      };
+    } catch (err) {
+      console.error("Create DISCOUNT CODE failed:", err.message);
+      return { ok: false, message: err.message || "Không thể tạo mã giảm giá" };
+    }
+  }
+
+  // Lấy 1 mã giảm giá theo id
+  async function fetchGetDiscountCode(req, id) {
+    // Fallback mock: tìm theo code = id
+    if (!BACKEND) {
+      const item = DISCOUNTS.find(d => d.code === id);
+      if (!item) throw new Error("Discount not found");
+      return item;
+    }
+
+    const url = `${BACKEND}/api/discount-code/${id}`;
+    const data = await fetchJSONAuth(req, url);
+    if (!data?.success || !data?.data) {
+      throw new Error(data?.message || "Discount not found");
+    }
+    return data.data;
+  }
+
+  // Cập nhật mã giảm giá
+  async function fetchUpdateDiscountCode(req, id) {
+    try {
+      if (!BACKEND) {
+        // mock: update theo code
+        const i = DISCOUNTS.findIndex(d => d.code === id);
+        if (i === -1) {
+          return { ok: false, message: "Discount not found (mock)" };
+        }
+
+        DISCOUNTS[i] = {
+          ...DISCOUNTS[i],
+          discount_value: Number(req.body.discount_value ?? DISCOUNTS[i].discount_value),
+          usage_limit: Number(req.body.usage_limit ?? DISCOUNTS[i].usage_limit),
+          is_active: req.body.is_active !== undefined
+            ? Boolean(req.body.is_active)
+            : DISCOUNTS[i].is_active,
+        };
+
+        return { ok: true, message: "Cập nhật mã giảm giá (mock) thành công!" };
+      }
+
+      const url = `${BACKEND}/api/discount-code/${id}`;
+      const payload = {
+        discount_value: req.body.discount_value !== undefined
+          ? Number(req.body.discount_value)
+          : undefined,
+        usage_limit: req.body.usage_limit !== undefined
+          ? Number(req.body.usage_limit)
+          : undefined,
+        is_active: req.body.is_active !== undefined
+          ? Boolean(req.body.is_active)
+          : undefined,
+      };
+
+      // xoá các field undefined để tránh ghi đè bậy
+      Object.keys(payload).forEach(k => payload[k] === undefined && delete payload[k]);
+
+      const data = await fetchJSONAuth(req, url, {
+        method: "PUT",
+        body: JSON.stringify(payload),
+      });
+
+      if (!data?.success) {
+        throw new Error(data?.message || "Update discount failed");
+      }
+
+      return {
+        ok: true,
+        message: "Cập nhật mã giảm giá thành công!",
+        data: data.data,
+      };
+    } catch (err) {
+      console.error("Update DISCOUNT CODE failed:", err.message);
+      return { ok: false, message: err.message || "Không thể cập nhật mã giảm giá" };
+    }
+  }
+
+  // Xoá mã giảm giá
+  async function fetchDeleteDiscountCode(req, id) {
+    try {
+      if (!BACKEND) {
+        DISCOUNTS = DISCOUNTS.filter(d => d.code !== id);
+        return { ok: true, message: "Xoá mã giảm giá (mock) thành công!" };
+      }
+
+      const url = `${BACKEND}/api/discount-code/${id}`;
+      const data = await fetchJSONAuth(req, url, { method: "DELETE" });
+
+      if (!data?.success) {
+        throw new Error(data?.message || "Delete discount failed");
+      }
+
+      return { ok: true, message: "Xoá mã giảm giá thành công!" };
+    } catch (err) {
+      console.error("Delete DISCOUNT CODE failed:", err.message);
+      return { ok: false, message: err.message || "Không thể xoá mã giảm giá" };
+    }
+  }
+
   // FE-style product fetch with cookie forwarding & strict JSON checks
   async function fetchProducts(req) {
     // If no BACKEND provided, keep the old mock/legacy flow
@@ -191,7 +414,66 @@ module.exports = function createAdminRouter({ BACKEND, proxy } = {}) {
       return { ok: false, message: err.message || "Không thể tạo sản phẩm" };
     }
   }
+  async function fetchUpdateProduct(req, id) {
+    try {
+      if (!BACKEND) throw new Error("BACKEND is not configured");
+      const url = `${BACKEND}/api/product/${id}`;
 
+      const form = new FormData();
+
+      // ---- Text fields giống Postman ----
+      const textKeys = [
+        "name", "slug", "brand", "category",
+        "short_description", "long_description", "statusName",
+        "imagesToDelete" // quan trọng cho xoá ảnh product
+      ];
+      for (const k of textKeys) {
+        if (req.body[k] !== undefined && req.body[k] !== null && req.body[k] !== "") {
+          form.append(k, String(req.body[k]));
+        }
+      }
+
+      // ---- variants: luôn là JSON string ----
+      if (req.body.variants !== undefined) {
+        const v = req.body.variants;
+        form.append("variants", typeof v === "string" ? v : JSON.stringify(v));
+      }
+
+      // ---- Files: productImages & variantImagesMap[*] ----
+      if (Array.isArray(req.files)) {
+        for (const f of req.files) {
+          form.append(
+            f.fieldname,
+            new Blob([f.buffer], { type: f.mimetype || "application/octet-stream" }),
+            f.originalname || "file"
+          );
+        }
+      }
+
+      const resp = await fetch(url, {
+        method: "PUT",
+        headers: { cookie: req.headers.cookie || "" },
+        body: form,
+        redirect: "manual",
+      });
+
+      let data = {};
+      try { data = await resp.json(); } catch { }
+
+      if (!resp.ok) {
+        return { ok: false, message: data?.message || `[${resp.status}] Update failed` };
+      }
+
+      // tuỳ backend trả gì, mình chỉ cần message
+      return {
+        ok: true,
+        message: data?.message || `Cập nhật sản phẩm thành công!`
+      };
+    } catch (err) {
+      console.error("Update PRODUCT failed:", err.message);
+      return { ok: false, message: err.message || "Không thể cập nhật sản phẩm" };
+    }
+  }
 
   let PRODUCT_COLORS = [{ _id: "pc1", product: "p1", product_name: "Sản phẩm 1", color_name: "Đen", color_code: "#000000", createdAt: new Date() }];
   let PRODUCT_SIZES = [{ _id: "ps1", product: "p1", product_name: "Sản phẩm 1", size_name: "M", size_order: 2, createdAt: new Date() }];
@@ -357,24 +639,28 @@ module.exports = function createAdminRouter({ BACKEND, proxy } = {}) {
           [];
 
     product.variants = (srcVariants || []).map(v => {
-      const images = Array.isArray(v?.images) ? v.images.map(img => ({
-        url: img?.url || "",
-        public_id: img?.public_id || "",
-        is_primary: !!img?.is_primary
-      })) : [];
+      const images = Array.isArray(v?.images)
+        ? v.images.map(img => ({
+          url: img?.url || "",
+          public_id: img?.public_id || "",
+          is_primary: !!img?.is_primary,
+        }))
+        : [];
 
-      // Tính index ảnh chính từ is_primary (mặc định 0 nếu không có)
       let primaryIndex = images.findIndex(i => i.is_primary);
       if (primaryIndex < 0) primaryIndex = 0;
 
       return {
+        // GIỮ ID LẠI
+        id: String(v?._id || v?.id || ""),
+        _id: String(v?._id || v?.id || ""), // optional, nếu muốn
         sku: String(v?.sku || "").trim(),
         price: Number(v?.price ?? 0),
         stock_quantity: Number(v?.stock_quantity ?? 0),
-        color: v?.color ? String(v.color) : null,   // backend trả _id string
-        size: v?.size ? String(v.size) : null,      // backend trả _id string
+        color: v?.color ? String(v.color) : "",
+        size: v?.size ? String(v.size) : "",
         images,
-        primaryIndex
+        primaryIndex,
       };
     });
 
@@ -403,17 +689,16 @@ module.exports = function createAdminRouter({ BACKEND, proxy } = {}) {
     return res.redirect(`/admin/products?${q.toString()}`);
   });
 
-  router.post("/products/:id", (req, res) => {
-    const i = PRODUCTS.findIndex(x => x._id === req.params.id);
-    if (i > -1) {
-      PRODUCTS[i] = {
-        ...PRODUCTS[i],
-        name: req.body.name, slug: req.body.slug, brand: req.body.brand, category: req.body.category,
-        short_description: req.body.short_description, long_description: req.body.long_description,
-        productStatus: { statusName: req.body.statusName || PRODUCTS[i].productStatus?.statusName || "New" }
-      };
-    }
-    res.redirect("/admin/products");
+  router.post("/products/:id", upload.any(), async (req, res) => {
+    console.log("[ADMIN UPDATE IN] fields:", Object.keys(req.body));
+    console.log("[ADMIN UPDATE IN] variants(raw):", typeof req.body.variants, String(req.body.variants || "").slice(0, 300));
+    console.log("[ADMIN UPDATE IN] files:", (req.files || []).map(f => ({
+      fieldname: f.fieldname, name: f.originalname, size: f.size
+    })));
+
+    const r = await fetchUpdateProduct(req, req.params.id);
+    const q = new URLSearchParams(r.ok ? { s: r.message } : { e: r.message });
+    return res.redirect(`/admin/products?${q.toString()}`);
   });
   router.post("/products/:id/delete", (req, res) => { PRODUCTS = PRODUCTS.filter(x => x._id !== req.params.id); res.redirect("/admin/products"); });
 
@@ -585,27 +870,58 @@ module.exports = function createAdminRouter({ BACKEND, proxy } = {}) {
     res.redirect("/admin/orders/" + req.params.id);
   });
 
-  // ========== Discounts ==========
-  router.get("/discounts", (req, res) => {
-    const p = paginate(DISCOUNTS, 1, DISCOUNTS.length);
-    res.render("discounts_index", { title: "Mã giảm giá", pageHeading: "Mã giảm giá", items: p.items, pagination: { ...p, baseUrl: "/admin/discounts?page=" } });
-  });
-  router.post("/discounts", (req, res) => {
-    const { code, discount_value, usage_limit, is_active } = req.body;
-    if (code && String(code).length === 5) {
-      DISCOUNTS.unshift({
-        code: String(code).toUpperCase(),
-        discount_value: Number(discount_value || 0),
-        usage_limit: Number(usage_limit || 1),
-        usage_count: 0,
-        is_active: Boolean(is_active),
-        createdAt: new Date()
-      });
-    }
-    res.redirect("/admin/discounts");
-  });
-  router.post("/discounts/:code/delete", (req, res) => { DISCOUNTS = DISCOUNTS.filter(x => x.code !== req.params.code); res.redirect("/admin/discounts"); });
+  // ========== Discounts ==========//
+  router.get("/discounts", async (req, res) => {
+    const { items, pagination } = await fetchDiscountCodes(req);
 
+    res.render("discounts_index", {
+      title: "Mã giảm giá",
+      pageHeading: "Mã giảm giá",
+      items,
+      pagination: {
+        ...pagination,
+        baseUrl: "/admin/discounts?page=",
+      },
+    });
+  });
+
+  // Tạo mới mã giảm giá từ form Admin
+  router.post("/discounts", async (req, res) => {
+    const r = await fetchCreateDiscountCode(req);
+    const q = new URLSearchParams(r.ok ? { s: r.message } : { e: r.message });
+    res.redirect(`/admin/discounts?${q.toString()}`);
+  });
+
+  // (Tuỳ nhu cầu) Trang edit 1 mã giảm giá, dùng entity_form chung
+  router.get("/discounts/:id", async (req, res) => {
+    try {
+      const item = await fetchGetDiscountCode(req, req.params.id);
+      res.render("entity_form", {
+        title: "Sửa mã giảm giá",
+        pageHeading: "Sửa mã giảm giá",
+        item,
+        fields: ["code", "discount_value", "usage_limit", "usage_count", "is_active"],
+        actionBase: "/admin/discounts",
+      });
+    } catch (err) {
+      console.error("GET discount by id failed:", err.message);
+      res.status(404).send("Không tìm thấy mã giảm giá");
+    }
+  });
+
+  // Update từ form /admin/discounts/:id
+  router.post("/discounts/:id", async (req, res) => {
+    const r = await fetchUpdateDiscountCode(req, req.params.id);
+    const q = new URLSearchParams(r.ok ? { s: r.message } : { e: r.message });
+    res.redirect(`/admin/discounts?${q.toString()}`);
+  });
+
+  // Xoá mã giảm giá
+  router.post("/discounts/:id/delete", async (req, res) => {
+    const r = await fetchDeleteDiscountCode(req, req.params.id);
+    const q = new URLSearchParams(r.ok ? { s: r.message } : { e: r.message });
+    res.redirect(`/admin/discounts?${q.toString()}`);
+  });
   // ========== Users ==========
   router.get("/users", (req, res) => { const p = paginate(USERS, 1, 20); res.render("users_index", { title: "Người dùng", pageHeading: "Người dùng", items: p.items }); });
   router.post("/users/:id/delete", (req, res) => { USERS = USERS.filter(x => x._id !== req.params.id); res.redirect("/admin/users"); });

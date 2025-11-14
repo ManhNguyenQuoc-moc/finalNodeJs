@@ -40,6 +40,7 @@
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
   <script src="https://unpkg.com/recharts/umd/Recharts.min.js"></script>
 </head>
+
 <body class="bg-white text-slate-800 antialiased">
   <div class="min-h-screen flex" x-data="{ open:false }">
     <!-- Sidebar -->
@@ -51,14 +52,10 @@
           <!-- Main -->
           <main class="p-6 max-w-[1400px] w-full mx-auto">
             <% if (flash && flash.success) { %>
-              <div class="mb-4 rounded-xl bg-brand-50 border border-brand-200 text-brand-700 px-4 py-3">
-                <%= flash.success %>
-              </div>
+
               <% } %>
                 <% if (flash && flash.error) { %>
-                  <div class="mb-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 px-4 py-3">
-                    <%= flash.error %>
-                  </div>
+
                   <% } %>
                     <%- body %>
           </main>
@@ -66,7 +63,6 @@
           <footer class="mt-auto border-t bg-white/90 backdrop-blur">
             <div class="max-w-[1400px] mx-auto px-6 py-4 text-sm text-slate-500 flex items-center justify-between">
               <span>© <%= new Date().getFullYear() %> Admin Console</span>
-              <span class="hidden md:inline">EJS • Tailwind • Recharts • Alpine</span>
             </div>
           </footer>
       </div>

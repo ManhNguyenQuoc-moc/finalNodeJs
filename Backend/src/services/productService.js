@@ -35,7 +35,16 @@ async function createProduct(dto) {
     // Check slug unique
     const existing = await productRepo.findOne({ slug: dto.slug });
     if (existing) throw new Error("Product already exists with this slug");
-
+    if (Array.isArray(dto.variants) && dto.variants.length) {
+      const combos = new Set();
+      for (const v of dto.variants) {
+        const key = `${String(v.color)}__${String(v.size)}`;
+        if (combos.has(key)) {
+          throw new Error(`Duplicate variant color/size combination: color=${v.color}, size=${v.size}`);
+        }
+        combos.add(key);
+      }
+    }
     // Map DTO → Product entity
     const productEntity = AddProductRequestMapper.toProductEntity(dto, uploadedProductImages);
 
@@ -431,14 +440,18 @@ async function updateProduct(productId, dto) {
     let slug = product.slug;
     let short_description = product.short_description;
     let long_description = product.long_description;
-
+    let statusName = product.productStatus?.statusName || "New";
     if (dto.name) name = dto.name;
     if (dto.slug) {
       slug = await productRepo.normalizeAndEnsureUniqueSlug(dto.slug, productId, { session });
     }
     if (dto.short_description) short_description = dto.short_description;
     if (dto.long_description) long_description = dto.long_description;
-
+    if (dto.statusName) {
+      statusName = dto.statusName;
+    } else if (dto.productStatus && dto.productStatus.statusName) {
+      statusName = dto.productStatus.statusName;
+    }
     // 5) ẢNH — upload mới trước, nhưng KHÔNG xóa cũ ngay (đánh dấu để xoá post-commit)
     const productImagesToDelete = Array.isArray(dto.imagesToDelete) ? dto.imagesToDelete : [];
 
@@ -485,6 +498,7 @@ async function updateProduct(productId, dto) {
       brand: brandId,
       category: categoryId,
       images: nextProductImages,
+      productStatus: { statusName },
     };
 
     const updatedProduct = await productRepo.updateProduct(productId, productPayload, session);
