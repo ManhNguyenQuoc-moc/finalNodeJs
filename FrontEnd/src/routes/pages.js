@@ -174,33 +174,77 @@ module.exports = function createPagesRouter({ BACKEND, proxy }) {
     // PRODUCT DETAIL (giữ nguyên logic build allImages/productSizes/variantMatrix)
     router.get("/product_detail/:id", async (req, res) => {
         try {
-            const r = await fetch(`${BACKEND}/api/page/product/${req.params.id}`, { headers: { "Content-Type": "application/json" }, redirect: "manual" });
+            const r = await fetch(`${BACKEND}/api/page/product/${req.params.id}`, {
+                headers: { "Content-Type": "application/json" },
+                redirect: "manual"
+            });
             if (r.status === 404) return res.status(404).send("Sản phẩm không tồn tại");
-            const ct = r.headers.get("content-type") || ""; const text = await r.text();
-            if (!r.ok || !ct.includes("application/json")) return res.status(500).send("Lỗi dữ liệu sản phẩm");
+            const ct = r.headers.get("content-type") || "";
+            const text = await r.text();
+            console.log("Product detail fetch response:", text);
+            if (!r.ok || !ct.includes("application/json"))
+                return res.status(500).send("Lỗi dữ liệu sản phẩm");
+
             const data = JSON.parse(text);
-            const product = data?.product || {}; const variants = Array.isArray(data?.variants) ? data.variants : [];
+
+            const product = data?.product || {};
+            const variants = Array.isArray(data?.variants) ? data.variants : [];
+            console.log("Product variants loaded:", data);
             const imgs = [];
-            if (Array.isArray(product.images)) for (const im of product.images) imgs.push(typeof im === "string" ? im : im?.url);
-            for (const v of variants) if (Array.isArray(v?.images)) for (const im of v.images) imgs.push(typeof im === "string" ? im : im?.url);
+            if (Array.isArray(product.images))
+                for (const im of product.images)
+                    imgs.push(typeof im === "string" ? im : im?.url);
+            for (const v of variants)
+                if (Array.isArray(v?.images))
+                    for (const im of v.images)
+                        imgs.push(typeof im === "string" ? im : im?.url);
+
             const uniq = Array.from(new Set(imgs.filter(Boolean)));
             const allImages = (uniq.length ? uniq : ["/images/default.png"]);
             while (allImages.length > 0 && allImages.length < 3) allImages.push(allImages[0]);
             const thumbImages = allImages.slice(0, Math.min(6, allImages.length));
-            const seen = new Set(); const productSizes = [];
+
+            const seen = new Set();
+            const productSizes = [];
             for (const v of variants) {
-                const id = String(v?.size?._id || ""); if (!id || seen.has(id)) continue;
-                seen.add(id); productSizes.push({
-                    size_id: id, name: v?.size?.size_name || "Size", sku: v?.sku || "DEFAULT",
-                    price: typeof v?.price === "number" ? v.price : (product.display_price || product.price), stock: v?.stock_quantity ?? null
+                const id = String(v?.size?._id || "");
+                if (!id || seen.has(id)) continue;
+                seen.add(id);
+                productSizes.push({
+                    size_id: id,
+                    name: v?.size?.size_name || "Size",
+                    sku: v?.sku || "DEFAULT",
+                    price: typeof v?.price === "number" ? v.price : (product.display_price || product.price),
+                    stock: v?.stock_quantity ?? null
                 });
             }
+
             const variantMatrix = {};
-            for (const v of variants) { const s = v?.size?._id ? String(v.size._id) : ""; const c = v?.color?._id ? String(v.color._id) : ""; if (s && c && v?.sku) variantMatrix[`${s}:${c}`] = v.sku; }
+            for (const v of variants) {
+                const s = v?.size?._id ? String(v.size._id) : "";
+                const c = v?.color?._id ? String(v.color._id) : "";
+                if (s && c && v?.sku) variantMatrix[`${s}:${c}`] = v.sku;
+            }
+
             const related = Array.isArray(data?.products) ? data.products : [];
-            res.render("product_detail", { title: product?.name || "Chi tiết sản phẩm", ...data, products: related, allImages, thumbImages, productSizes, variantMatrix });
-        } catch { return res.status(500).send("Có lỗi khi tải chi tiết sản phẩm"); }
+
+            // truyền thêm variants vào EJS (và giữ nguyên toàn bộ data khác như reviews, loggedInUser...)
+            res.render("product_detail", {
+                ...data,                         // reviews, likerId, loggedInUser, v.v...
+                title: product?.name || "Chi tiết sản phẩm",
+                product,
+                variants,
+                products: related,
+                allImages,
+                thumbImages,
+                productSizes,
+                variantMatrix,
+            });
+        } catch {
+            return res.status(500).send("Có lỗi khi tải chi tiết sản phẩm");
+        }
     });
+
 
     // CART pages
     router.get("/cart", async (req, res) => {
@@ -405,22 +449,94 @@ module.exports = function createPagesRouter({ BACKEND, proxy }) {
     });
     router.get("/logout", async (req, res) => {
         try {
-            const resp = await fetch(`${BACKEND}/logout`, { headers: { cookie: req.headers.cookie || "" }, redirect: "manual" });
+            const resp = await fetch(`${BACKEND}/api/auth/logout`, {
+                method: "POST",    // nên dùng POST logout
+                headers: {
+                    cookie: req.headers.cookie || ""
+                }
+            });
+            console.log(resp);
             const setCookie = getSetCookie(resp);
-            if (setCookie?.length) res.set("set-cookie", setCookie);
-        } catch { }
+            if (setCookie?.length) {
+                res.setHeader("set-cookie", setCookie);
+            }
+        } catch (e) {
+            console.error("Logout FE error", e);
+        }
+
+        // FE tự redirect
         return res.redirect("/login");
     });
-
     // CART actions
     router.post("/add-to-cart", async (req, res) => {
+        const isAjax =
+            req.xhr ||
+            req.headers["x-requested-with"] === "XMLHttpRequest" ||
+            (req.headers.accept || "").includes("application/json");
+
         try {
-            const form = new URLSearchParams(); for (const [k, v] of Object.entries(req.body || {})) form.append(k, v);
-            const resp = await fetch(`${BACKEND}/add-to-cart`, { method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded", cookie: req.headers.cookie || "" }, body: form, redirect: "manual" });
-            const setCookie = getSetCookie(resp); if (setCookie?.length) res.set("set-cookie", setCookie);
-            const back = req.get("referer") || "/"; return res.redirect(withQuery(back, { added: 1, add_error: null }));
-        } catch { const back = req.get("referer") || "/"; return res.redirect(withQuery(back, { add_error: 1 })); }
+            // Gửi form qua backend như cũ
+            const form = new URLSearchParams();
+            for (const [k, v] of Object.entries(req.body || {})) {
+                form.append(k, v);
+            }
+
+            const resp = await fetch(`${BACKEND}/add-to-cart`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/x-www-form-urlencoded",
+                    cookie: req.headers.cookie || "",
+                },
+                body: form,
+                redirect: "manual",
+            });
+            console.log("Add-to-cart response status:", resp.status, resp.statusText);
+            const setCookie = getSetCookie(resp);
+            if (setCookie?.length) res.set("set-cookie", setCookie);
+
+            // Nếu không phải AJAX => giữ nguyên hành vi redirect như trước
+            if (!isAjax) {
+                const back = req.get("referer") || "/";
+                return res.redirect(withQuery(back, { added: 1, add_error: null }));
+            }
+
+            // ==== AJAX: trả JSON cho FE ====
+            // Lấy lại mini cart để biết cartCount, total, ...
+            let miniJson = null;
+            try {
+                miniJson = await fetchJSONAuth(req, `${BACKEND}/api/page/minicart`);
+            } catch {
+                miniJson = null;
+            }
+
+            // miniJson.ok là theo chuẩn /api/page/minicart của bạn
+            if (miniJson && miniJson.ok) {
+                return res.json({
+                    ok: true,
+                    cartCount: miniJson.cartCount || 0,
+                    total: miniJson.total || 0,
+                    formattedTotal: miniJson.formattedTotal || "0 đ",
+                    carts: miniJson.carts || [],
+                });
+            }
+
+            // fallback nếu không lấy được minicart
+            return res.json({ ok: true });
+        } catch (err) {
+            console.error("Add-to-cart error:", err);
+
+            if (isAjax) {
+                return res.status(500).json({
+                    ok: false,
+                    message: "Không thể thêm vào giỏ hàng, vui lòng thử lại.",
+                });
+            }
+
+            const back = req.get("referer") || "/";
+            return res.redirect(withQuery(back, { add_error: 1 }));
+        }
     });
+
     router.post("/cart/update/:idx", async (req, res) => {
         const idx = req.params.idx;
         try {

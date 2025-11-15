@@ -7,9 +7,9 @@ const cartItemSchema = new mongoose.Schema({
   price_at_time:{ type: Number, required: true, min: 0 },
   quantity:     { type: Number, required: true, min: 1 },
 
-  color_name_snapshot: { type: String, default: null, trim: true },  // ✅
-  size_name_snapshot:  { type: String, default: null, trim: true },  // ✅
-  img_snapshot:        { type: String, default: null, trim: true },  // ✅
+  color_name_snapshot: { type: String, default: null, trim: true }, 
+  size_name_snapshot:  { type: String, default: null, trim: true },  
+  img_snapshot:        { type: String, default: null, trim: true }, 
 
   color_id_snapshot:   { type: mongoose.Schema.Types.ObjectId, ref: 'ProductColor', default: null },
   size_id_snapshot:    { type: mongoose.Schema.Types.ObjectId, ref: 'ProductSize',  default: null },

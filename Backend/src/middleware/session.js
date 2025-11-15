@@ -12,16 +12,16 @@ function ensureSession(req, res, next) {
   next();
 }
 
-async function loadUser(req, _res, next) {
-  req.currentUser = null;
-  const uid = req.cookies.uid;
-  if (uid) {
-    try {
-      const u = await User.findById(uid).lean();
-      if (u) req.currentUser = u;
-    } catch {}
-  }
-  next();
-}
+// async function loadUser(req, _res, next) {
+//   req.currentUser = null;
+//   const uid = req.cookies.uid;
+//   if (uid) {
+//     try {
+//       const u = await User.findById(uid).lean();
+//       if (u) req.currentUser = u;
+//     } catch {}
+//   }
+//   next();
+// }
 
-module.exports = { ensureSession, loadUser };
+module.exports = { ensureSession };
