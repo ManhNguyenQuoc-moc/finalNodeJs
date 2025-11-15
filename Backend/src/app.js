@@ -2,6 +2,7 @@ require("dotenv").config();
 const express = require("express");
 const passport = require("passport");
 const cookieParser = require("cookie-parser");
+const { ensureSession } = require("./middleware/session.js");
 require("./config/passport");
 require("express-async-errors");
 const cors = require("cors");
@@ -17,11 +18,13 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
+app.use(ensureSession);
+app.use(currentUser);  // tạo sid nếu chưa có   // load currentUser vào req nếu có uid
 app.use(passport.initialize());
 app.use(cors());
 app.use(helmet());
 app.use(morgan("dev"));
-app.use(currentUser);
+
 app.use("/api", routes);
 app.use(errorMiddleware);
 

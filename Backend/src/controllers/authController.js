@@ -56,11 +56,32 @@ class authController {
 
   async logout(req, res) {
     try {
-      const { userId } = req.body; // hoặc lấy từ req.user nếu có middleware
-      const result = await authService.logout(userId);
-      res.json(result);
+      const userId = req.currentUser?._id || req.cookies?.uid;
+
+      if (userId) {
+        await authService.logout(userId);  // xoá refresh_token trong DB
+      }
+
+      // Xoá hết cookie dùng để auth
+      res.clearCookie("uid", {
+        httpOnly: true,
+        sameSite: "lax",
+        // secure: process.env.NODE_ENV === "production",
+      });
+      res.clearCookie("sid", { path: "/", httpOnly: true, sameSite: "lax" }); // nếu muốn reset session
+      res.clearCookie("access_token");
+      res.clearCookie("refresh_token");
+      req.currentUser = null;
+      res.locals.user = null;
+      res.locals.loggedInUser = null;
+
+      res.set("Cache-Control", "no-store, no-cache, must-revalidate, private");
+      res.set("Pragma", "no-cache");
+      res.set("Expires", "0");
+
+      return res.json({ ok: true, message: "Logged out" });
     } catch (err) {
-      res.status(400).json({ message: err.message });
+      return res.status(500).json({ ok: false, message: "Logout failed" });
     }
   }
 

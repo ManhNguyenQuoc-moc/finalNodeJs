@@ -1,16 +1,51 @@
 const { getOrCreateCart, addItemToCart, findVariant } = require("../services/cart.service");
-const { Order, DiscountCode, Cart } = require("../models"); 
+const { Order, DiscountCode, Cart } = require("../models");
 
 exports.addToCartForm = async (req, res) => {
   try {
+    console.log("===== ADD TO CART - BODY =====");
+    console.log(req.body);
+
     const { variant_sku, product_id, size_id, color_id, quantity } = req.body || {};
+
+    console.log("===== FIND VARIANT INPUT =====");
+    console.log({ variant_sku, product_id, size_id, color_id });
+
     const variant = await findVariant({ variant_sku, product_id, size_id, color_id });
+
+    console.log("===== FOUND VARIANT =====");
+    console.log(variant);
+
     if (!variant) throw new Error("Variant not found");
+
     const cart = await getOrCreateCart(req);
+
+    console.log("===== USING CART =====");
+    console.log(cart);
+
     await addItemToCart({ cart, variant, qty: quantity });
-    return res.status(200).json({ ok: true });
+
+    const cartCount = cart.items.reduce((sum, it) => sum + Number(it.quantity || 0), 0);
+    const total = cart.items.reduce(
+      (sum, it) => sum + Number(it.quantity || 0) * Number(it.price_at_time || 0),
+      0
+    );
+
+    return res.status(200).json({
+      ok: true,
+      cartCount,
+      total,
+      formattedTotal: new Intl.NumberFormat("vi-VN").format(total) + " ₫",
+    });
+
   } catch (e) {
-    return res.status(400).json({ ok: false, message: e.message || "Add to cart failed" });
+    console.log("===== ADD TO CART ERROR =====");
+    console.log(e);
+
+    return res.status(400).json({
+      ok: false,
+      message: e.message || "Add to cart failed"
+    });
   }
 };
 
@@ -19,11 +54,24 @@ exports.addToCartJson = async (req, res) => {
     const { variant_sku, product_id, size_id, color_id, quantity } = req.body || {};
     const variant = await findVariant({ variant_sku, product_id, size_id, color_id });
     if (!variant) throw new Error("Variant not found");
+
     const cart = await getOrCreateCart(req);
     await addItemToCart({ cart, variant, qty: quantity });
-    return res.status(200).json({ ok: true });
+
+    const cartCount = cart.items.reduce((sum, it) => sum + Number(it.quantity || 0), 0);
+    const total = cart.items.reduce(
+      (sum, it) => sum + Number(it.quantity || 0) * Number(it.price_at_time || 0),
+      0
+    );
+
+    return res.status(200).json({
+      ok: true,
+      cartCount,
+      total,
+      formattedTotal: new Intl.NumberFormat("vi-VN").format(total) + " ₫",
+    });
   } catch (e) {
-    return res.status(400).json({ ok: false, message: e.message });
+    return res.status(400).json({ ok: false, message: e.message || "Add to cart failed" });
   }
 };
 

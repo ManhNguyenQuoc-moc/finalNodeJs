@@ -14,7 +14,7 @@ exports.minicart = async (req, res) => {
   const user = req.currentUser;
   const where = user ? { user_id: user._id } : { session_id: req.cookies.sid };
   const cart = await require("../models").Cart.findOne(where).lean().catch(() => null);
-  
+
   const items = cart?.items || [];
   const cartCount = items.reduce((s, it) => s + (it.quantity || 0), 0);
   const total = items.reduce((s, it) => s + (it.price_at_time * it.quantity), 0);
@@ -97,17 +97,24 @@ exports.search = async (req, res) => {
 
 exports.productDetail = async (req, res) => {
   const { Product } = require("../models");
-  const p = await Product.findById(req.params.id).populate("brand category").lean();
+
+  const p = await Product.findById(req.params.id)
+    .populate("brand category")
+    .lean();
+
   if (!p) return res.status(404).json({ ok: false, message: "Not found" });
 
   const variants = await ProductVariant.find({ product: p._id })
     .populate("color size")
     .lean();
 
+  // ========= LẤY HÌNH ẢNH =========
   const imgs = [];
   for (const v of variants) {
     if (Array.isArray(v.images)) {
-      for (const im of v.images) imgs.push(typeof im === "string" ? im : (im?.url || null));
+      for (const im of v.images) {
+        imgs.push(typeof im === "string" ? im : (im?.url || null));
+      }
     }
   }
   const allImagesRaw = Array.from(new Set(imgs.filter(Boolean)));
@@ -115,6 +122,7 @@ exports.productDetail = async (req, res) => {
   while (allImages.length > 0 && allImages.length < 3) allImages.push(allImages[0]);
   const thumbImages = allImages.slice(0, Math.min(6, allImages.length));
 
+  // ========= SIZE MAP =========
   const sizeMap = new Map();
   for (const v of variants) {
     const s = v.size;
@@ -132,6 +140,7 @@ exports.productDetail = async (req, res) => {
   }
   const productSizes = Array.from(sizeMap.values());
 
+  // ========= COLOR MAP =========
   const colorMap = new Map();
   for (const v of variants) {
     const c = v.color;
@@ -144,19 +153,45 @@ exports.productDetail = async (req, res) => {
         imageUrls: [],
       });
     }
-    const urls = (v.images || []).map(im => (typeof im === "string" ? im : (im?.url || null))).filter(Boolean);
+    const urls = (v.images || [])
+      .map(im => (typeof im === "string" ? im : (im?.url || null)))
+      .filter(Boolean);
     colorMap.get(key).imageUrls.push(...urls);
   }
+
   const productColors = Array.from(colorMap.values()).map(c => ({
     ...c,
     imageUrls: Array.from(new Set(c.imageUrls)),
   }));
 
+  // ========= TÍNH price_min / price_max / stock_total =========
+  const prices = variants
+    .map(v => Number(v.price))
+    .filter(n => Number.isFinite(n) && n >= 0);
+
+  let price_min = null;
+  let price_max = null;
+
+  if (prices.length) {
+    price_min = Math.min(...prices);
+    price_max = Math.max(...prices);
+  }
+
+  const stock_total = variants.reduce(
+    (sum, v) => sum + Number(v.stock_quantity || 0),
+    0
+  );
+
+  // ========= GỘP THÀNH OBJECT product HOÀN CHỈNH =========
   const product = {
     ...p,
-    colors: (productColors.length ? productColors : [{ color_id: null, color_code: "", imageUrls: allImages }]),
+    colors: (productColors.length
+      ? productColors
+      : [{ color_id: null, color_code: "", imageUrls: allImages }]),
+    price_min,
+    price_max,
+    stock_total,
   };
-
 
   return res.json({
     ok: true,
@@ -170,6 +205,7 @@ exports.productDetail = async (req, res) => {
     colors: product.colors,
   });
 };
+
 
 // --- ACCOUNT PAGES JSON ---
 exports.accountProfile = async (req, res) => {

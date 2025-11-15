@@ -16,75 +16,73 @@ async function getOrCreateCart(req) {
   }
 }
 
-/** Gộp item nếu trùng: TÊN + MÀU + SIZE (ưu tiên so sánh theo id) */
 async function addItemToCart({ cart, variant, qty }) {
   const product = await Product.findById(variant.product).lean();
   const color = variant.color ? await ProductColor.findById(variant.color).lean() : null;
-  const size  = variant.size  ? await ProductSize.findById(variant.size).lean()   : null;
-
+  const size = variant.size ? await ProductSize.findById(variant.size).lean() : null;
   const quantityToAdd = Math.max(1, Number(qty || 1));
-
   const name_snapshot = product?.name || "Sản phẩm";
-  const size_name_snapshot  = size?.size_name || null;
+  const size_name_snapshot = size?.size_name || null;
   const color_name_snapshot = color?.color_name || null;
-
   const newItem = {
     product_id: variant.product,
     variant_sku: variant.sku,
     name_snapshot,
     price_at_time: Number(variant.price || 0),
     quantity: quantityToAdd,
+
     color_name_snapshot,
     size_name_snapshot,
     img_snapshot:
       (Array.isArray(variant.images) && (variant.images[0]?.url || variant.images[0])) ||
       (Array.isArray(product?.images) && (product.images[0]?.url || product.images[0])) ||
       null,
+
     color_id_snapshot: color?._id || null,
     size_id_snapshot: size?._id || null,
   };
-
-  const keyOf = (it) => [
-    String(it.product_id || ""),
-    String(it.color_id_snapshot || ""),
-    String(it.size_id_snapshot || ""),
-    (it.name_snapshot || "").trim().toLowerCase(),
-    (it.color_name_snapshot || "").trim().toLowerCase(),
-    (it.size_name_snapshot || "").trim().toLowerCase(),
-  ].join("|");
-
+  const keyOf = (it) => String(it.variant_sku || "").toLowerCase();
   const newKey = keyOf(newItem);
   const idx = (cart.items || []).findIndex((it) => keyOf(it) === newKey);
-
   if (idx > -1) {
+    // Nếu đã có cùng SKU trong cart thì cộng dồn số lượng
     cart.items[idx].quantity = Number(cart.items[idx].quantity || 0) + quantityToAdd;
   } else {
+    // Chưa có thì push item mới
     cart.items.push(newItem);
   }
-
   await cart.save();
   return idx > -1 ? cart.items[idx] : newItem;
 }
 
 /** Tìm variant ưu tiên theo sku; sau đó theo (product+size+color); fallback rẻ nhất */
 async function findVariant({ variant_sku, product_id, size_id, color_id }) {
+  console.log("FIND VARIANT CALLED WITH:", { variant_sku, product_id, size_id, color_id });
+
   if (variant_sku) {
-    const v = await ProductVariant.findOne({ sku: variant_sku }).lean();
-    if (v) return v;
+    const bySku = await ProductVariant.findOne({ sku: variant_sku }).lean();
+    console.log("FIND BY SKU RESULT:", bySku);
+    if (bySku) return bySku;
   }
-  if (!product_id) return null;
+
+  if (!product_id) {
+    console.log("NO PRODUCT_ID, RETURNING NULL");
+    return null;
+  }
 
   const q = { product: product_id };
-  if (size_id)  q.size  = size_id;
+  if (size_id) q.size = size_id;
   if (color_id) q.color = color_id;
 
+  console.log("FIND BY PRODUCT+SIZE+COLOR QUERY:", q);
   let v = await ProductVariant.findOne(q).lean();
-  if (v) return v;
+  console.log("RESULT PRODUCT+SIZE+COLOR:", v);
 
-  if (size_id && !color_id)  v = await ProductVariant.findOne({ product: product_id, size: size_id }).lean();
-  if (!v && color_id && !size_id) v = await ProductVariant.findOne({ product: product_id, color: color_id }).lean();
+  if (!v) {
+    v = await ProductVariant.findOne({ product: product_id }).sort({ price: 1 }).lean();
+    console.log("RESULT PRODUCT ONLY:", v);
+  }
 
-  if (!v) v = await ProductVariant.findOne({ product: product_id }).sort({ price: 1 }).lean();
   return v;
 }
 
