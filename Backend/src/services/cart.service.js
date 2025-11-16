@@ -54,7 +54,24 @@ async function addItemToCart({ cart, variant, qty }) {
   await cart.save();
   return idx > -1 ? cart.items[idx] : newItem;
 }
+async function mergeCartItems(targetCart, sourceCart) {
+  const keyOf = (it) => String(it.variant_sku || "").toLowerCase();
 
+  for (const item of sourceCart.items || []) {
+    const idx = (targetCart.items || []).findIndex(
+      (it) => keyOf(it) === keyOf(item)
+    );
+
+    if (idx > -1) {
+      // cùng SKU -> cộng dồn số lượng
+      targetCart.items[idx].quantity =
+        Number(targetCart.items[idx].quantity || 0) +
+        Number(item.quantity || 0);
+    } else {
+      targetCart.items.push(item);
+    }
+  }
+}
 /** Tìm variant ưu tiên theo sku; sau đó theo (product+size+color); fallback rẻ nhất */
 async function findVariant({ variant_sku, product_id, size_id, color_id }) {
   console.log("FIND VARIANT CALLED WITH:", { variant_sku, product_id, size_id, color_id });
@@ -86,4 +103,4 @@ async function findVariant({ variant_sku, product_id, size_id, color_id }) {
   return v;
 }
 
-module.exports = { getOrCreateCart, addItemToCart, findVariant };
+module.exports = { getOrCreateCart, addItemToCart, findVariant , mergeCartItems};

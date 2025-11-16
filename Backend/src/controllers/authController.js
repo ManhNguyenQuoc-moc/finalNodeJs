@@ -1,5 +1,25 @@
 const authService = require("../services/authService");
+const { mergeCartItems } = require("../services/cart.service");
+const { Cart } = require("../models");
+async function attachGuestCartToUser(req, userId) {
+  const sid = req.cookies.sid;
+  if (!sid) return; // không có sid thì không có cart guest
 
+  const guestCart = await Cart.findOne({ session_id: sid });
+  if (!guestCart) return;
+
+  let userCart = await Cart.findOne({ user_id: userId });
+
+  if (!userCart) {
+    guestCart.user_id = userId;
+    guestCart.session_id = null;
+    await guestCart.save();
+  } else {
+    mergeCartItems(userCart, guestCart);
+    await userCart.save();
+    await guestCart.deleteOne(); // xoá cart guest
+  }
+}
 class authController {
   async register(req, res) {
     try {
@@ -35,12 +55,13 @@ class authController {
     try {
       const { email, password } = req.body;
       const result = await authService.login(email, password);
-      res.cookie('uid', result.user.id, { httpOnly: true, sameSite: 'lax' });
-      res.json(result);
+      const userId = result.user.id || result.user._id;
+      await attachGuestCartToUser(req, userId);
+      res.cookie("uid", userId, { httpOnly: true, sameSite: "lax" });
+      return res.json(result);
     } catch (err) {
-      res.status(400).json({ message: err.message });
       const code = /Invalid email or password/i.test(err.message) ? 401 : 400;
-      res.status(code).json({ message: err.message });
+      return res.status(code).json({ message: err.message });
     }
   }
 
@@ -68,7 +89,6 @@ class authController {
         sameSite: "lax",
         // secure: process.env.NODE_ENV === "production",
       });
-      res.clearCookie("sid", { path: "/", httpOnly: true, sameSite: "lax" }); // nếu muốn reset session
       res.clearCookie("access_token");
       res.clearCookie("refresh_token");
       req.currentUser = null;

@@ -36,6 +36,7 @@ exports.addToCartForm = async (req, res) => {
       cartCount,
       total,
       formattedTotal: new Intl.NumberFormat("vi-VN").format(total) + " ₫",
+      carts: cart.items,
     });
 
   } catch (e) {
@@ -69,6 +70,7 @@ exports.addToCartJson = async (req, res) => {
       cartCount,
       total,
       formattedTotal: new Intl.NumberFormat("vi-VN").format(total) + " ₫",
+      carts: cart.items, 
     });
   } catch (e) {
     return res.status(400).json({ ok: false, message: e.message || "Add to cart failed" });
