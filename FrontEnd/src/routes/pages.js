@@ -475,7 +475,6 @@ module.exports = function createPagesRouter({ BACKEND, proxy }) {
             (req.headers.accept || "").includes("application/json");
 
         try {
-            // Gửi form qua backend như cũ
             const form = new URLSearchParams();
             for (const [k, v] of Object.entries(req.body || {})) {
                 form.append(k, v);
@@ -490,38 +489,25 @@ module.exports = function createPagesRouter({ BACKEND, proxy }) {
                 body: form,
                 redirect: "manual",
             });
-            console.log("Add-to-cart response status:", resp.status, resp.statusText);
+
             const setCookie = getSetCookie(resp);
             if (setCookie?.length) res.set("set-cookie", setCookie);
 
-            // Nếu không phải AJAX => giữ nguyên hành vi redirect như trước
+            // ✅ KHÔNG phải ajax -> redirect như cũ
             if (!isAjax) {
                 const back = req.get("referer") || "/";
                 return res.redirect(withQuery(back, { added: 1, add_error: null }));
             }
 
-            // ==== AJAX: trả JSON cho FE ====
-            // Lấy lại mini cart để biết cartCount, total, ...
-            let miniJson = null;
-            try {
-                miniJson = await fetchJSONAuth(req, `${BACKEND}/api/page/minicart`);
-            } catch {
-                miniJson = null;
+            // ✅ AJAX: forward luôn JSON backend trả về
+            let data = null;
+            try { data = await resp.json(); } catch { data = null; }
+
+            if (data) {
+                return res.status(resp.status).json(data);
             }
 
-            // miniJson.ok là theo chuẩn /api/page/minicart của bạn
-            if (miniJson && miniJson.ok) {
-                return res.json({
-                    ok: true,
-                    cartCount: miniJson.cartCount || 0,
-                    total: miniJson.total || 0,
-                    formattedTotal: miniJson.formattedTotal || "0 đ",
-                    carts: miniJson.carts || [],
-                });
-            }
-
-            // fallback nếu không lấy được minicart
-            return res.json({ ok: true });
+            return res.status(500).json({ ok: false, message: "Invalid backend response" });
         } catch (err) {
             console.error("Add-to-cart error:", err);
 
