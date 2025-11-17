@@ -565,6 +565,150 @@
         <!-- ... PHẦN TABS & RATING & Q&A Y NGUYÊN ... -->
 
       </section>
+            <!-- ========== ĐÁNH GIÁ & BÌNH LUẬN ========== -->
+      <section id="section-reviews" class="container pdp-section mt-4 mb-4">
+        <% 
+          const __ratingAvg = Number((rating && rating.average) || product.avg_rating || 0);
+          const __ratingCount = Number((rating && rating.count) || product.rating_count || 0);
+          const __ratingRounded = Math.round(__ratingAvg || 0);
+        %>
+
+        <div class="qa-card mb-4">
+          <div class="qa-hero">
+            <div class="qa-hero__img d-none d-md-block">
+              <img src="/mixishop/images/qa-hero.svg" alt="Q&A">
+            </div>
+            <div class="flex-grow-1">
+              <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+                <div>
+                  <div class="qa-title">Đánh giá & bình luận</div>
+                  <div class="qa-desc">
+                    Hãy chia sẻ cảm nhận của bạn về sản phẩm để mọi người cùng tham khảo nhé.
+                  </div>
+                </div>
+                <div class="text-end">
+                  <div class="rating-large mb-1">
+                    <% for(let i = 1; i <= 5; i++) { %>
+                      <i class="star <%= i <= __ratingRounded ? 'filled' : '' %>">★</i>
+                    <% } %>
+                  </div>
+                  <div class="fw-bold" style="font-size: 18px;">
+                    <span id="ratingAverage"><%= __ratingAvg.toFixed(1) %></span>/5
+                  </div>
+                  <div class="small text-muted">
+                    <span id="ratingCount"><%= __ratingCount %></span> lượt đánh giá
+                  </div>
+                </div>
+              </div>
+
+              <!-- Ô nhập nhanh bình luận -->
+              <form id="reviewForm" class="mt-3">
+                <% if (!loggedInUser) { %>
+                  <div class="row g-2 mb-2">
+                    <div class="col-md-4">
+                      <input type="text" class="form-control" name="guest_name"
+                             placeholder="Tên hiển thị *" required>
+                    </div>
+                    <div class="col-md-4">
+                      <input type="email" class="form-control" name="guest_email"
+                             placeholder="Email (tuỳ chọn)">
+                    </div>
+                    <div class="col-md-4 d-flex align-items-center small text-muted">
+                      <i class="me-1 bi bi-info-circle"></i>
+                      Không cần đăng nhập để bình luận.
+                    </div>
+                  </div>
+                <% } else { %>
+                  <div class="mb-2 small text-muted">
+                    Đang đăng nhập: <strong><%= (user && user.full_name) || 'Tài khoản của bạn' %></strong>
+                  </div>
+                <% } %>
+
+                <div class="mb-2">
+                  <textarea class="form-control" name="comment" id="reviewComment"
+                            placeholder="Viết cảm nhận của bạn về sản phẩm..."
+                            required></textarea>
+                </div>
+
+                <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+                  <div class="rating-box d-flex align-items-center">
+                    <span class="me-2 small text-muted">Đánh giá sao:</span>
+
+                    <div id="ratingStars">
+                      <% for (let i = 1; i <= 5; i++) { %>
+                        <i class="rate-star" data-value="<%= i %>">★</i>
+                      <% } %>
+                    </div>
+
+                    <% if (!loggedInUser) { %>
+                      <span class="small text-muted ms-2">
+                        (Bạn cần đăng nhập để đánh giá sao)
+                      </span>
+                    <% } %>
+
+                    <input type="hidden" id="reviewRating" name="rating" value="">
+                  </div>
+
+                  <button type="submit" class="btn-ask">
+                    Gửi đánh giá
+                  </button>
+                </div>
+
+                <div id="reviewMessage" class="small mt-2"></div>
+              </form>
+            </div>
+          </div>
+        </div>
+
+        <!-- DANH SÁCH BÌNH LUẬN -->
+        <div class="card p-3">
+          <div class="section-title mb-3">Bình luận sản phẩm</div>
+
+          <div id="reviewsList">
+            <% if (!reviews || !reviews.length) { %>
+              <div class="text-muted small">
+                Chưa có bình luận nào. Hãy là người đầu tiên đánh giá sản phẩm này!
+              </div>
+            <% } else { %>
+              <% reviews.forEach(function(r){ 
+                  const displayName = (r.user && r.user.full_name) || r.guest_name || 'Ẩn danh';
+                  const createdLabel = r.createdAt ? new Date(r.createdAt).toLocaleString('vi-VN') : '';
+                  const rRating = Number(r.rating || 0);
+                  const rRounded = Math.round(rRating || 0);
+              %>
+                <div class="comment-item cmt-item border-bottom pb-3 mb-3" data-id="<%= r._id %>">
+                  <div class="d-flex">
+                    <div class="me-3">
+                      <div class="avatar rounded-circle d-flex align-items-center justify-content-center"
+                           style="width:40px;height:40px;background:#e5e7eb;font-weight:600;">
+                        <%= (displayName || 'Ẩn danh').charAt(0).toUpperCase() %>
+                      </div>
+                    </div>
+                    <div class="flex-grow-1">
+                      <div class="d-flex align-items-center justify-content-between mb-1">
+                        <div>
+                          <div class="fw-semibold"><%= displayName %></div>
+                          <div class="chat-meta"><%= createdLabel %></div>
+                        </div>
+                        <% if (rRating) { %>
+                          <div class="rating-small">
+                            <% for (let i = 1; i <= 5; i++) { %>
+                              <i class="star <%= i <= rRounded ? 'filled' : '' %>">★</i>
+                            <% } %>
+                          </div>
+                        <% } %>
+                      </div>
+                      <div class="chat-bubble">
+                        <%= r.comment %>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              <% }) %>
+            <% } %>
+          </div>
+        </div>
+      </section>
 
       <!-- ================= RELATED ================= -->
       <section id="section-related" class="products-carousel container" style="margin-top:10px;">
@@ -1101,6 +1245,256 @@
     });
   })();
 </script>
+<script>
+  (function () {
+    const socket      = GLOBAL_SOCKET || null;
+    const productId   = '<%= product._id %>';
+    const isLoggedIn  = <%= loggedInUser ? 'true' : 'false' %>;
+    const apiUrl      = '/api/product/<%= product._id %>/reviews';
+
+    const reviewListEl   = document.getElementById('reviewsList');
+    const ratingAvgEl    = document.getElementById('ratingAverage');
+    const ratingCountEl  = document.getElementById('ratingCount');
+    const ratingMessage  = document.getElementById('reviewMessage');
+
+    // vẽ lại sao trung bình
+    function repaintAverageStars(avg) {
+      const container = document.querySelector('.rating-large');
+      if (!container) return;
+      const rounded = Math.round(avg || 0);
+      container.innerHTML = '';
+      for (let i = 1; i <= 5; i++) {
+        const iEl = document.createElement('i');
+        iEl.className = 'star' + (i <= rounded ? ' filled' : '');
+        iEl.textContent = '★';
+        container.appendChild(iEl);
+      }
+    }
+
+    // render 1 item review -> HTML string
+    function buildReviewHtml(r) {
+      const displayName = (r.user && r.user.full_name) || r.guest_name || 'Ẩn danh';
+      const createdLabel = r.createdAt ? new Date(r.createdAt).toLocaleString('vi-VN') : '';
+      const rRating = Number(r.rating || 0);
+      const rRounded = Math.round(rRating || 0);
+
+      const safeName = AppUtils.escapeHtml(displayName);
+      const safeComment = AppUtils.escapeHtml(r.comment || '');
+
+      let starsHtml = '';
+      if (rRating) {
+        for (let i = 1; i <= 5; i++) {
+          starsHtml += `<i class="star ${i <= rRounded ? 'filled' : ''}">★</i>`;
+        }
+      }
+
+      return `
+        <div class="comment-item cmt-item border-bottom pb-3 mb-3" data-id="${r._id || ''}">
+          <div class="d-flex">
+            <div class="me-3">
+              <div class="avatar rounded-circle d-flex align-items-center justify-content-center"
+                   style="width:40px;height:40px;background:#e5e7eb;font-weight:600;">
+                ${safeName.charAt(0).toUpperCase()}
+              </div>
+            </div>
+            <div class="flex-grow-1">
+              <div class="d-flex align-items-center justify-content-between mb-1">
+                <div>
+                  <div class="fw-semibold">${safeName}</div>
+                  <div class="chat-meta">${AppUtils.escapeHtml(createdLabel)}</div>
+                </div>
+                ${rRating ? `<div class="rating-small">${starsHtml}</div>` : ''}
+              </div>
+              <div class="chat-bubble">
+                ${safeComment}
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function prependReview(r) {
+      if (!reviewListEl || !r) return;
+      const html = buildReviewHtml(r);
+      // nếu danh sách đang là "chưa có bình luận" thì clear
+      if (reviewListEl.children.length === 1 &&
+          reviewListEl.textContent.includes('Chưa có bình luận')) {
+        reviewListEl.innerHTML = '';
+      }
+      const tmp = document.createElement('div');
+      tmp.innerHTML = html.trim();
+      const node = tmp.firstChild;
+      reviewListEl.insertBefore(node, reviewListEl.firstChild);
+    }
+
+    // ===== RATING UI (chọn sao) =====
+    function initRatingStars() {
+      const stars = AppUtils.qsa('#ratingStars .rate-star');
+      if (!stars.length) return;
+
+      if (!isLoggedIn) {
+        // guest click sao -> báo đăng nhập
+        stars.forEach(st => {
+          st.addEventListener('click', (e) => {
+            e.preventDefault();
+            alert('Bạn cần đăng nhập để đánh giá sao.');
+          });
+        });
+        return;
+      }
+
+      const hiddenInput = document.getElementById('reviewRating');
+      let current = 0;
+
+      function paint(v) {
+        stars.forEach((st, idx) => {
+          st.classList.toggle('filled', idx < v);
+        });
+      }
+
+      stars.forEach(st => {
+        const val = Number(st.dataset.value || 0);
+
+        st.addEventListener('mouseenter', () => {
+          paint(val);
+        });
+        st.addEventListener('mouseleave', () => {
+          paint(current);
+        });
+        st.addEventListener('click', (e) => {
+          e.preventDefault();
+          current = val;
+          if (hiddenInput) hiddenInput.value = String(val);
+          paint(current);
+        });
+      });
+    }
+
+    // ===== SUBMIT FORM REVIEW =====
+    function initReviewForm() {
+      const form = document.getElementById('reviewForm');
+      if (!form) return;
+
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        if (ratingMessage) {
+          ratingMessage.textContent = '';
+          ratingMessage.style.color = '';
+        }
+
+        const formData = new FormData(form);
+        const payload = {
+          comment: (formData.get('comment') || '').toString().trim()
+        };
+
+        if (!payload.comment) {
+          if (ratingMessage) {
+            ratingMessage.textContent = 'Vui lòng nhập nội dung bình luận.';
+            ratingMessage.style.color = '#dc2626';
+          }
+          return;
+        }
+
+        if (!isLoggedIn) {
+          payload.guest_name  = (formData.get('guest_name')  || '').toString().trim();
+          payload.guest_email = (formData.get('guest_email') || '').toString().trim();
+          if (!payload.guest_name) {
+            if (ratingMessage) {
+              ratingMessage.textContent = 'Vui lòng nhập tên hiển thị.';
+              ratingMessage.style.color = '#dc2626';
+            }
+            return;
+          }
+        } else {
+          const ratingVal = Number(formData.get('rating') || 0);
+          if (ratingVal) {
+            payload.rating = ratingVal;
+          }
+        }
+
+        try {
+          const res = await fetch(apiUrl, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+              // Nếu bạn dùng JWT thì thêm:
+              // 'Authorization': 'Bearer ' + (localStorage.getItem('token') || '')
+            },
+            body: JSON.stringify(payload)
+          });
+
+          const data = await res.json().catch(() => null);
+
+          if (!res.ok || !data || !data.ok) {
+            const msg = (data && data.message) || 'Gửi đánh giá thất bại, vui lòng thử lại.';
+            if (ratingMessage) {
+              ratingMessage.textContent = msg;
+              ratingMessage.style.color = '#dc2626';
+            }
+            return;
+          }
+
+          // Thêm review mới (nếu socket đã emit thì vẫn OK, nhưng ta thêm luôn để chắc)
+          if (data.review) {
+            prependReview(data.review);
+          }
+
+          // Cập nhật lại số sao trung bình + count
+          if (data.rating) {
+            const avg  = Number(data.rating.average || 0);
+            const cnt  = Number(data.rating.count || 0);
+            if (ratingAvgEl)   ratingAvgEl.textContent   = avg.toFixed(1);
+            if (ratingCountEl) ratingCountEl.textContent = cnt;
+            repaintAverageStars(avg);
+          }
+
+          form.reset();
+          const hiddenRating = document.getElementById('reviewRating');
+          if (hiddenRating) hiddenRating.value = '';
+          const stars = AppUtils.qsa('#ratingStars .rate-star');
+          stars.forEach(st => st.classList.remove('filled'));
+
+          if (ratingMessage) {
+            ratingMessage.textContent = 'Gửi đánh giá thành công!';
+            ratingMessage.style.color = '#16a34a';
+          }
+
+        } catch (err) {
+          console.error('Submit review error:', err);
+          if (ratingMessage) {
+            ratingMessage.textContent = 'Có lỗi kết nối, vui lòng thử lại.';
+            ratingMessage.style.color = '#dc2626';
+          }
+        }
+      });
+    }
+
+    // ===== SOCKET.IO: join room & lắng nghe review mới =====
+    function initSocketReviews() {
+      if (!socket || !productId) return;
+      try {
+        // backend: socket.join(`product:${productId}`)
+        socket.emit('join-product-room', productId);
+
+        socket.on('review:new', (review) => {
+          if (!review || !review._id) return;
+          prependReview(review);
+          // nếu backend gửi kèm rating mới thì ở đây có thể update thêm
+        });
+      } catch (e) {
+        console.error('Socket review error:', e);
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      initRatingStars();
+      initReviewForm();
+      initSocketReviews();
+    });
+  })();
+</script>
+
 </body>
 
 </html>

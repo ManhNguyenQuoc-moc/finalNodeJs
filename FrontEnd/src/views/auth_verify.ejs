@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+  <meta charset="UTF-8" />
+  <title>
+    <%= title %> | E-Shop
+  </title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f5f5f5;
+    }
+
+    .wrapper {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .card {
+      background: #fff;
+      max-width: 480px;
+      width: 100%;
+      padding: 32px 28px;
+      border-radius: 10px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06);
+      text-align: center;
+    }
+
+    .logo {
+      margin-bottom: 10px;
+    }
+
+    .logo img {
+      max-height: 60px;
+    }
+
+    h1 {
+      font-size: 22px;
+      margin: 12px 0 8px;
+      color: #222;
+    }
+
+    p {
+      font-size: 14px;
+      color: #666;
+      margin: 4px 0;
+    }
+
+    .status-icon {
+      font-size: 40px;
+      margin-bottom: 10px;
+    }
+
+    .status-icon.success {
+      color: #28a745;
+    }
+
+    .status-icon.error {
+      color: #dc3545;
+    }
+
+    .btn {
+      display: inline-block;
+      margin-top: 20px;
+      padding: 10px 22px;
+      border-radius: 999px;
+      border: none;
+      outline: none;
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      background: #000;
+      color: #fff;
+    }
+
+    .btn-outline {
+      background: #fff;
+      color: #333;
+      border: 1px solid #ccc;
+      margin-left: 8px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="wrapper">
+    <div class="card">
+      <div class="logo">
+        <img src="/images/logo.png" alt="E-Shop" onerror="this.style.display='none'" />
+      </div>
+
+      <% if (success) { %>
+        <div class="status-icon success">✔</div>
+        <h1>Tài khoản đã được xác thực</h1>
+        <% if (full_name) { %>
+          <p>Xin chào <b>
+              <%= full_name %>
+            </b>,</p>
+          <% } %>
+            <p>Email của bạn đã được xác thực thành công.</p>
+            <p>Bây giờ bạn có thể đăng nhập để sử dụng tài khoản E-Shop.</p>
+
+            <a href="<%= loginUrl %>" class="btn">Đăng nhập ngay</a>
+            <% } else { %>
+              <div class="status-icon error">✖</div>
+              <h1>Xác thực thất bại</h1>
+              <p>
+                <%= message %>
+              </p>
+              <p>Nếu link đã hết hạn, hãy thử đăng ký lại hoặc yêu cầu gửi lại email xác thực.</p>
+
+              <a href="<%= registerUrl %>" class="btn">Đăng ký lại</a>
+              <a href="<%= loginUrl %>" class="btn btn-outline">Về trang đăng nhập</a>
+              <% } %>
+    </div>
+  </div>
+</body>
+
+</html>

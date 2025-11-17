@@ -467,6 +467,128 @@ module.exports = function createPagesRouter({ BACKEND, proxy }) {
         // FE tự redirect
         return res.redirect("/login");
     });
+    // ====== VERIFY ACCOUNT + SET PASSWORD PAGE ======
+    router.get("/verify-account", async (req, res) => {
+        const loginUrl = "/login";
+        const registerUrl = "/register";
+
+        const params = new URLSearchParams(req.query).toString();
+
+        let success = false;
+        let message = "Link xác thực không hợp lệ hoặc đã hết hạn.";
+        let full_name = "";
+        let userId = null;
+
+        try {
+            // gọi BE verify
+            const data = await fetchJSONPublic(`${BACKEND}/api/auth/verify?${params}`);
+
+            success = true;
+            message = data.message || "Email đã được xác thực. Vui lòng tạo mật khẩu.";
+            full_name = data.full_name || "";
+            userId = data.userId;   // BE verifyEmail đang trả userId như bạn chụp
+        } catch (err) {
+            console.error("Verify-account FE error:", err.message || err);
+            success = false;
+        }
+
+        return res.render("auth_set_password", {
+            title: "Xác thực tài khoản",
+            success,
+            message,
+            full_name,
+            userId,
+            loginUrl,
+            registerUrl,
+            formError: null,
+            done: false,
+        });
+    });
+    router.post("/set-password", async (req, res) => {
+        const { userId, password, confirm_password } = req.body;
+        console.log("SET-PASSWORD BODY:", req.body);
+        const loginUrl = "/login";
+        const registerUrl = "/register";
+
+        // validate đơn giản
+        if (!userId || !password || !confirm_password) {
+            return res.render("auth_set_password", {
+                title: "Xác thực tài khoản",
+                success: true,
+                message: "Vui lòng nhập đầy đủ thông tin.",
+                full_name: "",
+                userId,
+                loginUrl,
+                registerUrl,
+                formError: "Vui lòng nhập đầy đủ mật khẩu.",
+                done: false,
+            });
+        }
+
+        if (password !== confirm_password) {
+            return res.render("auth_set_password", {
+                title: "Xác thực tài khoản",
+                success: true,
+                message: "Mật khẩu không khớp.",
+                full_name: "",
+                userId,
+                loginUrl,
+                registerUrl,
+                formError: "Mật khẩu và xác nhận mật khẩu phải giống nhau.",
+                done: false,
+            });
+        }
+
+        try {
+            const resp = await fetch(`${BACKEND}/api/auth/set-password`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ userId, password }),
+            });
+
+            const data = await resp.json().catch(() => null);
+
+            if (!resp.ok) {
+                return res.render("auth_set_password", {
+                    title: "Xác thực tài khoản",
+                    success: true,
+                    message: (data && data.message) || "Không thể đặt mật khẩu.",
+                    full_name: "",
+                    userId,
+                    loginUrl,
+                    registerUrl,
+                    formError: (data && data.message) || "Đặt mật khẩu thất bại.",
+                    done: false,
+                });
+            }
+
+            // Đặt mật khẩu OK -> show trạng thái hoàn tất + nút Đăng nhập
+            return res.render("auth_set_password", {
+                title: "Hoàn tất đăng ký",
+                success: true,
+                message: (data && data.message) || "Mật khẩu đã được thiết lập thành công.",
+                full_name: data && data.full_name ? data.full_name : "",
+                userId: null,
+                loginUrl,
+                registerUrl,
+                formError: null,
+                done: true,
+            });
+        } catch (err) {
+            console.error("Set-password FE error:", err);
+            return res.render("auth_set_password", {
+                title: "Xác thực tài khoản",
+                success: true,
+                message: "Có lỗi xảy ra khi đặt mật khẩu.",
+                full_name: "",
+                userId,
+                loginUrl,
+                registerUrl,
+                formError: "Vui lòng thử lại sau.",
+                done: false,
+            });
+        }
+    });
     // CART actions
     router.post("/add-to-cart", async (req, res) => {
         const isAjax =

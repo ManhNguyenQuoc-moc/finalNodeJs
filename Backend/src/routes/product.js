@@ -4,11 +4,16 @@ const { upload } = require("../config/multer");
 const productController = require("../controllers/productController");
 const colorController = require("../controllers/colorController");
 const sizeController = require("../controllers/sizeController");
-
+const { requireAuthOptional } = require("../middleware/authMiddleware");
+const reviewController = require("../controllers/reviewController");
 // ===== Product (tạo / danh sách) =====
 router.post("/", upload.any(), productController.createProduct);
 router.get("/", productController.getAllProducts);
-
+router.post(
+  "/:id/reviews",
+  requireAuthOptional,
+  reviewController.createReview
+);
 // ===== Color (đặt TRƯỚC /:id) =====
 router.get("/color", colorController.getAll);
 router.get("/color/:id", colorController.getById);
