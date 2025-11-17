@@ -4,7 +4,7 @@ const { generateToken } = require("../utils/token");
 const userRepository = require("../repositories/userRepository");
 const { verifyToken } = require("../utils/token");
 const sendEmail = require("../utils/email");
-
+const verifyEmailTemplate = require("../utils/verifyEmailTemplate");
 class authService {
   async register(email, full_name, address_line) {
     const existingUser = await userRepository.findByEmail(email);
@@ -23,13 +23,14 @@ class authService {
       verification_expires: new Date(Date.now() + 10 * 60 * 1000), // 10 phút
     });
 
-    const verifyLink = `http://localhost:5000/api/auth/verify?token=${verificationToken}&address=${encodeURIComponent(
+    const verifyLink = `http://localhost:3000/verify-account?token=${verificationToken}&address=${encodeURIComponent(
       address_line
     )}`;
+    const htmlContent = verifyEmailTemplate({ full_name, verifyLink });
     await sendEmail(
       email,
       "E-Shop - Verify Your Email",
-      `Xin chào ${full_name},\n\nVui lòng nhấn vào link sau để xác thực email và kích hoạt tài khoản:\n${verifyLink}\n\nLink này có hiệu lực trong 15 phút.`
+      htmlContent
     );
 
     return {

@@ -1,6 +1,6 @@
 // src/controllers/page.controller.js
 const { money } = require("../utils/format");
-const { Brand, Category, Product, ProductVariant } = require("../models");
+const { Brand, Category, Product, ProductVariant, Review } = require("../models");
 const { normalizeProductsColors } = require("../services/productService");
 
 exports.health = (_req, res) => res.send("API is running...");
@@ -181,7 +181,21 @@ exports.productDetail = async (req, res) => {
     (sum, v) => sum + Number(v.stock_quantity || 0),
     0
   );
+  // ========= LẤY REVIEW VÀ TÍNH rating_avg / rating_count =========
 
+  const reviews = await Review.find({ product: p._id })
+    .sort({ createdAt: -1 })
+    .populate("user", "full_name email") // chỉ lấy vài field
+    .lean();
+
+  const ratingNumbers = reviews
+    .map(r => Number(r.rating))
+    .filter(n => Number.isFinite(n));
+
+  const ratingCount = ratingNumbers.length;
+  const ratingAvg = ratingCount
+    ? ratingNumbers.reduce((a, b) => a + b, 0) / ratingCount
+    : 0;
   // ========= GỘP THÀNH OBJECT product HOÀN CHỈNH =========
   const product = {
     ...p,
@@ -195,17 +209,25 @@ exports.productDetail = async (req, res) => {
 
   return res.json({
     ok: true,
-    product,
+    product: {
+      ...p,
+      price_min,
+      price_max,
+      stock_total,
+      colors: productColors, // nếu bạn muốn trả ra
+    },
     variants,
     allImages,
     thumbImages,
     productSizes,
-    reviews: [],
+    reviews,
+    rating: {
+      average: ratingAvg,
+      count: ratingCount,
+    },
     products: [],
-    colors: product.colors,
   });
 };
-
 
 // --- ACCOUNT PAGES JSON ---
 exports.accountProfile = async (req, res) => {

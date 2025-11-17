@@ -522,7 +522,12 @@ module.exports = function createAdminRouter({ BACKEND, proxy } = {}) {
   function baseUrl(req) {
     const q = new URLSearchParams(req.query);
     q.delete("page");
-    return req.path + (q.toString() ? `?${q.toString()}&page=` : "?page=");
+
+    const prefix = req.baseUrl || "";  // '/admin'
+    const path = req.path || "";     // '/products'
+    const url = prefix + path;      // '/admin/products'
+
+    return url + (q.toString() ? `?${q.toString()}&page=` : "?page=");
   }
 
   // ========== Dashboard ==========
