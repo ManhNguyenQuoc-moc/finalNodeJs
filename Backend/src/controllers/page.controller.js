@@ -185,7 +185,8 @@ exports.productDetail = async (req, res) => {
 
   const reviews = await Review.find({ product: p._id })
     .sort({ createdAt: -1 })
-    .populate("user", "full_name email") // chỉ lấy vài field
+    .populate("user", "full_name email")
+    .select("comment rating user guest_name guest_email sentiment sentiment_score ai_label createdAt")
     .lean();
 
   const ratingNumbers = reviews
@@ -195,6 +196,45 @@ exports.productDetail = async (req, res) => {
   const ratingCount = ratingNumbers.length;
   const ratingAvg = ratingCount
     ? ratingNumbers.reduce((a, b) => a + b, 0) / ratingCount
+    : 0;
+
+  // ========= TÍNH SENTIMENT STATS =========
+  // dùng aggregate để gom theo sentiment + tính avg sentiment_score
+  const mongoose = require("mongoose");
+  const pid = new mongoose.Types.ObjectId(p._id);
+
+  const sentimentAgg = await Review.aggregate([
+    { $match: { product: pid } },
+    {
+      $group: {
+        _id: { $ifNull: ["$sentiment", null] },
+        count: { $sum: 1 },
+      }
+    }
+  ]);
+
+  const sentimentScoreAgg = await Review.aggregate([
+    { $match: { product: pid } },
+    {
+      $group: {
+        _id: null,
+        avgScore: { $avg: "$sentiment_score" },
+      }
+    }
+  ]);
+
+  const sentimentStats = { positive: 0, neutral: 0, negative: 0, null: 0 };
+  for (const s of sentimentAgg) {
+    const key = s._id || "null";
+    if (sentimentStats[key] !== undefined) {
+      sentimentStats[key] = s.count;
+    } else {
+      sentimentStats[key] = s.count;
+    }
+  }
+
+  const sentimentScoreAvg = sentimentScoreAgg.length
+    ? sentimentScoreAgg[0].avgScore || 0
     : 0;
   // ========= GỘP THÀNH OBJECT product HOÀN CHỈNH =========
   const product = {
@@ -224,6 +264,8 @@ exports.productDetail = async (req, res) => {
     rating: {
       average: ratingAvg,
       count: ratingCount,
+      sentiment: sentimentStats,
+      sentimentScoreAvg: sentimentScoreAvg,
     },
     products: [],
   });

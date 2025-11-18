@@ -32,5 +32,23 @@ class UserRepository {
   async deleteById(id) {
     return await User.findByIdAndDelete(id);
   }
+
+  // ================== DÙNG CHO DASHBOARD ==================
+
+  // Tổng số user
+  async getTotalUsers() {
+    return await User.countDocuments({});
+  }
+
+  // Số user mới trong khoảng thời gian (dùng cho Simple Dashboard)
+  async getNewUsersInRange(startDate, endDate) {
+    return await User.countDocuments({
+      createdAt: {
+        $gte: new Date(startDate),
+        $lte: new Date(endDate)
+      }
+    });
+  }
 }
+
 module.exports = new UserRepository();
