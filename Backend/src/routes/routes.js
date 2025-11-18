@@ -13,10 +13,14 @@ const brandRouter = require("./brand");//import
 router.use("/brand", brandRouter);
 const discountCodeRouter = require("./discountCodeRouter");
 router.use("/discount-code", discountCodeRouter);
+const adminDashboard = require("./adminDashboard");
+router.use("/admin-dashboard", adminDashboard);
+const aiRouter = require("./aiRouter");
+router.use("/ai", aiRouter);
 // const pageRouter = require("./page.routes");
 // router.use("/", pageRouter);
-// const authRouter = require("./auth");//import
-// router.use("/auth", authRouter);
+const authRouter = require("./auth");//import
+router.use("/auth", authRouter);
 // const userRouter = require("./user");//import
 // router.use("/user", userRouter);
 module.exports = router;//export

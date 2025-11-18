@@ -271,6 +271,97 @@ class ProductRepository {
       cover,
     };
   }
+  async _mapProductsWithVariantStats(products) {
+    if (!products || !products.length) return [];
+
+    const productIds = products.map((p) => p._id);
+    const variants = await ProductVariant.find(
+      { product: { $in: productIds } },
+      { sku: 1, price: 1, stock_quantity: 1, images: 1, product: 1 }
+    ).lean();
+
+    const byProduct = new Map();
+    for (const v of variants) {
+      const key = String(v.product);
+      if (!byProduct.has(key)) byProduct.set(key, []);
+      byProduct.get(key).push(v);
+    }
+
+    return products.map((p) => {
+      const key = String(p._id);
+      const pv = byProduct.get(key) || [];
+
+      // cover image
+      let cover = null;
+      for (const v of pv) {
+        const primary = (v.images || []).find((img) => img.is_primary);
+        if (primary) {
+          cover = primary.url;
+          break;
+        }
+      }
+      if (!cover && pv[0]?.images?.[0]?.url) {
+        cover = pv[0].images[0].url;
+      }
+
+      const prices = pv.map((v) => v.price || 0);
+      const stocks = pv.map((v) => v.stock_quantity || 0);
+
+      const price_min = prices.length ? Math.min(...prices) : 0;
+      const price_max = prices.length ? Math.max(...prices) : 0;
+      const stock_total = stocks.reduce((s, x) => s + x, 0);
+
+      return {
+        productId: String(p._id),
+        name: p.name,
+        slug: p.slug,
+        brandName: p.brand?.name || undefined,
+        categoryName: p.category?.name || undefined,
+        short_description: p.short_description,
+        price_min,
+        price_max,
+        stock_total,
+        cover,
+      };
+    });
+  }
+  async findForAISuggestion(limit = 50) {
+    const products = await Product.find({})
+      .populate("brand category")
+      .sort({ createdAt: -1 })
+      .limit(limit)
+      .lean();
+
+    return this._mapProductsWithVariantStats(products);
+  }
+  async searchByKeywords(keywords = []) {
+    if (!keywords.length) return [];
+
+    // escape regex special chars
+    const escapeRegex = (str) =>
+      str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+    const regexes = keywords
+      .filter((kw) => kw && kw.trim())
+      .map((kw) => new RegExp(escapeRegex(kw.trim()), "i"));
+
+    if (!regexes.length) return [];
+
+    const products = await Product.find({
+      $or: [
+        { name: { $in: regexes } },
+        { short_description: { $in: regexes } },
+        { long_description: { $in: regexes } },
+        { slug: { $in: regexes } },
+      ],
+    })
+      .populate("brand category")
+      .sort({ createdAt: -1 })
+      .limit(50)
+      .lean();
+
+    return this._mapProductsWithVariantStats(products);
+  }
 }
 
 module.exports = new ProductRepository();
