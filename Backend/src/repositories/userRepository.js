@@ -22,10 +22,28 @@ class UserRepository {
   async findById(id) {
     return await User.findById(id).select("-password_hash");
   }
+  // ====== THÊM MỚI: dùng cho auth (cần password_hash) ======
 
+  async findByIdWithPassword(id) {
+    return await User.findById(id); // không select, giữ nguyên password_hash
+  }
+
+  async findByValidResetToken(token) {
+    return await User.findOne({
+      reset_password_token: token,
+      reset_password_expires: { $gt: new Date() },
+    });
+  }
   // Update user
   async updateById(id, updateData) {
     return await User.findByIdAndUpdate(id, updateData, { new: true });
+  }
+  async setBanStatus(id, isBanned) {
+    return await User.findByIdAndUpdate(
+      id,
+      { is_banned: isBanned },
+      { new: true }
+    ).select("-password_hash");
   }
 
   // Xóa user

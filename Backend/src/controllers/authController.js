@@ -126,6 +126,46 @@ class authController {
       res.status(400).json({ message: err.message });
     }
   }
+  async forgotPassword(req, res) {
+    try {
+      const { email } = req.body;
+      const result = await authService.generateResetPasswordToken(email);
+      res.json(result);
+    } catch (err) {
+      res.status(400).json({ message: err.message });
+    }
+  }
+  async resetPassword(req, res) {
+    try {
+      const { token, newPassword } = req.body;
+      const result = await authService.resetPassword(token, newPassword);
+      res.json(result);
+    } catch (err) {
+      res.status(400).json({ message: err.message });
+    }
+  }
+  async changePassword(req, res) {
+    try {
+      // Ưu tiên currentUser nếu sau này bạn có middleware set, fallback sang cookie uid
+      const userId = req.currentUser?._id || req.cookies?.uid;
+
+      if (!userId) {
+        return res.status(401).json({ message: "Bạn chưa đăng nhập" });
+      }
+
+      const { oldPassword, newPassword } = req.body;
+
+      if (!oldPassword || !newPassword) {
+        return res.status(400).json({ message: "Vui lòng nhập đầy đủ mật khẩu" });
+      }
+
+      const result = await authService.changePassword(userId, oldPassword, newPassword);
+
+      return res.json(result);
+    } catch (err) {
+      return res.status(400).json({ message: err.message });
+    }
+  }
 }
 
 module.exports = new authController();
