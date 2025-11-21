@@ -5,6 +5,8 @@ const userRepository = require("../repositories/userRepository");
 const { verifyToken } = require("../utils/token");
 const sendEmail = require("../utils/email");
 const verifyEmailTemplate = require("../utils/verifyEmailTemplate");
+const resetPasswordTemplate = require("../utils/resetPasswordTemplate");
+const crypto = require("crypto");
 class authService {
   async register(email, full_name, address_line) {
     const existingUser = await userRepository.findByEmail(email);
@@ -192,6 +194,61 @@ class authService {
         full_name: user.full_name,
       },
     };
+  }
+  async changePassword(userId, oldPassword, newPassword) {
+    // cần password_hash nên dùng hàm mới trong repo
+    const user = await userRepository.findByIdWithPassword(userId);
+    if (!user) throw new Error("User not found");
+
+    const isMatch = await comparePassword(oldPassword, user.password_hash || "");
+    if (!isMatch) throw new Error("Mật khẩu cũ không đúng");
+
+    const newHash = await hashPassword(newPassword);
+
+    await userRepository.updateById(userId, {
+      password_hash: newHash,
+    });
+
+    return { message: "Đổi mật khẩu thành công" };
+  }
+  async generateResetPasswordToken(email) {
+    const user = await userRepository.findByEmail(email);
+    if (!user) throw new Error("Email không tồn tại");
+
+    const token = crypto.randomBytes(32).toString("hex");
+    const expires = new Date(Date.now() + 30 * 60 * 1000); // 30 phút
+
+    await userRepository.updateById(user._id, {
+      reset_password_token: token,
+      reset_password_expires: expires,
+    });
+    const resetLink = `http://localhost:3000/reset-password?token=${token}`;
+    const htmlContent = resetPasswordTemplate({
+      full_name: user.full_name || "bạn",
+      resetLink,
+    });
+
+    await sendEmail(
+      user.email,
+      "E-Shop - Reset Your Password",
+      htmlContent
+    );
+    return {
+      message: "Vui lòng kiểm tra email để đặt lại mật khẩu.",
+      token,
+    };
+  }
+  async resetPassword(token, newPassword) {
+    const user = await userRepository.findByValidResetToken(token);
+    if (!user) throw new Error("Token không hợp lệ hoặc đã hết hạn");
+    const newHash = await hashPassword(newPassword);
+    await userRepository.updateById(user._id, {
+      password_hash: newHash,
+      reset_password_token: null,
+      reset_password_expires: null,
+    });
+
+    return { message: "Đặt lại mật khẩu thành công" };
   }
 }
 

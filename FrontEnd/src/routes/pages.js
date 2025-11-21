@@ -279,12 +279,249 @@ module.exports = function createPagesRouter({ BACKEND, proxy }) {
         if (data.loggedInUser) return res.redirect("/my-account");
         res.render("login_register", { title: "Đăng nhập & Đăng ký", error: null, success: null, activeTab: "register", ...data });
     });
+    // ====== FORGOT PASSWORD & RESET PASSWORD ======
+
+    // Quên mật khẩu - form nhập email
+    router.get("/forgot-password", async (req, res) => {
+        const data = await fetchJSONAuth(req, `${BACKEND}/api/page/minicart`).catch(() => ({}));
+        res.render("auth_forgot_password", {
+            title: "Quên mật khẩu",
+            error: null,
+            success: null,
+            email: "",
+            ...data,
+        });
+    });
+
+    // Xử lý submit quên mật khẩu -> gọi BE /api/auth/forgot-password
+    router.post("/forgot-password", async (req, res) => {
+        const { email } = req.body;
+        const dataMini = await fetchJSONAuth(req, `${BACKEND}/api/page/minicart`).catch(() => ({}));
+
+        if (!email) {
+            return res.render("auth_forgot_password", {
+                title: "Quên mật khẩu",
+                error: "Vui lòng nhập email.",
+                success: null,
+                email,
+                ...dataMini,
+            });
+        }
+
+        try {
+            const resp = await fetch(`${BACKEND}/api/auth/forgot-password`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ email }),
+            });
+
+            const data = await resp.json().catch(() => null);
+
+            if (!resp.ok) {
+                return res.render("auth_forgot_password", {
+                    title: "Quên mật khẩu",
+                    error: (data && data.message) || "Không thể gửi email đặt lại mật khẩu.",
+                    success: null,
+                    email,
+                    ...dataMini,
+                });
+            }
+
+            return res.render("auth_forgot_password", {
+                title: "Quên mật khẩu",
+                error: null,
+                success: data && data.message
+                    ? data.message
+                    : "Nếu email tồn tại, chúng tôi đã gửi link đặt lại mật khẩu.",
+                email,
+                ...dataMini,
+            });
+        } catch (err) {
+            console.error("Forgot-password FE error:", err);
+            return res.render("auth_forgot_password", {
+                title: "Quên mật khẩu",
+                error: "Có lỗi xảy ra. Vui lòng thử lại sau.",
+                success: null,
+                email,
+                ...dataMini,
+            });
+        }
+    });
+
+    // Trang reset password (từ link email: /reset-password?token=...)
+    router.get("/reset-password", async (req, res) => {
+        const token = req.query.token || "";
+        if (!token) {
+            return res.status(400).send("Token không hợp lệ.");
+        }
+
+        const dataMini = await fetchJSONAuth(req, `${BACKEND}/api/page/minicart`).catch(() => ({}));
+
+        return res.render("auth_reset_password", {
+            title: "Đặt lại mật khẩu",
+            token,
+            error: null,
+            formError: null,
+            done: false,
+            message: "",
+            ...dataMini,
+        });
+    });
+
+    // Xử lý submit reset password -> gọi BE /api/auth/reset-password
+    router.post("/reset-password", async (req, res) => {
+        const { token, password, confirm_password } = req.body;
+        const dataMini = await fetchJSONAuth(req, `${BACKEND}/api/page/minicart`).catch(() => ({}));
+
+        if (!token) {
+            return res.status(400).send("Token không hợp lệ.");
+        }
+
+        if (!password || !confirm_password) {
+            return res.render("auth_reset_password", {
+                title: "Đặt lại mật khẩu",
+                token,
+                error: null,
+                formError: "Vui lòng nhập đầy đủ mật khẩu.",
+                done: false,
+                message: "",
+                ...dataMini,
+            });
+        }
+
+        if (password !== confirm_password) {
+            return res.render("auth_reset_password", {
+                title: "Đặt lại mật khẩu",
+                token,
+                error: null,
+                formError: "Mật khẩu và xác nhận mật khẩu phải giống nhau.",
+                done: false,
+                message: "",
+                ...dataMini,
+            });
+        }
+
+        try {
+            const resp = await fetch(`${BACKEND}/api/auth/reset-password`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ token, newPassword: password }),
+            });
+
+            const data = await resp.json().catch(() => null);
+
+            if (!resp.ok) {
+                return res.render("auth_reset_password", {
+                    title: "Đặt lại mật khẩu",
+                    token,
+                    error: (data && data.message) || "Không thể đặt lại mật khẩu.",
+                    formError: null,
+                    done: false,
+                    message: "",
+                    ...dataMini,
+                });
+            }
+
+            return res.render("auth_reset_password", {
+                title: "Đặt lại mật khẩu",
+                token: null,
+                error: null,
+                formError: null,
+                done: true,
+                message: data && data.message ? data.message : "Mật khẩu đã được đặt lại thành công.",
+                ...dataMini,
+            });
+        } catch (err) {
+            console.error("Reset-password FE error:", err);
+            return res.render("auth_reset_password", {
+                title: "Đặt lại mật khẩu",
+                token,
+                error: "Có lỗi xảy ra. Vui lòng thử lại sau.",
+                formError: null,
+                done: false,
+                message: "",
+                ...dataMini,
+            });
+        }
+    });
     router.get("/my-account", (_req, res) => res.redirect("/account/profile"));
     router.get("/account/profile", async (req, res) => {
         const data = await fetchJSONAuth(req, `${BACKEND}/api/page/account/profile`).catch(() => null);
         if (!data || data.redirectToLogin) return res.redirect("/login");
         res.render("account_profile", { title: "Tài khoản", activeAccountTab: "profile", ...data });
     });
+    router.post("/account/profile/change-password", async (req, res) => {
+        const { current_password, new_password, confirm_password } = req.body;
+
+        // lấy lại dữ liệu profile để render
+        const profile = await fetchJSONAuth(req, `${BACKEND}/api/page/account/profile`).catch(() => null);
+        if (!profile || profile.redirectToLogin) return res.redirect("/login");
+
+        // validate đơn giản ở FE server
+        if (!current_password || !new_password || !confirm_password) {
+            return res.render("account_profile", {
+                title: "Tài khoản",
+                activeAccountTab: "profile",
+                error: "Vui lòng nhập đầy đủ thông tin mật khẩu.",
+                success: null,
+                ...profile,
+            });
+        }
+
+        if (new_password !== confirm_password) {
+            return res.render("account_profile", {
+                title: "Tài khoản",
+                activeAccountTab: "profile",
+                error: "Mật khẩu mới và xác nhận mật khẩu không khớp.",
+                success: null,
+                ...profile,
+            });
+        }
+
+        try {
+            const resp = await fetch(`${BACKEND}/api/auth/change-password`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    cookie: req.headers.cookie || "",
+                },
+                body: JSON.stringify({
+                    oldPassword: current_password,
+                    newPassword: new_password,
+                }),
+            });
+
+            const data = await resp.json().catch(() => null);
+
+            if (!resp.ok) {
+                return res.render("account_profile", {
+                    title: "Tài khoản",
+                    activeAccountTab: "profile",
+                    error: (data && data.message) || "Đổi mật khẩu thất bại.",
+                    success: null,
+                    ...profile,
+                });
+            }
+
+            return res.render("account_profile", {
+                title: "Tài khoản",
+                activeAccountTab: "profile",
+                error: null,
+                success: data && data.message ? data.message : "Đổi mật khẩu thành công.",
+                ...profile,
+            });
+        } catch (e) {
+            console.error("Change-password FE error:", e);
+            return res.render("account_profile", {
+                title: "Tài khoản",
+                activeAccountTab: "profile",
+                error: "Có lỗi xảy ra, vui lòng thử lại.",
+                success: null,
+                ...profile,
+            });
+        }
+    });
+
     router.get("/account/addresses", async (req, res) => {
         const data = await fetchJSONAuth(req, `${BACKEND}/api/page/account/addresses`).catch(() => null);
         if (!data || data.redirectToLogin) return res.redirect("/login");
