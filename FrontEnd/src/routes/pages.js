@@ -165,6 +165,18 @@ module.exports = function createPagesRouter({ BACKEND, proxy }) {
         }
     });
 
+    router.get("/about", (_req, res) => {
+        res.render("about", { title: "Giới thiệu" });
+    });
+
+    router.get("/blog", (_req, res) => {
+        res.render("blog", { title: "Blog" });
+    });
+
+    router.get("/contact", (_req, res) => {
+        res.render("contact", { title: "Liên hệ" });
+    });
+
     router.get("/search", async (req, res) => {
         const params = new URLSearchParams(req.query).toString();
         const data = await fetchJSONPublic(`${BACKEND}/api/page/search?${params}`).catch(() => ({ ok: true, products: [], q: "" }));
