@@ -1,94 +1,270 @@
 <% layout('layouts/admin') %>
-  <section class="space-y-6">
-    <!-- Header -->
-    <div class="flex items-center justify-between">
-      <h2 class="text-xl font-semibold tracking-tight text-slate-900">Người dùng</h2>
+
+<section class="space-y-6">
+  <!-- Header -->
+  <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+    <div>
+      <h2 class="text-xl font-semibold tracking-tight text-slate-50">Người dùng</h2>
+      <p class="text-sm text-slate-400">
+        Quản lý tài khoản, cập nhật thông tin, khóa/mở khóa người dùng.
+      </p>
     </div>
 
-    <!-- Table Card -->
-    <div class="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
-      <div class="overflow-x-auto">
-        <table class="w-full text-sm">
-          <thead class="sticky top-0 z-10 bg-slate-50/95 backdrop-blur supports-[backdrop-filter]:bg-slate-50/80">
-            <tr class="text-left text-slate-500 uppercase text-[11px]">
-              <th class="p-3">Tên</th>
-              <th class="p-3">Email</th>
-              <th class="p-3">Role</th>
-              <th class="p-3">Verified</th>
-              <th class="p-3 text-right">Điểm</th>
-              <th class="p-3">Ngày tạo</th>
-              <th class="p-3 w-24"></th>
-            </tr>
-          </thead>
+    <!-- Actions: search + add user (optional) -->
+    <div class="flex flex-col gap-2 sm:flex-row sm:items-center">
+      <form action="/admin/users" method="get" class="flex items-center gap-2">
+        <div class="relative">
+          <input
+            type="text"
+            name="q"
+            placeholder="Tìm theo tên, email..."
+            value="<%= typeof q !== 'undefined' ? q : '' %>"
+            class="w-48 sm:w-64 rounded-xl border border-emerald-300/40 bg-slate-900/60 px-3 py-2 text-sm text-slate-50 shadow-sm
+                   placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-emerald-400"
+          />
+          <span class="pointer-events-none absolute inset-y-0 right-2 flex items-center text-slate-400">
+            <i data-lucide="search" class="w-4 h-4"></i>
+          </span>
+        </div>
+        <button
+          type="submit"
+          class="inline-flex items-center gap-1 rounded-xl bg-emerald-500 px-3 py-2 text-xs font-medium text-white shadow-sm
+                 hover:bg-emerald-600 focus:outline-none focus:ring-2 focus:ring-emerald-400/70"
+        >
+          <i data-lucide="filter" class="w-4 h-4"></i>
+          Lọc
+        </button>
+      </form>
 
-          <tbody>
-            <% (items||[]).forEach(u=>{ %>
-              <tr class="border-t odd:bg-white even:bg-slate-50/40 hover:bg-indigo-50/40 transition-colors">
-                <!-- Name -->
-                <td class="p-3 font-medium text-slate-900 whitespace-nowrap max-w-[320px]">
-                  <div class="truncate">
-                    <%= u.full_name || '-' %>
+      <!-- Nếu có chức năng tạo user bằng tay -->
+      <!--
+      <a
+        href="/admin/users/create"
+        class="inline-flex items-center gap-1 rounded-xl bg-emerald-600 px-3 py-2 text-xs font-medium text-white shadow-sm hover:bg-emerald-700"
+      >
+        <i data-lucide="user-plus" class="w-4 h-4"></i>
+        Thêm người dùng
+      </a>
+      -->
+    </div>
+  </div>
+
+  <!-- Table Card -->
+  <div class="rounded-2xl border border-slate-800 bg-slate-950/80 shadow-soft overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead
+          class="sticky top-0 z-10 bg-slate-900/95 backdrop-blur supports-[backdrop-filter]:bg-slate-900/80"
+        >
+          <tr class="text-left text-slate-400 uppercase text-[11px]">
+            <th class="p-3 w-[220px] font-semibold">Tên</th>
+            <th class="p-3 w-[220px] font-semibold">Email</th>
+            <th class="p-3 font-semibold">Role</th>
+            <th class="p-3 font-semibold">Xác thực</th>
+            <th class="p-3 font-semibold">Trạng thái</th>
+            <th class="p-3 text-right font-semibold">Điểm</th>
+            <th class="p-3 whitespace-nowrap font-semibold">Ngày tạo</th>
+            <th class="p-3 w-52 text-right font-semibold">Hành động</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          <% (items || []).forEach(u => { %>
+            <tr
+              class="border-t border-slate-800 odd:bg-slate-950 even:bg-slate-900/60 hover:bg-emerald-950/40 transition-colors"
+            >
+              <!-- Name -->
+              <td class="p-3 font-medium text-slate-50 whitespace-nowrap max-w-[220px]">
+                <div class="flex items-center gap-2">
+                  <div
+                    class="flex h-9 w-9 items-center justify-center rounded-full bg-emerald-500/10 text-[11px] font-semibold text-emerald-300 ring-1 ring-emerald-500/40"
+                  >
+                    <%= (u.full_name || u.email || '?')
+                      .trim()
+                      .split(' ')
+                      .map(p => p[0])
+                      .join('')
+                      .toUpperCase()
+                      .slice(0, 2) %>
                   </div>
-                </td>
-
-                <!-- Email -->
-                <td class="p-3 text-slate-700 whitespace-nowrap">
-                  <div class="truncate">
-                    <%= u.email || '—' %>
+                  <div class="min-w-0">
+                    <div class="truncate">
+                      <%= u.full_name || '—' %>
+                    </div>
+                    <div class="text-[11px] text-slate-500 truncate">
+                      ID: <%= u._id %>
+                    </div>
                   </div>
-                </td>
+                </div>
+              </td>
 
-                <!-- Role -->
-                <td class="p-3">
+              <!-- Email -->
+              <td class="p-3 text-slate-200 whitespace-nowrap max-w-[220px]">
+                <div class="truncate">
+                  <%= u.email || '—' %>
+                </div>
+              </td>
+
+              <!-- Role -->
+              <td class="p-3">
+                <span
+                  class="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2.5 py-0.5 text-[11px] font-medium text-emerald-300 ring-1 ring-emerald-500/50"
+                >
+                  <i data-lucide="shield" class="w-3 h-3"></i>
+                  <%= u.role %>
+                </span>
+              </td>
+
+              <!-- Verified -->
+              <td class="p-3">
+                <% if (u.is_verified) { %>
                   <span
-                    class="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-700 ring-1 ring-slate-200">
-                    <i data-lucide="shield"></i>
-                    <%= u.role %>
+                    class="inline-flex items-center gap-1 rounded-full bg-emerald-500/15 px-2.5 py-0.5 text-[11px] font-medium text-emerald-300 ring-1 ring-emerald-500/50"
+                  >
+                    <i data-lucide="check-circle-2" class="w-3 h-3"></i>
+                    Đã xác thực
                   </span>
-                </td>
-
-                <!-- Verified -->
-                <td class="p-3">
-                  <% if (u.is_verified) { %>
-                    <span
-                      class="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-medium text-emerald-700 ring-1 ring-emerald-200">
-                      <i data-lucide="check-circle-2" class="text-[12px]"></i> Verified
-                    </span>
-                    <% } else { %>
-                      <span
-                        class="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-600 ring-1 ring-slate-200">
-                        <i data-lucide="x" class="text-[12px]"></i> —
-                      </span>
-                      <% } %>
-                </td>
-
-                <!-- Points -->
-                <td class="p-3 text-right tabular-nums">
-                  <%= u.loyalty_points || 0 %>
-                </td>
-
-                <!-- Created at -->
-                <td class="p-3 whitespace-nowrap">
-                  <span class="text-slate-700">
-                    <%= new Date(u.createdAt).toLocaleString('vi-VN') %>
+                <% } else { %>
+                  <span
+                    class="inline-flex items-center gap-1 rounded-full bg-slate-800 px-2.5 py-0.5 text-[11px] font-medium text-slate-300 ring-1 ring-slate-700"
+                  >
+                    <i data-lucide="alert-circle" class="w-3 h-3"></i>
+                    Chưa xác thực
                   </span>
-                </td>
+                <% } %>
+              </td>
 
-                <!-- Actions -->
-                <td class="p-3 text-right">
-                  <form action="/admin/users/<%= u._id %>/delete" method="post" class="inline"
-                    onsubmit="return confirm('Xóa user này?')">
-                    <button type="submit"
-                      class="inline-flex items-center gap-1 rounded-lg bg-rose-600 px-2.5 py-1.5 text-xs font-medium text-white shadow-sm hover:bg-rose-700">
-                      <i data-lucide="trash-2"></i>
-                      <span class="hidden sm:inline">Xóa</span>
+              <!-- Status (banned / active) -->
+              <td class="p-3">
+                <% if (u.is_banned) { %>
+                  <span
+                    class="inline-flex items-center gap-1 rounded-full bg-rose-500/10 px-2.5 py-0.5 text-[11px] font-medium text-rose-300 ring-1 ring-rose-500/60"
+                  >
+                    <i data-lucide="slash" class="w-3 h-3"></i>
+                    Đã khóa
+                  </span>
+                <% } else { %>
+                  <span
+                    class="inline-flex items-center gap-1 rounded-full bg-emerald-500/15 px-2.5 py-0.5 text-[11px] font-medium text-emerald-300 ring-1 ring-emerald-500/60"
+                  >
+                    <i data-lucide="check" class="w-3 h-3"></i>
+                    Đang hoạt động
+                  </span>
+                <% } %>
+              </td>
+
+              <!-- Points -->
+              <td class="p-3 text-right tabular-nums text-slate-50">
+                <%= u.loyalty_points || 0 %>
+              </td>
+
+              <!-- Created at -->
+              <td class="p-3 whitespace-nowrap text-slate-300">
+                <%= new Date(u.createdAt).toLocaleString('vi-VN') %>
+              </td>
+
+              <!-- Actions -->
+              <td class="p-3 text-right">
+                <div class="flex justify-end gap-1">
+                  <!-- View detail -->
+                  <a
+                    href="/admin/users/<%= u._id %>"
+                    class="inline-flex items-center gap-1 rounded-lg border border-slate-700 bg-slate-900 px-2 py-1.5 text-[11px] font-medium text-slate-100 hover:bg-slate-800 hover:border-slate-500"
+                  >
+                    <i data-lucide="eye" class="w-3 h-3"></i>
+                    <span class="hidden lg:inline">Chi tiết</span>
+                  </a>
+
+                  <!-- Edit -->
+                  <a
+                    href="/admin/users/<%= u._id %>/edit"
+                    class="inline-flex items-center gap-1 rounded-lg border border-emerald-500/60 bg-emerald-500/10 px-2 py-1.5 text-[11px] font-medium text-emerald-200 hover:bg-emerald-500/20 hover:border-emerald-400"
+                  >
+                    <i data-lucide="pencil" class="w-3 h-3"></i>
+                    <span class="hidden lg:inline">Sửa</span>
+                  </a>
+
+                  <!-- Ban / Unban -->
+                  <% if (u.is_banned) { %>
+                    <form
+                      action="/admin/users/<%= u._id %>/unban"
+                      method="post"
+                      class="inline"
+                      onsubmit="return confirm('Mở khóa người dùng này?')"
+                    >
+                      <button
+                        type="submit"
+                        class="inline-flex items-center gap-1 rounded-lg bg-emerald-600 px-2.5 py-1.5 text-[11px] font-medium text-white shadow-sm hover:bg-emerald-700"
+                      >
+                        <i data-lucide="unlock" class="w-3 h-3"></i>
+                        <span class="hidden lg:inline">Mở khóa</span>
+                      </button>
+                    </form>
+                  <% } else { %>
+                    <form
+                      action="/admin/users/<%= u._id %>/ban"
+                      method="post"
+                      class="inline"
+                      onsubmit="return confirm('Khóa người dùng này?')"
+                    >
+                      <button
+                        type="submit"
+                        class="inline-flex items-center gap-1 rounded-lg bg-amber-500 px-2.5 py-1.5 text-[11px] font-medium text-slate-950 shadow-sm hover:bg-amber-600"
+                      >
+                        <i data-lucide="ban" class="w-3 h-3"></i>
+                        <span class="hidden lg:inline">Khóa</span>
+                      </button>
+                    </form>
+                  <% } %>
+
+                  <!-- Delete -->
+                  <form
+                    action="/admin/users/<%= u._id %>/delete"
+                    method="post"
+                    class="inline"
+                    onsubmit="return confirm('Xóa vĩnh viễn user này? Hành động không thể hoàn tác.')"
+                  >
+                    <button
+                      type="submit"
+                      class="inline-flex items-center gap-1 rounded-lg bg-rose-600 px-2.5 py-1.5 text-[11px] font-medium text-white shadow-sm hover:bg-rose-700"
+                    >
+                      <i data-lucide="trash-2" class="w-3 h-3"></i>
+                      <span class="hidden lg:inline">Xóa</span>
                     </button>
                   </form>
-                </td>
-              </tr>
-              <% }) %>
-          </tbody>
-        </table>
+                </div>
+              </td>
+            </tr>
+          <% }) %>
+
+          <% if (!items || items.length === 0) { %>
+            <tr>
+              <td colspan="8" class="p-6 text-center text-sm text-slate-400">
+                Không tìm thấy người dùng nào.
+              </td>
+            </tr>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination (nếu có) -->
+    <div class="flex items-center justify-between border-t border-slate-800 bg-slate-900 px-4 py-3 text-xs text-slate-400">
+      <div>Hiển thị 1–20 trong 120 người dùng</div>
+      <div class="flex items-center gap-1">
+        <a
+          href="?page=1"
+          class="px-2 py-1 rounded-lg border border-slate-700 bg-slate-900 hover:bg-slate-800 hover:border-slate-500"
+        >
+          Trước
+        </a>
+        <a
+          href="?page=2"
+          class="px-2 py-1 rounded-lg border border-emerald-500/70 bg-emerald-500/15 text-emerald-200 hover:bg-emerald-500/25 hover:border-emerald-400"
+        >
+          Sau
+        </a>
       </div>
     </div>
-  </section>
+  </div>
+</section>
