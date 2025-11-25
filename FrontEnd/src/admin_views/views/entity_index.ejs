@@ -1,48 +1,116 @@
 <% layout('layouts/admin') %>
+
+<%
+  const isColorPage = activePath && activePath.startsWith('/admin/product-colors');
+  const isSizePage  = activePath && activePath.startsWith('/admin/product-sizes');
+%>
+
 <section class="space-y-6">
   <!-- Header -->
   <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-    <h2 class="text-xl font-semibold tracking-tight text-slate-900"><%= pageHeading %></h2>
+    <h2 class="text-2xl font-semibold tracking-tight text-slate-900">
+      <%= pageHeading %>
+    </h2>
 
-    <a href="<%= '/admin' + activePath.replace(/\/[^/]*$/, '') + '/new' %>"
-       class="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-3.5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-700 active:translate-y-[0.5px]">
-      <i class="lucide lucide-plus"></i>
+    <a
+      href="<%= '/admin' + activePath.replace(/\/[^/]*$/, '') + '/new' %>"
+      class="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white shadow-md hover:bg-emerald-700 active:translate-y-[0.5px] focus:outline-none focus:ring-2 focus:ring-emerald-500/70 focus:ring-offset-2 focus:ring-offset-slate-50 transition"
+    >
+      <i class="lucide lucide-plus text-[18px]"></i>
       <span>Thêm</span>
     </a>
   </div>
 
   <!-- Table Card -->
-  <div class="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+  <div class="rounded-2xl border border-slate-200 bg-white/90 shadow-lg shadow-slate-200/70 overflow-hidden">
+    <!-- Card header (nhẹ nhàng) -->
+    <div class="flex items-center justify-between border-b border-slate-100 bg-slate-50/80 px-4 py-3">
+      <div class="flex items-center gap-2">
+        <span class="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-100 text-emerald-600 text-sm">
+          <i class="lucide lucide-table"></i>
+        </span>
+        <div class="text-sm">
+          <div class="font-semibold text-slate-800">Danh sách</div>
+          <div class="text-xs text-slate-500">
+            <%= (items && items.length) ? (items.length + ' mục') : 'Không có dữ liệu' %>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <div class="overflow-x-auto">
-      <table class="w-full text-sm">
+      <table class="w-full text-[13px] sm:text-[14px]">
         <thead class="sticky top-0 z-10 bg-slate-50/95 backdrop-blur supports-[backdrop-filter]:bg-slate-50/80">
-          <tr class="text-left text-slate-500 uppercase text-[11px]">
-            <% fields.forEach(f=>{ %>
-              <th class="p-3 font-semibold"><%= f %></th>
+          <tr class="text-left text-slate-500 uppercase text-[11px] tracking-wide border-b border-slate-200">
+            <% fields.forEach(f => { %>
+              <% if ((isColorPage || isSizePage) && (f === 'product' || f === 'products')) { return; } %>
+              <th class="p-3.5 font-semibold">
+                <span class="inline-flex items-center gap-1">
+                  <span><%= f %></span>
+                </span>
+              </th>
             <% }) %>
-            <th class="p-3 w-32"></th>
+
+            <% if (isColorPage) { %>
+              <th class="p-3.5 font-semibold">Màu sắc</th>
+            <% } %>
+
+            <th class="p-3.5 w-36 text-right">Thao tác</th>
           </tr>
         </thead>
 
-        <tbody>
+        <tbody class="divide-y divide-slate-100">
           <% (items||[]).forEach(it=>{ %>
-            <tr class="border-t odd:bg-white even:bg-slate-50/40 hover:bg-indigo-50/40 transition-colors">
-              <% fields.forEach(f=>{ %>
-                <td class="p-3 align-middle whitespace-nowrap max-w-[320px]">
-                  <div class="truncate text-slate-700"><%= (it[f]!==undefined && it[f]!==null) ? it[f] : (f==='items.length' && it.items ? it.items.length : '—') %></div>
+            <tr class="odd:bg-white even:bg-slate-50/40 hover:bg-emerald-50/60 transition-colors">
+              <% fields.forEach(f=>{ 
+                   if ((isColorPage || isSizePage) && (f === 'product' || f === 'products')) { return; }
+              %>
+                <td class="p-3.5 align-middle whitespace-nowrap max-w-[320px]">
+                  <div class="truncate text-slate-800 text-[13px] sm:text-[14px]">
+                    <%= (it[f]!==undefined && it[f]!==null)
+                          ? it[f]
+                          : (f==='items.length' && it.items ? it.items.length : '—') %>
+                  </div>
                 </td>
               <% }) %>
-              <td class="p-3 text-right">
-                <div class="inline-flex items-center gap-1">
-                  <a class="inline-flex items-center gap-1 rounded-lg border border-transparent bg-blue-600 px-2.5 py-1.5 text-xs font-medium text-white shadow-sm hover:bg-blue-700"
-                     href="<%= activePath %>/<%= it._id || it.code || it.sku %>">
-                    Sửa
+
+              <% if (isColorPage) { 
+                   const colorValue = it.hex || it.code || it.color_code || it.colorHex || '';
+              %>
+                <td class="p-3.5 align-middle whitespace-nowrap">
+                  <div class="flex items-center gap-2">
+                    <span
+                      class="inline-flex h-6 w-6 rounded-full border border-slate-300 shadow-sm"
+                      style="background-color:<%= colorValue || '#000000' %>;"
+                    ></span>
+                    <span class="text-xs sm:text-[13px] text-slate-600 font-medium">
+                      <%= colorValue || '—' %>
+                    </span>
+                  </div>
+                </td>
+              <% } %>
+
+              <td class="p-3.5 text-right align-middle">
+                <div class="inline-flex items-center gap-1.5">
+                  <a
+                    class="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs sm:text-[13px] font-medium text-slate-700 shadow-sm hover:bg-slate-50 hover:border-slate-300 focus:outline-none focus:ring-1 focus:ring-slate-300"
+                    href="<%= activePath %>/<%= it._id || it.code || it.sku %>"
+                  >
+                    <i class="lucide lucide-pencil-line h-3.5 w-3.5"></i>
+                    <span>Sửa</span>
                   </a>
-                  <form action="<%= activePath %>/<%= it._id || it.code || it.sku %>/delete" method="post" class="inline"
-                        onsubmit="return confirm('Xóa mục này?')">
-                    <button class="inline-flex items-center gap-1 rounded-lg border border-transparent bg-rose-600 px-2.5 py-1.5 text-xs font-medium text-white shadow-sm hover:bg-rose-700"
-                            type="submit">
-                      Xóa
+                  <form
+                    action="<%= activePath %>/<%= it._id || it.code || it.sku %>/delete"
+                    method="post"
+                    class="inline"
+                    onsubmit="return confirm('Xóa mục này?')"
+                  >
+                    <button
+                      class="inline-flex items-center gap-1 rounded-lg border border-transparent bg-rose-600 px-3 py-1.5 text-xs sm:text-[13px] font-medium text-white shadow-sm hover:bg-rose-700 focus:outline-none focus:ring-1 focus:ring-rose-500"
+                      type="submit"
+                    >
+                      <i class="lucide lucide-trash-2 h-3.5 w-3.5"></i>
+                      <span>Xóa</span>
                     </button>
                   </form>
                 </div>

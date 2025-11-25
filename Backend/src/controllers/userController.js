@@ -231,3 +231,46 @@ exports.deleteMyAddress = async (req, res) => {
     return res.status(400).json({ success: false, message: err.message });
   }
 };
+// GET /api/user/:id/details
+exports.getUserDetailsAdmin = async (req, res) => {
+  try {
+    const userId = req.params.id;
+    const { user, addresses, orders } = await userService.getUserDetailsForAdmin(userId);
+
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User không tồn tại" });
+    }
+
+    return res.json({
+      success: true,
+      user,
+      addresses,
+      orders,
+    });
+  } catch (err) {
+    return res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+// GET /api/user/:id/addresses (admin xem địa chỉ user bất kỳ)
+exports.getAddressesOfUserAdmin = async (req, res) => {
+  try {
+    const userId = req.params.id;
+    const addresses = await userService.getAddresses(userId);
+    return res.json({ success: true, addresses });
+  } catch (err) {
+    return res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+// PUT /api/user/:userId/addresses/:addressId (admin update địa chỉ)
+exports.adminUpdateAddress = async (req, res) => {
+  try {
+    const addressId = req.params.addressId;
+    const updated = await userService.adminUpdateAddress(addressId, req.body);
+    return res.json({ success: true, address: updated });
+  } catch (err) {
+    return res.status(400).json({ success: false, message: err.message });
+  }
+};
+

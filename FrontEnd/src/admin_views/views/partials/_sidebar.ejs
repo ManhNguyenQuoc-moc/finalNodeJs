@@ -1,320 +1,540 @@
-<!-- Sidebar / Admin Nav -->
-<aside role="navigation" aria-label="Admin navigation" x-data="{ open:true, mini:false, sp:true, vh:false, nd:false }"
-  class="fixed inset-y-0 left-0 z-40 bg-[#0E141B] text-slate-100 border-r border-white/10 shadow-xl
-         transform transition-all duration-300 ease-out
-         flex flex-col" :class="{
-    'translate-x-0': open,
-    '-translate-x-full': !open,
-    'w-20': mini,
-    'w-80 md:w-72': !mini
-  }">
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <title>Admin Sidebar Mixishop</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <!-- Header (logo + close on mobile) -->
-  <div class="sticky top-0 bg-[#0E141B] border-b border-white/10 z-10">
-    <div class="px-5 py-3 flex items-center gap-3">
+  <!-- Tailwind (nếu bạn đã build riêng thì bỏ link CDN này đi) -->
+  <script src="https://cdn.tailwindcss.com"></script>
 
-      <!-- Close button on mobile -->
-      <button class="md:hidden size-9 grid place-items-center rounded-xl hover:bg-white/10 transition"
-        @click="open=false" aria-label="Đóng menu">
-        <i data-lucide="x" class="w-4 h-4 text-white"></i>
-      </button>
+  <!-- AlpineJS + Collapse plugin -->
+  <script defer src="https://unpkg.com/@alpinejs/collapse@3.x.x/dist/cdn.min.js"></script>
+  <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
 
-      <!-- Logo -->
-      <div class="relative size-9 shrink-0">
-        <img src="/mixishop/images/logo_mixishop.png" alt="Logo"
-          class="size-9 rounded-xl object-contain ring-2 ring-emerald-400 bg-[#0E141B]"
-          onerror="this.style.display='none'; this.nextElementSibling.classList.remove('hidden');" />
-        <div class="hidden size-9 bg-emerald-400 rounded-xl grid place-items-center text-[#0E141B] font-semibold">
-          A
+  <!-- Lucide (nếu bạn dùng icon) -->
+  <script defer src="https://unpkg.com/lucide@latest"></script>
+
+  <style>
+    [x-cloak] { display: none !important; }
+    .shadow-soft {
+      box-shadow: 0 18px 45px rgba(0, 0, 0, 0.45);
+    }
+  </style>
+</head>
+<body class="bg-slate-900 text-white">
+
+  <!-- Sidebar / Admin Nav -->
+  <div
+    x-data="{
+      open: true,            // mở / đóng sidebar
+      mini: false,           // chế độ mini
+      sp: true,              // group 'Quản lý sản phẩm'
+      vh: false,             // group 'Đơn hàng & khuyến mãi'
+      nd: false,             // group 'Khách hàng'
+      activePath: window.location.pathname || '/admin'
+    }"
+  >
+    <!-- NÚT 3 GẠCH: chỉ hiện khi sidebar ĐÓNG -->
+    <button
+      x-show="!open"
+      x-transition
+      @click="open = true"
+      class="fixed top-4 left-4 z-40 h-10 w-10 rounded-xl bg-[#0E141B] text-white shadow-xl border border-white/10
+             flex items-center justify-center hover:bg-white/5 hover:scale-105 transition"
+      aria-label="Mở menu"
+    >
+      <i data-lucide="menu" class="w-5 h-5"></i>
+    </button>
+
+    <aside
+      role="navigation"
+      aria-label="Admin navigation"
+      class="fixed inset-y-0 left-0 z-40 bg-[#0E141B] text-slate-100 border-r border-white/10 shadow-xl
+             transform transition-all duration-300 ease-out flex flex-col"
+      :class="{
+        'translate-x-0': open,
+        '-translate-x-full': !open,
+        'w-20': mini,
+        'w-80 md:w-72': !mini
+      }"
+    >
+      <!-- Header (logo + close + toggle mini) -->
+      <div class="sticky top-0 bg-[#0E141B]/95 backdrop-blur border-b border-white/10 z-10">
+        <div class="px-4 py-3 flex items-center gap-3">
+
+          <!-- Logo -->
+          <div class="relative size-9 shrink-0">
+            <img
+              src="/mixishop/images/logo_mixishop.png"
+              alt="Logo"
+              class="size-9 rounded-xl object-contain ring-2 ring-emerald-400 bg-[#0E141B]"
+              onerror="this.style.display='none'; this.nextElementSibling.classList.remove('hidden');"
+            />
+            <div class="hidden size-9 bg-emerald-400 rounded-xl grid place-items-center text-[#0E141B] font-semibold">
+              A
+            </div>
+          </div>
+
+          <!-- Title -->
+          <div class="min-w-0" x-show="!mini" x-cloak>
+            <div class="flex items-center gap-1.5">
+              <i data-lucide="shield-check" class="h-4 w-4 text-emerald-400"></i>
+              <span class="font-semibold text-[15px] text-white truncate">
+                Admin Console
+              </span>
+            </div>
+            <div class="text-[11px] text-white/55 mt-0.5">
+              Quản lý hệ thống Mixishop
+            </div>
+          </div>
+
+          <!-- Nút thu nhỏ / phóng to sidebar -->
+          <!-- <button
+            class="ml-auto mr-1 size-9 grid place-items-center rounded-xl hover:bg-white/10 transition-colors duration-200"
+          >
+          </button> -->
+
+          <!-- Nút đóng -->
+          <button
+            class="size-9 ml-8 grid place-items-center rounded-xl hover:bg-white/10 transition-colors duration-200"
+            @click="open = false"
+            aria-label="Đóng menu"
+          >
+            <i data-lucide="x" class="w-4 h-4 text-white"></i>
+          </button>
+
         </div>
       </div>
 
-      <!-- Title -->
-      <div class="min-w-0" x-show="!mini" x-cloak>
-        <div class="flex items-center gap-1.5">
-          <i data-lucide="shield-check" class="h-4 w-4 text-emerald-400"></i>
-          <span class="font-semibold text-white truncate">Admin Console</span>
+      <!-- Scrollable nav body -->
+      <nav class="flex-1 overflow-y-auto px-3 py-4 text-[15px] space-y-5">
+
+        <!-- Nhóm: Tổng quan -->
+        <div>
+          <a
+            href="/admin"
+            class="mt-1 flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200 group
+                   hover:bg-white/5 hover:text-white hover:-translate-y-0.5 hover:shadow-soft"
+            :class="activePath === '/admin'
+              ? 'bg-emerald-500 text-white font-semibold shadow-soft'
+              : 'text-white/70'"
+          >
+            <span class="flex items-center justify-center rounded-lg bg-white/5 text-emerald-400 p-1.5">
+              <i data-lucide="gauge" class="h-4 w-4"></i>
+            </span>
+
+            <span
+              class="flex-1"
+              x-show="!mini"
+              x-transition.opacity.duration.150ms
+              x-cloak
+            >
+              Dashboard
+            </span>
+
+            <span
+              x-show="!mini"
+              x-transition.opacity.duration.150ms
+              x-cloak
+              class="text-[11px] px-1.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-200 border border-emerald-400/30"
+            >
+              Live
+            </span>
+          </a>
         </div>
-        <div class="text-[11px] text-white/50 mt-0.5">
-          Quản lý hệ thống Mixishop
+
+        <!-- Nhóm: Sản phẩm -->
+        <div>
+          <!-- Button cha SẢN PHẨM -->
+          <button
+            @click="sp = !sp"
+            class="mt-2 flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-semibold
+                   hover:bg-white/5 transition-all duration-200 hover:-translate-y-0.5"
+            :class="(
+              activePath.startsWith('/admin/products')
+              || activePath.startsWith('/admin/product-colors')
+              || activePath.startsWith('/admin/product-sizes')
+              || activePath.startsWith('/admin/product-variants')
+              || activePath.startsWith('/admin/brands')
+              || activePath.startsWith('/admin/categories')
+            )
+              ? 'text-emerald-300 bg-white/10 shadow-soft'
+              : 'text-white/70'"
+          >
+            <span class="flex items-center justify-center rounded-lg bg-white/5 text-emerald-400 p-1.5">
+              <i data-lucide="box" class="h-4 w-4"></i>
+            </span>
+            <span class="flex-1" x-show="!mini" x-cloak>Quản lý sản phẩm</span>
+            <i
+              data-lucide="chevron-down"
+              class="ml-auto h-4 w-4 transition-transform duration-200"
+              x-show="!mini"
+              x-cloak
+              :class="sp ? 'rotate-180 text-emerald-300' : 'text-white/40'"
+            ></i>
+          </button>
+
+          <!-- Submenu SẢN PHẨM -->
+          <div
+            x-show="sp"
+            x-collapse
+            x-cloak
+            class="mt-1 pl-3 space-y-0.5 border-l border-white/10"
+          >
+            <!-- Sản phẩm -->
+            <a
+              href="/admin/products"
+              class="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-all duration-200
+                     hover:bg-white/5 hover:text-emerald-200"
+              :class="activePath.startsWith('/admin/products')
+                ? 'bg-emerald-500 text-white font-semibold shadow-soft'
+                : 'text-white/70'"
+            >
+              <i
+                data-lucide="dot"
+                class="h-3 w-3"
+                :class="activePath.startsWith('/admin/products') ? 'text-white' : 'text-white/30'"
+              ></i>
+              <i
+                data-lucide="box"
+                class="h-4 w-4"
+                :class="activePath.startsWith('/admin/products') ? 'text-white' : 'text-white/70'"
+              ></i>
+              <span x-show="!mini" x-cloak>Sản phẩm</span>
+            </a>
+
+            <!-- Màu -->
+            <a
+              href="/admin/product-colors"
+              class="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-all duration-200
+                     hover:bg-white/5 hover:text-emerald-200"
+              :class="activePath.startsWith('/admin/product-colors')
+                ? 'bg-emerald-500 text-white font-semibold shadow-soft'
+                : 'text-white/70'"
+            >
+              <i
+                data-lucide="dot"
+                class="h-3 w-3"
+                :class="activePath.startsWith('/admin/product-colors') ? 'text-white' : 'text-rose-300'"
+              ></i>
+              <i
+                data-lucide="palette"
+                class="h-4 w-4"
+                :class="activePath.startsWith('/admin/product-colors') ? 'text-white' : 'text-white/70'"
+              ></i>
+              <span x-show="!mini" x-cloak>Màu</span>
+            </a>
+
+            <!-- Size -->
+            <a
+              href="/admin/product-sizes"
+              class="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-all duration-200
+                     hover:bg-white/5 hover:text-emerald-200"
+              :class="activePath.startsWith('/admin/product-sizes')
+                ? 'bg-emerald-500 text-white font-semibold shadow-soft'
+                : 'text-white/70'"
+            >
+              <i
+                data-lucide="dot"
+                class="h-3 w-3"
+                :class="activePath.startsWith('/admin/product-sizes') ? 'text-white' : 'text-amber-300'"
+              ></i>
+              <i
+                data-lucide="ruler"
+                class="h-4 w-4"
+                :class="activePath.startsWith('/admin/product-sizes') ? 'text-white' : 'text-white/70'"
+              ></i>
+              <span x-show="!mini" x-cloak>Size</span>
+            </a>
+
+            <!-- Biến thể -->
+            <a
+              href="/admin/product-variants"
+              class="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-all duration-200
+                     hover:bg-white/5 hover:text-emerald-200"
+              :class="activePath.startsWith('/admin/product-variants')
+                ? 'bg-emerald-500 text-white font-semibold shadow-soft'
+                : 'text-white/70'"
+            >
+              <i
+                data-lucide="dot"
+                class="h-3 w-3"
+                :class="activePath.startsWith('/admin/product-variants') ? 'text-white' : 'text-sky-300'"
+              ></i>
+              <i
+                data-lucide="layers"
+                class="h-4 w-4"
+                :class="activePath.startsWith('/admin/product-variants') ? 'text-white' : 'text-white/70'"
+              ></i>
+              <span x-show="!mini" x-cloak>Biến thể</span>
+            </a>
+
+            <!-- Thương hiệu -->
+            <a
+              href="/admin/brands"
+              class="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-all duration-200
+                     hover:bg-white/5 hover:text-emerald-200"
+              :class="activePath.startsWith('/admin/brands')
+                ? 'bg-emerald-500 text-white font-semibold shadow-soft'
+                : 'text-white/70'"
+            >
+              <i
+                data-lucide="dot"
+                class="h-3 w-3"
+                :class="activePath.startsWith('/admin/brands') ? 'text-white' : 'text-emerald-300'"
+              ></i>
+              <i
+                data-lucide="badge-check"
+                class="h-4 w-4"
+                :class="activePath.startsWith('/admin/brands') ? 'text-white' : 'text-white/70'"
+              ></i>
+              <span x-show="!mini" x-cloak>Thương hiệu</span>
+            </a>
+
+            <!-- Danh mục -->
+            <a
+              href="/admin/categories"
+              class="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-all duration-200
+                     hover:bg-white/5 hover:text-emerald-200"
+              :class="activePath.startsWith('/admin/categories')
+                ? 'bg-emerald-500 text-white font-semibold shadow-soft'
+                : 'text-white/70'"
+            >
+              <i
+                data-lucide="dot"
+                class="h-3 w-3"
+                :class="activePath.startsWith('/admin/categories') ? 'text-white' : 'text-violet-300'"
+              ></i>
+              <i
+                data-lucide="folders"
+                class="h-4 w-4"
+                :class="activePath.startsWith('/admin/categories') ? 'text-white' : 'text-white/70'"
+              ></i>
+              <span x-show="!mini" x-cloak>Danh mục</span>
+            </a>
+          </div>
         </div>
-      </div>
-      <!-- Nút thu gọn / mở rộng (desktop) -->
-      <button
-        class="hidden md:flex ml-auto size-8 items-center justify-center rounded-xl bg-white/5 hover:bg-white/10 border border-white/10"
-        @click="mini = !mini" aria-label="Thu gọn / mở rộng sidebar">
-        <i data-lucide="chevron-left" class="w-4 h-4" x-show="!mini" x-cloak></i>
-        <i data-lucide="chevron-right" class="w-4 h-4" x-show="mini" x-cloak></i>
-      </button>
-    </div>
+
+        <!-- Nhóm: Vận hành -->
+        <div>
+          <!-- Button cha VẬN HÀNH -->
+          <button
+            @click="vh = !vh"
+            class="mt-2 flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-semibold
+                   hover:bg-white/5 transition-all duration-200 hover:-translate-y-0.5"
+            :class="(
+              activePath.startsWith('/admin/orders')
+              || activePath.startsWith('/admin/discounts')
+            )
+              ? 'text-emerald-300 bg-white/10 shadow-soft'
+              : 'text-white/70'"
+          >
+            <span class="flex items-center justify-center rounded-lg bg-white/5 text-emerald-400 p-1.5">
+              <i data-lucide="receipt" class="h-4 w-4"></i>
+            </span>
+            <span class="flex-1" x-show="!mini" x-cloak>Đơn hàng &amp; khuyến mãi</span>
+            <i
+              data-lucide="chevron-down"
+              class="ml-auto h-4 w-4 transition-transform duration-200"
+              x-show="!mini"
+              x-cloak
+              :class="vh ? 'rotate-180 text-emerald-300' : 'text-white/40'"
+            ></i>
+          </button>
+
+          <!-- Submenu VẬN HÀNH -->
+          <div
+            x-show="vh"
+            x-collapse
+            x-cloak
+            class="mt-1 pl-3 space-y-0.5 border-l border-white/10"
+          >
+            <!-- Đơn hàng -->
+            <a
+              href="/admin/orders"
+              class="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-all duration-200
+                     hover:bg-white/5 hover:text-emerald-200"
+              :class="activePath.startsWith('/admin/orders')
+                ? 'bg-emerald-500 text-white font-semibold shadow-soft'
+                : 'text-white/70'"
+            >
+              <i
+                data-lucide="dot"
+                class="h-3 w-3"
+                :class="activePath.startsWith('/admin/orders') ? 'text-white' : 'text-sky-300'"
+              ></i>
+              <i
+                data-lucide="receipt"
+                class="h-4 w-4"
+                :class="activePath.startsWith('/admin/orders') ? 'text-white' : 'text-white/70'"
+              ></i>
+              <span x-show="!mini" x-cloak>Đơn hàng</span>
+            </a>
+
+            <!-- Mã giảm giá -->
+            <a
+              href="/admin/discounts"
+              class="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-all duration-200
+                     hover:bg-white/5 hover:text-emerald-200"
+              :class="activePath.startsWith('/admin/discounts')
+                ? 'bg-emerald-500 text-white font-semibold shadow-soft'
+                : 'text-white/70'"
+            >
+              <i
+                data-lucide="dot"
+                class="h-3 w-3"
+                :class="activePath.startsWith('/admin/discounts') ? 'text-white' : 'text-rose-300'"
+              ></i>
+              <i
+                data-lucide="ticket-percent"
+                class="h-4 w-4"
+                :class="activePath.startsWith('/admin/discounts') ? 'text-white' : 'text-white/70'"
+              ></i>
+              <span x-show="!mini" x-cloak>Mã giảm giá</span>
+            </a>
+          </div>
+        </div>
+
+        <!-- Nhóm: Người dùng -->
+        <div>
+          <!-- Button cha NGƯỜI DÙNG -->
+          <button
+            @click="nd = !nd"
+            class="mt-2 flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-semibold
+                   hover:bg-white/5 transition-all duration-200 hover:-translate-y-0.5"
+            :class="(
+              activePath.startsWith('/admin/users')
+              || activePath.startsWith('/admin/addresses')
+              || activePath.startsWith('/admin/reviews')
+              || activePath.startsWith('/admin/wishlists')
+            )
+              ? 'text-emerald-300 bg-white/10 shadow-soft'
+              : 'text-white/70'"
+          >
+            <span class="flex items-center justify-center rounded-lg bg-white/5 text-emerald-400 p-1.5">
+              <i data-lucide="users" class="h-4 w-4"></i>
+            </span>
+            <span class="flex-1" x-show="!mini" x-cloak>Khách hàng</span>
+            <i
+              data-lucide="chevron-down"
+              class="ml-auto h-4 w-4 transition-transform duration-200"
+              x-show="!mini"
+              x-cloak
+              :class="nd ? 'rotate-180 text-emerald-300' : 'text-white/40'"
+            ></i>
+          </button>
+
+          <!-- Submenu NGƯỜI DÙNG -->
+          <div
+            x-show="nd"
+            x-collapse
+            x-cloak
+            class="mt-1 pl-3 space-y-0.5 border-l border-white/10"
+          >
+            <!-- Người dùng -->
+            <a
+              href="/admin/users"
+              class="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-all duration-200
+                     hover:bg-white/5 hover:text-emerald-200"
+              :class="activePath.startsWith('/admin/users')
+                ? 'bg-emerald-500 text-white font-semibold shadow-soft'
+                : 'text-white/70'"
+            >
+              <i
+                data-lucide="dot"
+                class="h-3 w-3"
+                :class="activePath.startsWith('/admin/users') ? 'text-white' : 'text-sky-300'"
+              ></i>
+              <i
+                data-lucide="users"
+                class="h-4 w-4"
+                :class="activePath.startsWith('/admin/users') ? 'text-white' : 'text-white/70'"
+              ></i>
+              <span x-show="!mini" x-cloak>Người dùng</span>
+            </a>
+
+            <!-- Địa chỉ -->
+            <a
+              href="/admin/addresses"
+              class="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-all duration-200
+                     hover:bg-white/5 hover:text-emerald-200"
+              :class="activePath.startsWith('/admin/addresses')
+                ? 'bg-emerald-500 text-white font-semibold shadow-soft'
+                : 'text-white/70'"
+            >
+              <i
+                data-lucide="dot"
+                class="h-3 w-3"
+                :class="activePath.startsWith('/admin/addresses') ? 'text-white' : 'text-emerald-300'"
+              ></i>
+              <i
+                data-lucide="map-pin"
+                class="h-4 w-4"
+                :class="activePath.startsWith('/admin/addresses') ? 'text-white' : 'text-white/70'"
+              ></i>
+              <span x-show="!mini" x-cloak>Địa chỉ</span>
+            </a>
+
+            <!-- Đánh giá -->
+            <a
+              href="/admin/reviews"
+              class="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-all duration-200
+                     hover:bg-white/5 hover:text-emerald-200"
+              :class="activePath.startsWith('/admin/reviews')
+                ? 'bg-emerald-500 text-white font-semibold shadow-soft'
+                : 'text-white/70'"
+            >
+              <i
+                data-lucide="dot"
+                class="h-3 w-3"
+                :class="activePath.startsWith('/admin/reviews') ? 'text-white' : 'text-amber-300'"
+              ></i>
+              <i
+                data-lucide="message-square"
+                class="h-4 w-4"
+                :class="activePath.startsWith('/admin/reviews') ? 'text-white' : 'text-white/70'"
+              ></i>
+              <span x-show="!mini" x-cloak>Đánh giá</span>
+            </a>
+
+            <!-- Wishlist -->
+            <a
+              href="/admin/wishlists"
+              class="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-all duration-200
+                     hover:bg-white/5 hover:text-emerald-200"
+              :class="activePath.startsWith('/admin/wishlists')
+                ? 'bg-emerald-500 text-white font-semibold shadow-soft'
+                : 'text-white/70'"
+            >
+              <i
+                data-lucide="dot"
+                class="h-3 w-3"
+                :class="activePath.startsWith('/admin/wishlists') ? 'text-white' : 'text-rose-300'"
+              ></i>
+              <i
+                data-lucide="heart"
+                class="h-4 w-4"
+                :class="activePath.startsWith('/admin/wishlists') ? 'text-white' : 'text-white/70'"
+              ></i>
+              <span x-show="!mini" x-cloak>Wishlist</span>
+            </a>
+          </div>
+        </div>
+      </nav>
+    </aside>
+
+    <!-- Nội dung giả bên phải -->
+
   </div>
 
-  <!-- Scrollable nav body -->
-  <nav class="flex-1 overflow-y-auto p-4 text-[15px] space-y-5">
-
-    <!-- Nhóm: Tổng quan -->
-    <div>
-      <!-- <div
-        class="px-3 text-[11px] font-semibold tracking-[0.08em] text-emerald-400 uppercase flex items-center gap-1.5">
-        <span x-show="!mini" x-transition.opacity.duration.150ms x-cloak>
-          Tổng quan
-        </span>
-      </div> -->
-
-      <!-- DASHBOARD -->
-      <a href="/admin" class="mt-2 flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-medium transition group
-               hover:bg-white/5 hover:text-white" :class="activePath === '/admin'
-                  ? 'bg-emerald-500 text-white font-semibold'
-                  : 'text-white/70'">
-        <span class="flex items-center justify-center rounded-lg bg-white/5 text-emerald-400 p-1.5">
-          <i data-lucide="gauge" class="h-5 w-5"></i>
-        </span>
-        <span class="flex-1" x-show="!mini" x-transition.opacity.duration.150ms x-cloak>
-          Dashboard
-        </span>
-        <span x-show="!mini" x-transition.opacity.duration.150ms x-cloak
-          class="text-[11px] px-1.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-200 border border-emerald-400/30">
-          Live
-        </span>
-      </a>
-    </div>
-
-    <!-- Nhóm: Sản phẩm -->
-    <div>
-      <!-- <div
-        class="px-3 text-[11px] font-semibold tracking-[0.08em] text-emerald-400 uppercase flex items-center gap-1.5">
-        <span x-show="!mini" x-cloak>Sản phẩm</span>
-      </div> -->
-
-      <!-- Button cha SẢN PHẨM -->
-      <button @click="sp=!sp" class="mt-2 flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-left text-sm font-semibold
-               hover:bg-white/5 transition" :class="(activePath.startsWith('/admin/products')
-                 || activePath.startsWith('/admin/product-colors')
-                 || activePath.startsWith('/admin/product-sizes')
-                 || activePath.startsWith('/admin/product-variants')
-                 || activePath.startsWith('/admin/brands')
-                 || activePath.startsWith('/admin/categories'))
-                ? 'text-emerald-300 bg-white/10'
-                : 'text-white/70'">
-        <span class="flex items-center justify-center rounded-lg bg-white/5 text-emerald-400 p-1.5">
-          <i data-lucide="box" class="h-4 w-4"></i>
-        </span>
-        <span class="flex-1" x-show="!mini" x-cloak>Quản lý sản phẩm</span>
-        <i data-lucide="chevron-down" class="ml-auto h-4 w-4 transition-transform" x-show="!mini" x-cloak
-          :class="sp ? 'rotate-180 text-emerald-300' : 'text-white/40'"></i>
-      </button>
-
-      <!-- Submenu SẢN PHẨM -->
-      <div x-show="sp" x-collapse x-cloak class="mt-1 pl-3 space-y-0.5 border-l border-white/10">
-
-        <!-- Sản phẩm -->
-        <a href="/admin/products"
-          class="flex items-center gap-2 rounded-lg px-3 py-2 text-sm transition hover:bg-white/5 hover:text-emerald-200"
-          :class="activePath.startsWith('/admin/products')
-                    ? 'bg-emerald-500 text-white font-semibold'
-                    : 'text-white/70'">
-          <i data-lucide="dot" class="h-3 w-3"
-            :class="activePath.startsWith('/admin/products') ? 'text-white' : 'text-white/30'"></i>
-          <i data-lucide="box" class="h-4 w-4"
-            :class="activePath.startsWith('/admin/products') ? 'text-white' : 'text-white/60'"></i>
-          <span x-show="!mini" x-cloak>Sản phẩm</span>
-        </a>
-
-        <!-- Màu -->
-        <a href="/admin/product-colors"
-          class="flex items-center gap-2 rounded-lg px-3 py-2 text-sm transition hover:bg-white/5 hover:text-emerald-200"
-          :class="activePath.startsWith('/admin/product-colors')
-                    ? 'bg-emerald-500 text-white font-semibold'
-                    : 'text-white/70'">
-          <i data-lucide="dot" class="h-3 w-3"
-            :class="activePath.startsWith('/admin/product-colors') ? 'text-white' : 'text-rose-300'"></i>
-          <i data-lucide="palette" class="h-4 w-4"
-            :class="activePath.startsWith('/admin/product-colors') ? 'text-white' : 'text-white/60'"></i>
-          <span x-show="!mini" x-cloak>Màu</span>
-        </a>
-
-        <!-- Size -->
-        <a href="/admin/product-sizes"
-          class="flex items-center gap-2 rounded-lg px-3 py-2 text-sm transition hover:bg-white/5 hover:text-emerald-200"
-          :class="activePath.startsWith('/admin/product-sizes')
-                    ? 'bg-emerald-500 text-white font-semibold'
-                    : 'text-white/70'">
-          <i data-lucide="dot" class="h-3 w-3"
-            :class="activePath.startsWith('/admin/product-sizes') ? 'text-white' : 'text-amber-300'"></i>
-          <i data-lucide="ruler" class="h-4 w-4"
-            :class="activePath.startsWith('/admin/product-sizes') ? 'text-white' : 'text-white/60'"></i>
-          <span x-show="!mini" x-cloak>Size</span>
-        </a>
-
-        <!-- Biến thể -->
-        <a href="/admin/product-variants"
-          class="flex items-center gap-2 rounded-lg px-3 py-2 text-sm transition hover:bg-white/5 hover:text-emerald-200"
-          :class="activePath.startsWith('/admin/product-variants')
-                    ? 'bg-emerald-500 text-white font-semibold'
-                    : 'text-white/70'">
-          <i data-lucide="dot" class="h-3 w-3"
-            :class="activePath.startsWith('/admin/product-variants') ? 'text-white' : 'text-sky-300'"></i>
-          <i data-lucide="layers" class="h-4 w-4"
-            :class="activePath.startsWith('/admin/product-variants') ? 'text-white' : 'text-white/60'"></i>
-          <span x-show="!mini" x-cloak>Biến thể</span>
-        </a>
-
-        <!-- Thương hiệu -->
-        <a href="/admin/brands"
-          class="flex items-center gap-2 rounded-lg px-3 py-2 text-sm transition hover:bg-white/5 hover:text-emerald-200"
-          :class="activePath.startsWith('/admin/brands')
-                    ? 'bg-emerald-500 text-white font-semibold'
-                    : 'text-white/70'">
-          <i data-lucide="dot" class="h-3 w-3"
-            :class="activePath.startsWith('/admin/brands') ? 'text-white' : 'text-emerald-300'"></i>
-          <i data-lucide="badge-check" class="h-4 w-4"
-            :class="activePath.startsWith('/admin/brands') ? 'text-white' : 'text-white/60'"></i>
-          <span x-show="!mini" x-cloak>Thương hiệu</span>
-        </a>
-
-        <!-- Danh mục -->
-        <a href="/admin/categories"
-          class="flex items-center gap-2 rounded-lg px-3 py-2 text-sm transition hover:bg-white/5 hover:text-emerald-200"
-          :class="activePath.startsWith('/admin/categories')
-                    ? 'bg-emerald-500 text-white font-semibold'
-                    : 'text-white/70'">
-          <i data-lucide="dot" class="h-3 w-3"
-            :class="activePath.startsWith('/admin/categories') ? 'text-white' : 'text-violet-300'"></i>
-          <i data-lucide="folders" class="h-4 w-4"
-            :class="activePath.startsWith('/admin/categories') ? 'text-white' : 'text-white/60'"></i>
-          <span x-show="!mini" x-cloak>Danh mục</span>
-        </a>
-      </div>
-    </div>
-
-    <!-- Nhóm: Vận hành -->
-    <div>
-      <!-- <div
-        class="px-3 text-[11px] font-semibold tracking-[0.08em] text-emerald-400 uppercase flex items-center gap-1.5">
-        <span x-show="!mini" x-cloak>Vận hành</span>
-      </div> -->
-
-      <!-- Button cha VẬN HÀNH -->
-      <button @click="vh=!vh" class="mt-2 flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-left text-sm font-semibold
-               hover:bg-white/5 transition" :class="(activePath.startsWith('/admin/orders')
-                 || activePath.startsWith('/admin/discounts'))
-                ? 'text-emerald-300 bg-white/10'
-                : 'text-white/70'">
-        <span class="flex items-center justify-center rounded-lg bg-white/5 text-emerald-400 p-1.5">
-          <i data-lucide="receipt" class="h-4 w-4"></i>
-        </span>
-        <span class="flex-1" x-show="!mini" x-cloak>Đơn hàng & khuyến mãi</span>
-        <i data-lucide="chevron-down" class="ml-auto h-4 w-4 transition-transform" x-show="!mini" x-cloak
-          :class="vh ? 'rotate-180 text-emerald-300' : 'text-white/40'"></i>
-      </button>
-
-      <!-- Submenu VẬN HÀNH -->
-      <div x-show="vh" x-collapse x-cloak class="mt-1 pl-3 space-y-0.5 border-l border-white/10">
-        <!-- Đơn hàng -->
-        <a href="/admin/orders"
-          class="flex items-center gap-2 rounded-lg px-3 py-2 text-sm transition hover:bg-white/5 hover:text-emerald-200"
-          :class="activePath.startsWith('/admin/orders')
-                    ? 'bg-emerald-500 text-white font-semibold'
-                    : 'text-white/70'">
-          <i data-lucide="dot" class="h-3 w-3"
-            :class="activePath.startsWith('/admin/orders') ? 'text-white' : 'text-sky-300'"></i>
-          <i data-lucide="receipt" class="h-4 w-4"
-            :class="activePath.startsWith('/admin/orders') ? 'text-white' : 'text-white/60'"></i>
-          <span x-show="!mini" x-cloak>Đơn hàng</span>
-        </a>
-
-        <!-- Mã giảm giá -->
-        <a href="/admin/discounts"
-          class="flex items-center gap-2 rounded-lg px-3 py-2 text-sm transition hover:bg-white/5 hover:text-emerald-200"
-          :class="activePath.startsWith('/admin/discounts')
-                    ? 'bg-emerald-500 text-white font-semibold'
-                    : 'text-white/70'">
-          <i data-lucide="dot" class="h-3 w-3"
-            :class="activePath.startsWith('/admin/discounts') ? 'text-white' : 'text-rose-300'"></i>
-          <i data-lucide="ticket-percent" class="h-4 w-4"
-            :class="activePath.startsWith('/admin/discounts') ? 'text-white' : 'text-white/60'"></i>
-          <span x-show="!mini" x-cloak>Mã giảm giá</span>
-        </a>
-      </div>
-    </div>
-
-    <!-- Nhóm: Người dùng -->
-    <div>
-      <!-- <div
-        class="px-3 text-[11px] font-semibold tracking-[0.08em] text-emerald-400 uppercase flex items-center gap-1.5">
-        <span x-show="!mini" x-cloak>Người dùng</span>
-      </div> -->
-
-      <!-- Button cha NGƯỜI DÙNG -->
-      <button @click="nd=!nd" class="mt-2 flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-left text-sm font-semibold
-               hover:bg-white/5 transition" :class="(activePath.startsWith('/admin/users')
-                 || activePath.startsWith('/admin/addresses')
-                 || activePath.startsWith('/admin/reviews')
-                 || activePath.startsWith('/admin/wishlists'))
-                ? 'text-emerald-300 bg-white/10'
-                : 'text-white/70'">
-        <span class="flex items-center justify-center rounded-lg bg-white/5 text-emerald-400 p-1.5">
-          <i data-lucide="users" class="h-4 w-4"></i>
-        </span>
-        <span class="flex-1" x-show="!mini" x-cloak>Khách hàng</span>
-        <i data-lucide="chevron-down" class="ml-auto h-4 w-4 transition-transform" x-show="!mini" x-cloak
-          :class="nd ? 'rotate-180 text-emerald-300' : 'text-white/40'"></i>
-      </button>
-
-      <!-- Submenu NGƯỜI DÙNG -->
-      <div x-show="nd" x-collapse x-cloak class="mt-1 pl-3 space-y-0.5 border-l border-white/10">
-        <!-- Người dùng -->
-        <a href="/admin/users"
-          class="flex items-center gap-2 rounded-lg px-3 py-2 text-sm transition hover:bg-white/5 hover:text-emerald-200"
-          :class="activePath.startsWith('/admin/users')
-                    ? 'bg-emerald-500 text-white font-semibold'
-                    : 'text-white/70'">
-          <i data-lucide="dot" class="h-3 w-3"
-            :class="activePath.startsWith('/admin/users') ? 'text-white' : 'text-sky-300'"></i>
-          <i data-lucide="users" class="h-4 w-4"
-            :class="activePath.startsWith('/admin/users') ? 'text-white' : 'text-white/60'"></i>
-          <span x-show="!mini" x-cloak>Người dùng</span>
-        </a>
-
-        <!-- Địa chỉ -->
-        <a href="/admin/addresses"
-          class="flex items-center gap-2 rounded-lg px-3 py-2 text-sm transition hover:bg-white/5 hover:text-emerald-200"
-          :class="activePath.startsWith('/admin/addresses')
-                    ? 'bg-emerald-500 text-white font-semibold'
-                    : 'text-white/70'">
-          <i data-lucide="dot" class="h-3 w-3"
-            :class="activePath.startsWith('/admin/addresses') ? 'text-white' : 'text-emerald-300'"></i>
-          <i data-lucide="map-pin" class="h-4 w-4"
-            :class="activePath.startsWith('/admin/addresses') ? 'text-white' : 'text-white/60'"></i>
-          <span x-show="!mini" x-cloak>Địa chỉ</span>
-        </a>
-
-        <!-- Đánh giá -->
-        <a href="/admin/reviews"
-          class="flex items-center gap-2 rounded-lg px-3 py-2 text-sm transition hover:bg-white/5 hover:text-emerald-200"
-          :class="activePath.startsWith('/admin/reviews')
-                    ? 'bg-emerald-500 text-white font-semibold'
-                    : 'text-white/70'">
-          <i data-lucide="dot" class="h-3 w-3"
-            :class="activePath.startsWith('/admin/reviews') ? 'text-white' : 'text-amber-300'"></i>
-          <i data-lucide="message-square" class="h-4 w-4"
-            :class="activePath.startsWith('/admin/reviews') ? 'text-white' : 'text-white/60'"></i>
-          <span x-show="!mini" x-cloak>Đánh giá</span>
-        </a>
-
-        <!-- Wishlist -->
-        <a href="/admin/wishlists"
-          class="flex items-center gap-2 rounded-lg px-3 py-2 text-sm transition hover:bg-white/5 hover:text-emerald-200"
-          :class="activePath.startsWith('/admin/wishlists')
-                    ? 'bg-emerald-500 text-white font-semibold'
-                    : 'text-white/70'">
-          <i data-lucide="dot" class="h-3 w-3"
-            :class="activePath.startsWith('/admin/wishlists') ? 'text-white' : 'text-rose-300'"></i>
-          <i data-lucide="heart" class="h-4 w-4"
-            :class="activePath.startsWith('/admin/wishlists') ? 'text-white' : 'text-white/60'"></i>
-          <span x-show="!mini" x-cloak>Wishlist</span>
-        </a>
-      </div>
-    </div>
-  </nav>
-</aside>
+  <script>
+    // Khởi tạo icon Lucide
+    window.addEventListener('DOMContentLoaded', () => {
+      if (window.lucide) {
+        window.lucide.createIcons();
+      }
+    });
+  </script>
+</body>
+</html>

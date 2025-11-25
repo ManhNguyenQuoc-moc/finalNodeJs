@@ -21,7 +21,7 @@ router.use("/ai", aiRouter);
 // router.use("/", pageRouter);
 const authRouter = require("./auth");//import
 router.use("/auth", authRouter);
-// const userRouter = require("./user");//import
-// router.use("/user", userRouter);
+const userRouter = require("./users");//import
+router.use("/user", userRouter);
 module.exports = router;//export
 

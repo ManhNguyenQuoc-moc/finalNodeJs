@@ -1,116 +1,94 @@
 <% layout('layouts/admin') %>
 
 <section class="space-y-6">
+
   <!-- Header -->
   <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
     <div>
-      <h2 class="text-xl font-semibold tracking-tight text-slate-50">Người dùng</h2>
-      <p class="text-sm text-slate-400">
-        Quản lý tài khoản, cập nhật thông tin, khóa/mở khóa người dùng.
+      <h2 class="text-xl font-semibold tracking-tight text-slate-900">Người dùng</h2>
+      <p class="text-sm text-slate-600">
+        Quản lý tài khoản hệ thống: xem, chỉnh sửa, khóa/mở khóa và xóa người dùng.
       </p>
     </div>
 
-    <!-- Actions: search + add user (optional) -->
-    <div class="flex flex-col gap-2 sm:flex-row sm:items-center">
-      <form action="/admin/users" method="get" class="flex items-center gap-2">
-        <div class="relative">
-          <input
-            type="text"
-            name="q"
-            placeholder="Tìm theo tên, email..."
-            value="<%= typeof q !== 'undefined' ? q : '' %>"
-            class="w-48 sm:w-64 rounded-xl border border-emerald-300/40 bg-slate-900/60 px-3 py-2 text-sm text-slate-50 shadow-sm
-                   placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-emerald-400"
-          />
-          <span class="pointer-events-none absolute inset-y-0 right-2 flex items-center text-slate-400">
-            <i data-lucide="search" class="w-4 h-4"></i>
-          </span>
-        </div>
-        <button
-          type="submit"
-          class="inline-flex items-center gap-1 rounded-xl bg-emerald-500 px-3 py-2 text-xs font-medium text-white shadow-sm
-                 hover:bg-emerald-600 focus:outline-none focus:ring-2 focus:ring-emerald-400/70"
-        >
-          <i data-lucide="filter" class="w-4 h-4"></i>
-          Lọc
-        </button>
-      </form>
+    <!-- Search -->
+    <form action="/admin/users" method="get" class="flex items-center gap-2">
+      <div class="relative">
+        <input
+          type="text"
+          name="q"
+          value="<%= q || '' %>"
+          placeholder="Tìm theo tên, email..."
+          class="w-56 rounded-xl border border-blue-300/70 bg-white px-3 py-2 text-sm text-slate-800 shadow-sm
+                 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-400"
+        />
+        <span class="pointer-events-none absolute inset-y-0 right-2 flex items-center text-slate-400">
+          <i data-lucide="search" class="w-4 h-4"></i>
+        </span>
+      </div>
 
-      <!-- Nếu có chức năng tạo user bằng tay -->
-      <!--
-      <a
-        href="/admin/users/create"
-        class="inline-flex items-center gap-1 rounded-xl bg-emerald-600 px-3 py-2 text-xs font-medium text-white shadow-sm hover:bg-emerald-700"
+      <button
+        type="submit"
+        class="inline-flex items-center gap-1 rounded-xl bg-blue-500 px-3 py-2 text-xs font-medium text-white shadow-sm
+               hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-300"
       >
-        <i data-lucide="user-plus" class="w-4 h-4"></i>
-        Thêm người dùng
-      </a>
-      -->
-    </div>
+        <i data-lucide="filter" class="w-4 h-4"></i>
+        Lọc
+      </button>
+    </form>
   </div>
 
-  <!-- Table Card -->
-  <div class="rounded-2xl border border-slate-800 bg-slate-950/80 shadow-soft overflow-hidden">
+  <!-- Table -->
+  <div class="rounded-2xl border border-slate-200 bg-white shadow-md overflow-hidden">
     <div class="overflow-x-auto">
       <table class="w-full text-sm">
-        <thead
-          class="sticky top-0 z-10 bg-slate-900/95 backdrop-blur supports-[backdrop-filter]:bg-slate-900/80"
-        >
-          <tr class="text-left text-slate-400 uppercase text-[11px]">
-            <th class="p-3 w-[220px] font-semibold">Tên</th>
-            <th class="p-3 w-[220px] font-semibold">Email</th>
+        <thead class="bg-blue-50 border-b border-slate-200">
+          <tr class="text-left text-slate-600 uppercase text-[11px]">
+            <th class="p-3 font-semibold">Tên</th>
+            <th class="p-3 font-semibold">Email</th>
             <th class="p-3 font-semibold">Role</th>
             <th class="p-3 font-semibold">Xác thực</th>
             <th class="p-3 font-semibold">Trạng thái</th>
             <th class="p-3 text-right font-semibold">Điểm</th>
             <th class="p-3 whitespace-nowrap font-semibold">Ngày tạo</th>
-            <th class="p-3 w-52 text-right font-semibold">Hành động</th>
+            <th class="p-3 text-right font-semibold w-32">Hành động</th>
           </tr>
         </thead>
 
         <tbody>
           <% (items || []).forEach(u => { %>
-            <tr
-              class="border-t border-slate-800 odd:bg-slate-950 even:bg-slate-900/60 hover:bg-emerald-950/40 transition-colors"
-            >
+            <tr class="border-b border-slate-100 hover:bg-blue-50/40 transition-colors">
+
               <!-- Name -->
-              <td class="p-3 font-medium text-slate-50 whitespace-nowrap max-w-[220px]">
+              <td class="p-3 font-medium text-slate-900">
                 <div class="flex items-center gap-2">
                   <div
-                    class="flex h-9 w-9 items-center justify-center rounded-full bg-emerald-500/10 text-[11px] font-semibold text-emerald-300 ring-1 ring-emerald-500/40"
+                    class="flex h-9 w-9 items-center justify-center rounded-full bg-blue-100 text-[11px] font-semibold text-blue-600 border border-blue-200"
                   >
                     <%= (u.full_name || u.email || '?')
                       .trim()
                       .split(' ')
-                      .map(p => p[0])
+                      .map(n => n[0])
                       .join('')
+                      .slice(0, 2)
                       .toUpperCase()
-                      .slice(0, 2) %>
+                    %>
                   </div>
-                  <div class="min-w-0">
-                    <div class="truncate">
-                      <%= u.full_name || '—' %>
-                    </div>
-                    <div class="text-[11px] text-slate-500 truncate">
-                      ID: <%= u._id %>
-                    </div>
+                  <div>
+                    <div class="truncate max-w-[180px]"><%= u.full_name %></div>
+                    <div class="text-[11px] text-slate-500">ID: <%= u._id %></div>
                   </div>
                 </div>
               </td>
 
               <!-- Email -->
-              <td class="p-3 text-slate-200 whitespace-nowrap max-w-[220px]">
-                <div class="truncate">
-                  <%= u.email || '—' %>
-                </div>
+              <td class="p-3 text-slate-700">
+                <div class="truncate max-w-[180px]"><%= u.email %></div>
               </td>
 
               <!-- Role -->
               <td class="p-3">
-                <span
-                  class="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2.5 py-0.5 text-[11px] font-medium text-emerald-300 ring-1 ring-emerald-500/50"
-                >
-                  <i data-lucide="shield" class="w-3 h-3"></i>
+                <span class="px-2.5 py-0.5 rounded-full bg-blue-100 text-[11px] font-medium text-blue-600 border border-blue-200">
                   <%= u.role %>
                 </span>
               </td>
@@ -118,128 +96,89 @@
               <!-- Verified -->
               <td class="p-3">
                 <% if (u.is_verified) { %>
-                  <span
-                    class="inline-flex items-center gap-1 rounded-full bg-emerald-500/15 px-2.5 py-0.5 text-[11px] font-medium text-emerald-300 ring-1 ring-emerald-500/50"
-                  >
-                    <i data-lucide="check-circle-2" class="w-3 h-3"></i>
-                    Đã xác thực
+                  <span class="px-2.5 py-0.5 rounded-full bg-green-100 text-[11px] font-medium text-green-700 border border-green-200">
+                    ✔ Đã xác thực
                   </span>
                 <% } else { %>
-                  <span
-                    class="inline-flex items-center gap-1 rounded-full bg-slate-800 px-2.5 py-0.5 text-[11px] font-medium text-slate-300 ring-1 ring-slate-700"
-                  >
-                    <i data-lucide="alert-circle" class="w-3 h-3"></i>
-                    Chưa xác thực
+                  <span class="px-2.5 py-0.5 rounded-full bg-slate-200 text-[11px] font-medium text-slate-600 border border-slate-300">
+                    ✖ Chưa
                   </span>
                 <% } %>
               </td>
 
-              <!-- Status (banned / active) -->
+              <!-- Status -->
               <td class="p-3">
                 <% if (u.is_banned) { %>
-                  <span
-                    class="inline-flex items-center gap-1 rounded-full bg-rose-500/10 px-2.5 py-0.5 text-[11px] font-medium text-rose-300 ring-1 ring-rose-500/60"
-                  >
-                    <i data-lucide="slash" class="w-3 h-3"></i>
-                    Đã khóa
+                  <span class="px-2.5 py-0.5 rounded-full bg-red-100 text-[11px] font-medium text-red-600 border border-red-200">
+                    Bị khóa
                   </span>
                 <% } else { %>
-                  <span
-                    class="inline-flex items-center gap-1 rounded-full bg-emerald-500/15 px-2.5 py-0.5 text-[11px] font-medium text-emerald-300 ring-1 ring-emerald-500/60"
-                  >
-                    <i data-lucide="check" class="w-3 h-3"></i>
-                    Đang hoạt động
+                  <span class="px-2.5 py-0.5 rounded-full bg-green-100 text-[11px] font-medium text-green-700 border border-green-200">
+                    Hoạt động
                   </span>
                 <% } %>
               </td>
 
               <!-- Points -->
-              <td class="p-3 text-right tabular-nums text-slate-50">
-                <%= u.loyalty_points || 0 %>
+              <td class="p-3 text-right font-semibold text-slate-800">
+                <%= u.loyalty_points %>
               </td>
 
-              <!-- Created at -->
-              <td class="p-3 whitespace-nowrap text-slate-300">
-                <%= new Date(u.createdAt).toLocaleString('vi-VN') %>
+              <!-- Created -->
+              <td class="p-3 text-slate-600 whitespace-nowrap">
+                <%= new Date(u.createdAt).toLocaleString("vi-VN") %>
               </td>
 
-              <!-- Actions -->
+              <!-- Actions: ICON ONLY -->
               <td class="p-3 text-right">
-                <div class="flex justify-end gap-1">
-                  <!-- View detail -->
-                  <a
-                    href="/admin/users/<%= u._id %>"
-                    class="inline-flex items-center gap-1 rounded-lg border border-slate-700 bg-slate-900 px-2 py-1.5 text-[11px] font-medium text-slate-100 hover:bg-slate-800 hover:border-slate-500"
-                  >
-                    <i data-lucide="eye" class="w-3 h-3"></i>
-                    <span class="hidden lg:inline">Chi tiết</span>
+                <div class="flex justify-end gap-2">
+
+                  <!-- View -->
+                  <a href="/admin/users/<%= u._id %>"
+                    class="p-2 rounded-lg bg-blue-100 text-blue-600 border border-blue-200 hover:bg-blue-200">
+                    <i data-lucide="eye" class="w-4 h-4"></i>
                   </a>
 
                   <!-- Edit -->
-                  <a
-                    href="/admin/users/<%= u._id %>/edit"
-                    class="inline-flex items-center gap-1 rounded-lg border border-emerald-500/60 bg-emerald-500/10 px-2 py-1.5 text-[11px] font-medium text-emerald-200 hover:bg-emerald-500/20 hover:border-emerald-400"
-                  >
-                    <i data-lucide="pencil" class="w-3 h-3"></i>
-                    <span class="hidden lg:inline">Sửa</span>
+                  <a href="/admin/users/<%= u._id %>/edit"
+                    class="p-2 rounded-lg bg-green-100 text-green-700 border border-green-200 hover:bg-green-200">
+                    <i data-lucide="pencil" class="w-4 h-4"></i>
                   </a>
 
                   <!-- Ban / Unban -->
-                  <% if (u.is_banned) { %>
-                    <form
-                      action="/admin/users/<%= u._id %>/unban"
-                      method="post"
-                      class="inline"
-                      onsubmit="return confirm('Mở khóa người dùng này?')"
-                    >
-                      <button
-                        type="submit"
-                        class="inline-flex items-center gap-1 rounded-lg bg-emerald-600 px-2.5 py-1.5 text-[11px] font-medium text-white shadow-sm hover:bg-emerald-700"
-                      >
-                        <i data-lucide="unlock" class="w-3 h-3"></i>
-                        <span class="hidden lg:inline">Mở khóa</span>
+                  <% if (!u.is_banned) { %>
+                    <form action="/admin/users/<%= u._id %>/ban" method="post" class="inline"
+                      onsubmit="return confirm('Khóa người dùng này?')">
+                      <button class="p-2 rounded-lg bg-red-100 text-red-600 border border-red-200 hover:bg-red-200">
+                        <i data-lucide="ban" class="w-4 h-4"></i>
                       </button>
                     </form>
                   <% } else { %>
-                    <form
-                      action="/admin/users/<%= u._id %>/ban"
-                      method="post"
-                      class="inline"
-                      onsubmit="return confirm('Khóa người dùng này?')"
-                    >
-                      <button
-                        type="submit"
-                        class="inline-flex items-center gap-1 rounded-lg bg-amber-500 px-2.5 py-1.5 text-[11px] font-medium text-slate-950 shadow-sm hover:bg-amber-600"
-                      >
-                        <i data-lucide="ban" class="w-3 h-3"></i>
-                        <span class="hidden lg:inline">Khóa</span>
+                    <form action="/admin/users/<%= u._id %>/unban" method="post" class="inline"
+                      onsubmit="return confirm('Mở khóa người dùng này?')">
+                      <button class="p-2 rounded-lg bg-green-200 text-green-700 border border-green-300 hover:bg-green-300">
+                        <i data-lucide="unlock" class="w-4 h-4"></i>
                       </button>
                     </form>
                   <% } %>
 
                   <!-- Delete -->
-                  <form
-                    action="/admin/users/<%= u._id %>/delete"
-                    method="post"
-                    class="inline"
-                    onsubmit="return confirm('Xóa vĩnh viễn user này? Hành động không thể hoàn tác.')"
-                  >
-                    <button
-                      type="submit"
-                      class="inline-flex items-center gap-1 rounded-lg bg-rose-600 px-2.5 py-1.5 text-[11px] font-medium text-white shadow-sm hover:bg-rose-700"
-                    >
-                      <i data-lucide="trash-2" class="w-3 h-3"></i>
-                      <span class="hidden lg:inline">Xóa</span>
+                  <form action="/admin/users/<%= u._id %>/delete" method="post" class="inline"
+                    onsubmit="return confirm('Xóa vĩnh viễn người dùng này?')">
+                    <button class="p-2 rounded-lg bg-red-200 text-red-700 border border-red-300 hover:bg-red-300">
+                      <i data-lucide="trash-2" class="w-4 h-4"></i>
                     </button>
                   </form>
+
                 </div>
               </td>
+
             </tr>
           <% }) %>
 
           <% if (!items || items.length === 0) { %>
             <tr>
-              <td colspan="8" class="p-6 text-center text-sm text-slate-400">
+              <td colspan="8" class="p-6 text-center text-sm text-slate-500 bg-slate-50">
                 Không tìm thấy người dùng nào.
               </td>
             </tr>
@@ -248,23 +187,39 @@
       </table>
     </div>
 
-    <!-- Pagination (nếu có) -->
-    <div class="flex items-center justify-between border-t border-slate-800 bg-slate-900 px-4 py-3 text-xs text-slate-400">
-      <div>Hiển thị 1–20 trong 120 người dùng</div>
-      <div class="flex items-center gap-1">
-        <a
-          href="?page=1"
-          class="px-2 py-1 rounded-lg border border-slate-700 bg-slate-900 hover:bg-slate-800 hover:border-slate-500"
-        >
-          Trước
-        </a>
-        <a
-          href="?page=2"
-          class="px-2 py-1 rounded-lg border border-emerald-500/70 bg-emerald-500/15 text-emerald-200 hover:bg-emerald-500/25 hover:border-emerald-400"
-        >
-          Sau
-        </a>
+    <!-- Pagination -->
+    <% if (pagination) { %>
+      <div class="flex items-center justify-between border-t border-slate-200 bg-blue-50 px-4 py-3 text-xs text-slate-600">
+
+        <div>
+          Hiển thị <span class="text-slate-900 font-semibold"><%= pagination.from %></span>–
+          <span class="text-slate-900 font-semibold"><%= pagination.to %></span>
+          trong <%= pagination.totalItems %> người dùng
+        </div>
+
+        <div class="flex items-center gap-1">
+
+          <% if (pagination.hasPrev) { %>
+            <a href="<%= pagination.baseUrl + pagination.prev %>"
+              class="px-2 py-1 rounded-lg bg-white border border-slate-300 hover:bg-slate-200">Trước</a>
+          <% } else { %>
+            <span class="px-2 py-1 bg-slate-200 rounded-lg opacity-60 cursor-not-allowed">Trước</span>
+          <% } %>
+
+          <span class="px-2 py-1 rounded-lg bg-white border border-slate-300">
+            Trang <%= pagination.page %>/<%= pagination.totalPages %>
+          </span>
+
+          <% if (pagination.hasNext) { %>
+            <a href="<%= pagination.baseUrl + pagination.next %>"
+              class="px-2 py-1 rounded-lg bg-blue-200 border border-blue-300 text-blue-700 hover:bg-blue-300">Sau</a>
+          <% } else { %>
+            <span class="px-2 py-1 bg-slate-200 rounded-lg opacity-60 cursor-not-allowed">Sau</span>
+          <% } %>
+
+        </div>
+
       </div>
-    </div>
+    <% } %>
   </div>
 </section>
