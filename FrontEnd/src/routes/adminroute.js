@@ -33,6 +33,31 @@ module.exports = function createAdminRouter({ BACKEND, proxy } = {}) {
     const headers = { "Content-Type": "application/json", cookie: req?.headers?.cookie || "", ...(init.headers || {}) };
     return fetchJSONRaw(url, { ...init, headers });
   }
+  async function fetchUsers(req) {
+    const fallback = () => USERS; // vẫn giữ mock cho trường hợp chưa có BACKEND
+
+    try {
+      if (!BACKEND) return fallback();
+
+      // tuỳ backend của bạn, ở trên bạn nói: http://localhost:5000/api/user/
+      const url = `${BACKEND}/api/user/`;
+      const data = await fetchJSONAuth(req, url);
+
+      // chuẩn theo response bạn gửi:
+      // { success: true, users: [ ... ] }
+      if (data && data.success && Array.isArray(data.users)) {
+        return data.users;
+      }
+
+      // fallback: nếu BE trả array trực tiếp
+      if (Array.isArray(data)) return data;
+
+      throw new Error("Unexpected USERS payload from backend");
+    } catch (err) {
+      console.error("Fetch USERS failed:", err.message);
+      return fallback();
+    }
+  }
 
   // ========== Helpers (locals) ==========
   let ADMIN_ACCOUNT = { id: "admin1", full_name: "Admin", password: "admin123" }; // demo
@@ -517,7 +542,13 @@ module.exports = function createAdminRouter({ BACKEND, proxy } = {}) {
     const current = Math.min(Math.max(1, parseInt(page) || 1), totalPages);
     const start = (current - 1) * pageSize;
     const end = start + pageSize;
-    return { items: array.slice(start, end), page: current, totalPages, totalItems };
+    return {
+      items: array.slice(start, end),
+      page: current,
+      totalPages,
+      totalItems,
+      pageSize,
+    };
   }
   function baseUrl(req) {
     const q = new URLSearchParams(req.query);
@@ -928,8 +959,126 @@ module.exports = function createAdminRouter({ BACKEND, proxy } = {}) {
     res.redirect(`/admin/discounts?${q.toString()}`);
   });
   // ========== Users ==========
-  router.get("/users", (req, res) => { const p = paginate(USERS, 1, 20); res.render("users_index", { title: "Người dùng", pageHeading: "Người dùng", items: p.items }); });
-  router.post("/users/:id/delete", (req, res) => { USERS = USERS.filter(x => x._id !== req.params.id); res.redirect("/admin/users"); });
+  router.get("/users", async (req, res) => {
+    const page = parseInt(req.query.page) || 1;
+    const pageSize = 20;
+    const q = (req.query.q || "").trim().toLowerCase();
+
+    // lấy users từ backend (hoặc mock nếu chưa config BACKEND)
+    let list = await fetchUsers(req);
+
+    // search theo tên / email
+    if (q) {
+      list = list.filter((u) => {
+        const name = (u.full_name || "").toLowerCase();
+        const email = (u.email || "").toLowerCase();
+        return name.includes(q) || email.includes(q);
+      });
+    }
+
+    // sort cho “đẹp”: user mới tạo lên trước
+    list.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+
+    const p = paginate(list, page, pageSize);
+
+    res.render("users_index", {
+      title: "Người dùng",
+      pageHeading: "Người dùng",
+      items: p.items,
+      q, // để giữ lại giá trị ô search
+      pagination: {
+        ...p,
+        baseUrl: baseUrl(req), // /admin/users?...&page=
+      },
+    });
+  });
+  router.get("/users/:id", async (req, res) => {
+    try {
+      if (!BACKEND) {
+        return res.status(500).send("BACKEND chưa được cấu hình");
+      }
+
+      const id = req.params.id;
+      const data = await fetchJSONAuth(req, `${BACKEND}/api/user/${id}/details`);
+
+      const user = data.user;
+      const addresses = data.addresses || [];
+      const orders = data.orders || [];
+
+      if (!user) {
+        return res.status(404).send("Không tìm thấy người dùng");
+      }
+
+      return res.render("user_detail", {
+        title: `Người dùng: ${user.full_name || user.email}`,
+        pageHeading: "Chi tiết người dùng",
+        user,
+        addresses,
+        orders,
+      });
+    } catch (err) {
+      console.error("Load user detail failed:", err.message);
+      return res.status(500).send("Không thể tải thông tin người dùng");
+    }
+  });
+  // Ban user
+  router.post("/users/:id/ban", async (req, res) => {
+    const id = req.params.id;
+    try {
+      if (BACKEND) {
+        const url = `${BACKEND}/api/user/${id}/ban`;
+        const data = await fetchJSONAuth(req, url, { method: "PATCH" });
+        if (!data?.success) throw new Error(data?.message || "Không thể khóa người dùng");
+      } else {
+        // fallback mock
+        const i = USERS.findIndex((u) => u._id === id);
+        if (i > -1) USERS[i].is_banned = true;
+      }
+      res.redirect("/admin/users?s=Đã khóa người dùng");
+    } catch (err) {
+      console.error("Ban user failed:", err.message);
+      res.redirect(`/admin/users?e=${encodeURIComponent(err.message || "Không thể khóa người dùng")}`);
+    }
+  });
+
+  // Unban user
+  router.post("/users/:id/unban", async (req, res) => {
+    const id = req.params.id;
+    try {
+      if (BACKEND) {
+        const url = `${BACKEND}/api/user/${id}/unban`;
+        const data = await fetchJSONAuth(req, url, { method: "PATCH" });
+        if (!data?.success) throw new Error(data?.message || "Không thể mở khóa người dùng");
+      } else {
+        // fallback mock
+        const i = USERS.findIndex((u) => u._id === id);
+        if (i > -1) USERS[i].is_banned = false;
+      }
+      res.redirect("/admin/users?s=Đã mở khóa người dùng");
+    } catch (err) {
+      console.error("Unban user failed:", err.message);
+      res.redirect(`/admin/users?e=${encodeURIComponent(err.message || "Không thể mở khóa người dùng")}`);
+    }
+  });
+
+  // Delete user
+  router.post("/users/:id/delete", async (req, res) => {
+    const id = req.params.id;
+    try {
+      if (BACKEND) {
+        const url = `${BACKEND}/api/user/${id}`;
+        const data = await fetchJSONAuth(req, url, { method: "DELETE" });
+        if (!data?.success) throw new Error(data?.message || "Xoá user thất bại");
+      } else {
+        USERS = USERS.filter((x) => x._id !== id);
+      }
+      res.redirect("/admin/users?s=Đã xóa người dùng");
+    } catch (err) {
+      console.error("Delete user failed:", err.message);
+      res.redirect(`/admin/users?e=${encodeURIComponent(err.message || "Không thể xóa người dùng")}`);
+    }
+  });
+
 
   // ========== Generic helpers: Addresses / Reviews / Wishlists ==========
   function renderEntityIndex(res, title, items, fields) {
