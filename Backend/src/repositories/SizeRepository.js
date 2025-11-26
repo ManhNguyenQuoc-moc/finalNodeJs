@@ -1,23 +1,25 @@
-const Size = require("../models/ProductSize");
+const SizeModel = require("../models/ProductSize");
 
 class SizeRepository {
   async create(data) {
-    const Size = new ProductColor(data);
-    return Size.save();
+    const size = new SizeModel(data);
+    return size.save();
   }
+
   async findAll() {
-    return Size.find();
+    return SizeModel.find();
   }
+
   async findById(id) {
-    return Size.findById(id);
+    return SizeModel.findById(id);
   }
 
   async update(id, data) {
-    return Size.findByIdAndUpdate(id, data, { new: true });
+    return SizeModel.findByIdAndUpdate(id, data, { new: true });
   }
 
   async delete(id) {
-    return Size.findByIdAndDelete(id);
+    return SizeModel.findByIdAndDelete(id);
   }
 }
 

@@ -134,7 +134,6 @@ exports.unbanUser = async (req, res) => {
 
 // ========== USER PROFILE ==========
 
-// GET /api/account/profile  (user tự xem profile của mình)
 exports.getMyProfile = async (req, res) => {
   try {
     const userId = req.currentUser?.id || req.user?._id || req.cookies?.uid;

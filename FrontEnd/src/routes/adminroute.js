@@ -58,7 +58,197 @@ module.exports = function createAdminRouter({ BACKEND, proxy } = {}) {
       return fallback();
     }
   }
+  async function fetchCreateColor(req) {
+    try {
+      if (!BACKEND) {
+        // fallback mock
+        PRODUCT_COLORS.unshift({
+          _id: "pc" + Date.now(),
+          product: req.body.product,
+          color_name: req.body.color_name,
+          color_code: req.body.color_code,
+          createdAt: new Date(),
+        });
+        return { ok: true, message: "Tạo màu (mock) thành công!" };
+      }
 
+      const url = `${BACKEND}/api/product/color`;
+      const payload = {
+        product: req.body.product || null,
+        color_name: req.body.color_name,
+        color_code: req.body.color_code,
+      };
+
+      const data = await fetchJSONAuth(req, url, {
+        method: "POST",
+        body: JSON.stringify(payload),
+      });
+
+      if (!data?.success) {
+        throw new Error(data?.message || "Tạo màu thất bại");
+      }
+
+      return { ok: true, message: "Tạo màu thành công!", data: data.data };
+    } catch (err) {
+      console.error("Create COLOR failed:", err.message);
+      return { ok: false, message: err.message || "Không thể tạo màu" };
+    }
+  }
+
+  async function fetchUpdateColor(req, id) {
+    try {
+      if (!BACKEND) {
+        const i = PRODUCT_COLORS.findIndex((x) => x._id == id);
+        if (i === -1) return { ok: false, message: "Không tìm thấy màu (mock)" };
+
+        PRODUCT_COLORS[i] = {
+          ...PRODUCT_COLORS[i],
+          product: req.body.product,
+          color_name: req.body.color_name,
+          color_code: req.body.color_code,
+        };
+        return { ok: true, message: "Cập nhật màu (mock) thành công!" };
+      }
+
+      const url = `${BACKEND}/api/product/color/${id}`;
+      const payload = {
+        product: req.body.product,
+        color_name: req.body.color_name,
+        color_code: req.body.color_code,
+      };
+
+      const data = await fetchJSONAuth(req, url, {
+        method: "PUT",
+        body: JSON.stringify(payload),
+      });
+
+      if (!data?.success) {
+        throw new Error(data?.message || "Cập nhật màu thất bại");
+      }
+
+      return { ok: true, message: "Cập nhật màu thành công!", data: data.data };
+    } catch (err) {
+      console.error("Update COLOR failed:", err.message);
+      return { ok: false, message: err.message || "Không thể cập nhật màu" };
+    }
+  }
+
+  async function fetchDeleteColor(req, id) {
+    try {
+      if (!BACKEND) {
+        PRODUCT_COLORS = PRODUCT_COLORS.filter((x) => x._id != id);
+        return { ok: true, message: "Xoá màu (mock) thành công!" };
+      }
+
+      const url = `${BACKEND}/api/product/color/${id}`;
+      const data = await fetchJSONAuth(req, url, { method: "DELETE" });
+
+      if (!data?.success) {
+        throw new Error(data?.message || "Xoá màu thất bại");
+      }
+
+      return { ok: true, message: "Xoá màu thành công!" };
+    } catch (err) {
+      console.error("Delete COLOR failed:", err.message);
+      return { ok: false, message: err.message || "Không thể xoá màu" };
+    }
+  }
+
+  // ===== Helpers cho SIZE =====
+  async function fetchCreateSize(req) {
+    try {
+      if (!BACKEND) {
+        PRODUCT_SIZES.unshift({
+          _id: "ps" + Date.now(),
+          product: req.body.product,
+          size_name: req.body.size_name,
+          size_order: Number(req.body.size_order || 0),
+          createdAt: new Date(),
+        });
+        return { ok: true, message: "Tạo size (mock) thành công!" };
+      }
+
+      const url = `${BACKEND}/api/product/size`;
+      const payload = {
+        product: req.body.product,
+        size_name: req.body.size_name,
+        size_order: Number(req.body.size_order || 0),
+      };
+
+      const data = await fetchJSONAuth(req, url, {
+        method: "POST",
+        body: JSON.stringify(payload),
+      });
+
+      if (!data?.success) {
+        throw new Error(data?.message || "Tạo size thất bại");
+      }
+
+      return { ok: true, message: "Tạo size thành công!", data: data.data };
+    } catch (err) {
+      console.error("Create SIZE failed:", err.message);
+      return { ok: false, message: err.message || "Không thể tạo size" };
+    }
+  }
+
+  async function fetchUpdateSize(req, id) {
+    try {
+      if (!BACKEND) {
+        const i = PRODUCT_SIZES.findIndex((x) => x._id == id);
+        if (i === -1) return { ok: false, message: "Không tìm thấy size (mock)" };
+
+        PRODUCT_SIZES[i] = {
+          ...PRODUCT_SIZES[i],
+          product: req.body.product,
+          size_name: req.body.size_name,
+          size_order: Number(req.body.size_order || 0),
+        };
+        return { ok: true, message: "Cập nhật size (mock) thành công!" };
+      }
+
+      const url = `${BACKEND}/api/product/size/${id}`;
+      const payload = {
+        product: req.body.product,
+        size_name: req.body.size_name,
+        size_order: Number(req.body.size_order || 0),
+      };
+
+      const data = await fetchJSONAuth(req, url, {
+        method: "PUT",
+        body: JSON.stringify(payload),
+      });
+
+      if (!data?.success) {
+        throw new Error(data?.message || "Cập nhật size thất bại");
+      }
+
+      return { ok: true, message: "Cập nhật size thành công!", data: data.data };
+    } catch (err) {
+      console.error("Update SIZE failed:", err.message);
+      return { ok: false, message: err.message || "Không thể cập nhật size" };
+    }
+  }
+
+  async function fetchDeleteSize(req, id) {
+    try {
+      if (!BACKEND) {
+        PRODUCT_SIZES = PRODUCT_SIZES.filter((x) => x._id != id);
+        return { ok: true, message: "Xoá size (mock) thành công!" };
+      }
+
+      const url = `${BACKEND}/api/product/size/${id}`;
+      const data = await fetchJSONAuth(req, url, { method: "DELETE" });
+
+      if (!data?.success) {
+        throw new Error(data?.message || "Xoá size thất bại");
+      }
+
+      return { ok: true, message: "Xoá size thành công!" };
+    } catch (err) {
+      console.error("Delete SIZE failed:", err.message);
+      return { ok: false, message: err.message || "Không thể xoá size" };
+    }
+  }
   // ========== Helpers (locals) ==========
   let ADMIN_ACCOUNT = { id: "admin1", full_name: "Admin", password: "admin123" }; // demo
 
@@ -114,6 +304,104 @@ module.exports = function createAdminRouter({ BACKEND, proxy } = {}) {
     } catch { }
     return CATEGORIES;
   }
+  // ===== Helpers cho CATEGORY =====
+  async function fetchCreateCategory(req) {
+    try {
+      if (!BACKEND) {
+        CATEGORIES.unshift({
+          _id: "c" + Date.now(),
+          name: req.body.name,
+          slug: req.body.slug,
+          description: req.body.description,
+          createdAt: new Date(),
+        });
+        return { ok: true, message: "Tạo danh mục (mock) thành công!" };
+      }
+
+      const url = `${BACKEND}/api/category`;
+      const payload = {
+        name: req.body.name,
+        slug: req.body.slug,
+        description: req.body.description,
+      };
+
+      const data = await fetchJSONAuth(req, url, {
+        method: "POST",
+        body: JSON.stringify(payload),
+      });
+
+      if (!data?.success) {
+        throw new Error(data?.message || "Tạo danh mục thất bại");
+      }
+
+      return { ok: true, message: "Tạo danh mục thành công!", data: data.data };
+    } catch (err) {
+      console.error("Create CATEGORY failed:", err.message);
+      return { ok: false, message: err.message || "Không thể tạo danh mục" };
+    }
+  }
+
+  async function fetchUpdateCategory(req, id) {
+    try {
+      if (!BACKEND) {
+        const i = CATEGORIES.findIndex((x) => x._id == id);
+        if (i === -1) return { ok: false, message: "Không tìm thấy danh mục (mock)" };
+
+        CATEGORIES[i] = {
+          ...CATEGORIES[i],
+          name: req.body.name,
+          slug: req.body.slug,
+          description: req.body.description,
+        };
+        return { ok: true, message: "Cập nhật danh mục (mock) thành công!" };
+      }
+
+      // BE: router.put("/categories/:id") -> /api/category/categories/:id
+      const url = `${BACKEND}/api/category/categories/${id}`;
+      const payload = {
+        name: req.body.name,
+        slug: req.body.slug,
+        description: req.body.description,
+      };
+
+      const data = await fetchJSONAuth(req, url, {
+        method: "PUT",
+        body: JSON.stringify(payload),
+      });
+
+      if (!data?.success) {
+        throw new Error(data?.message || "Cập nhật danh mục thất bại");
+      }
+
+      return { ok: true, message: "Cập nhật danh mục thành công!", data: data.data };
+    } catch (err) {
+      console.error("Update CATEGORY failed:", err.message);
+      return { ok: false, message: err.message || "Không thể cập nhật danh mục" };
+    }
+  }
+
+  async function fetchDeleteCategory(req, id) {
+    try {
+      if (!BACKEND) {
+        CATEGORIES = CATEGORIES.filter((x) => x._id != id);
+        return { ok: true, message: "Xoá danh mục (mock) thành công!" };
+      }
+
+      // BE: router.delete("/categories/:id") -> /api/category/categories/:id
+      const url = `${BACKEND}/api/category/categories/${id}`;
+      const data = await fetchJSONAuth(req, url, { method: "DELETE" });
+
+      if (!data?.success) {
+        throw new Error(data?.message || "Xoá danh mục thất bại");
+      }
+
+      return { ok: true, message: "Xoá danh mục thành công!" };
+    } catch (err) {
+      console.error("Delete CATEGORY failed:", err.message);
+      return { ok: false, message: err.message || "Không thể xoá danh mục" };
+    }
+  }
+
   // === Load SIZES ===
   async function tryLoadSizes(req) {
     if (!BACKEND) return PRODUCT_SIZES;
@@ -355,6 +643,99 @@ module.exports = function createAdminRouter({ BACKEND, proxy } = {}) {
       return { ok: false, message: err.message || "Không thể xoá mã giảm giá" };
     }
   }
+  // ===== Helpers cho BRAND =====
+  async function fetchCreateBrand(req) {
+    try {
+      if (!BACKEND) {
+        BRANDS.unshift({
+          _id: "b" + Date.now(),
+          name: req.body.name,
+          slug: req.body.slug,
+          createdAt: new Date(),
+        });
+        return { ok: true, message: "Tạo thương hiệu (mock) thành công!" };
+      }
+
+      const url = `${BACKEND}/api/brand`;     // BE: router.post("/")
+      const payload = {
+        name: req.body.name,
+        slug: req.body.slug,
+      };
+
+      const data = await fetchJSONAuth(req, url, {
+        method: "POST",
+        body: JSON.stringify(payload),
+      });
+
+      if (!data?.success) {
+        throw new Error(data?.message || "Tạo thương hiệu thất bại");
+      }
+
+      return { ok: true, message: "Tạo thương hiệu thành công!", data: data.data };
+    } catch (err) {
+      console.error("Create BRAND failed:", err.message);
+      return { ok: false, message: err.message || "Không thể tạo thương hiệu" };
+    }
+  }
+
+  async function fetchUpdateBrand(req, id) {
+    try {
+      if (!BACKEND) {
+        const i = BRANDS.findIndex((x) => x._id == id);
+        if (i === -1) return { ok: false, message: "Không tìm thấy thương hiệu (mock)" };
+
+        BRANDS[i] = {
+          ...BRANDS[i],
+          name: req.body.name,
+          slug: req.body.slug,
+        };
+        return { ok: true, message: "Cập nhật thương hiệu (mock) thành công!" };
+      }
+
+      // BE: router.put("/brands/:id", ...) -> /api/brand/brands/:id
+      const url = `${BACKEND}/api/brand/brands/${id}`;
+      const payload = {
+        name: req.body.name,
+        slug: req.body.slug,
+      };
+
+      const data = await fetchJSONAuth(req, url, {
+        method: "PUT",
+        body: JSON.stringify(payload),
+      });
+
+      if (!data?.success) {
+        throw new Error(data?.message || "Cập nhật thương hiệu thất bại");
+      }
+
+      return { ok: true, message: "Cập nhật thương hiệu thành công!", data: data.data };
+    } catch (err) {
+      console.error("Update BRAND failed:", err.message);
+      return { ok: false, message: err.message || "Không thể cập nhật thương hiệu" };
+    }
+  }
+
+  async function fetchDeleteBrand(req, id) {
+    try {
+      if (!BACKEND) {
+        BRANDS = BRANDS.filter((x) => x._id != id);
+        return { ok: true, message: "Xoá thương hiệu (mock) thành công!" };
+      }
+      // BE: router.delete("/brands/:id") -> /api/brand/brands/:id
+      const url = `${BACKEND}/api/brand/brands/${id}`;
+      const data = await fetchJSONAuth(req, url, { method: "DELETE" });
+
+      if (!data?.success) {
+        throw new Error(data?.message || "Xoá thương hiệu thất bại");
+      }
+
+      return { ok: true, message: "Xoá thương hiệu thành công!" };
+    } catch (err) {
+      console.error("Delete BRAND failed:", err.message);
+      return { ok: false, message: err.message || "Không thể xoá thương hiệu" };
+    }
+  }
+
 
   // FE-style product fetch with cookie forwarding & strict JSON checks
   async function fetchProducts(req) {
@@ -497,6 +878,231 @@ module.exports = function createAdminRouter({ BACKEND, proxy } = {}) {
     } catch (err) {
       console.error("Update PRODUCT failed:", err.message);
       return { ok: false, message: err.message || "Không thể cập nhật sản phẩm" };
+    }
+  }
+  // === Load VARIANTS (tồn kho) ===
+  // let VARIANTS_PAGINATION = {
+  //   page: 1,
+  //   totalPages: 1,
+  //   totalItems: PRODUCT_VARIANTS.length,
+  //   pageSize: 50,
+  // };
+
+  async function tryLoadVariants(req) {
+    const page = parseInt(req.query.page, 10) || 1;
+    const limit = 50;
+
+    // Không có BACKEND -> dùng mock
+    if (!BACKEND) {
+      const p = paginate(PRODUCT_VARIANTS, page, limit);
+      VARIANTS_PAGINATION = {
+        page: p.page,
+        totalPages: p.totalPages,
+        totalItems: p.totalItems,
+        pageSize: p.pageSize,
+      };
+      return { items: p.items, pagination: VARIANTS_PAGINATION };
+    }
+
+    try {
+      const qs = new URLSearchParams({
+        page: String(page),
+        limit: String(limit),
+      }).toString();
+
+      const url = `${BACKEND}/api/product/variants?${qs}`;
+      const data = await fetchJSONAuth(req, url).catch(() => null);
+
+      console.log("VARIANTS API payload:", JSON.stringify(data).slice(0, 500));
+
+      // ----- BÓC ITEMS THEO NHIỀU DẠNG PHỔ BIẾN -----
+      let rawItems = [];
+      let total = 0;
+      let totalPages = 1;
+      let pageSize = limit;
+
+      if (data && data.success) {
+        // 1) { success:true, items:[...], total, page, limit, totalPages }
+        if (Array.isArray(data.items)) {
+          rawItems = data.items;
+          total = data.total ?? data.items.length;
+          totalPages = data.totalPages ?? 1;
+          pageSize = data.limit ?? limit;
+        }
+        // 2) { success:true, data:[...] }
+        else if (Array.isArray(data.data)) {
+          rawItems = data.data;
+          total = rawItems.length;
+        }
+        // 3) { success:true, data:{ items:[...], total,... } }
+        else if (data.data && Array.isArray(data.data.items)) {
+          rawItems = data.data.items;
+          total = data.data.total ?? rawItems.length;
+          totalPages = data.data.totalPages ?? 1;
+          pageSize = data.data.limit ?? limit;
+        }
+      } else if (Array.isArray(data)) {
+        // 4) Trả array trực tiếp
+        rawItems = data;
+        total = rawItems.length;
+      }
+
+      // Nếu vẫn không có items -> fallback mock
+      if (!Array.isArray(rawItems) || !rawItems.length) {
+        console.warn("VARIANTS: no items from backend, fallback to mock");
+        const p = paginate(PRODUCT_VARIANTS, page, limit);
+        VARIANTS_PAGINATION = {
+          page: p.page,
+          totalPages: p.totalPages,
+          totalItems: p.totalItems,
+          pageSize: p.pageSize,
+        };
+        return { items: p.items, pagination: VARIANTS_PAGINATION };
+      }
+
+      // ----- MAP RA DATA PHẲNG CHO FORM ADMIN (edit tồn kho) -----
+      PRODUCT_VARIANTS = rawItems.map((v) => {
+        const productName = v.product?.name || v.product_name || "";
+        const productId = v.product?._id || v.product_id || "";
+        const colorName = v.color?.color_name || v.color_name || "";
+        const sizeName = v.size?.size_name || v.size_name || "";
+        const imageUrl =
+          (Array.isArray(v.images) && (v.images[0]?.url || v.images[0])) ||
+          (Array.isArray(v.product?.images) &&
+            (v.product.images[0]?.url || v.product.images[0])) ||
+          "";
+
+        return {
+          _id: v._id || v.id || v.sku,
+          sku: v.sku,
+          product: productName,
+          product_id: productId,
+          color: colorName,
+          size: sizeName,
+          price: v.price,
+          stock_quantity: v.stock_quantity,
+          image_url: imageUrl,
+        };
+      });
+
+      VARIANTS_PAGINATION = {
+        page: data.page || page,
+        totalPages,
+        totalItems: total || PRODUCT_VARIANTS.length,
+        pageSize,
+      };
+
+      // ⬅️ Quan trọng: list dùng RAW items để EJS đọc product/color/size/images
+      return { items: rawItems, pagination: VARIANTS_PAGINATION };
+    } catch (e) {
+      console.error("Load VARIANTS failed:", e.message);
+      const p = paginate(PRODUCT_VARIANTS, page, limit);
+      VARIANTS_PAGINATION = {
+        page: p.page,
+        totalPages: p.totalPages,
+        totalItems: p.totalItems,
+        pageSize: p.pageSize,
+      };
+      return { items: p.items, pagination: VARIANTS_PAGINATION };
+    }
+  }
+
+
+  async function fetchUpdateVariantStockAdmin(req, id) {
+    try {
+      if (!BACKEND) {
+        const i = PRODUCT_VARIANTS.findIndex((x) => String(x._id || x.sku) === String(id));
+        if (i === -1) return { ok: false, message: "Variant not found (mock)" };
+        PRODUCT_VARIANTS[i] = {
+          ...PRODUCT_VARIANTS[i],
+          price: Number(req.body.price || PRODUCT_VARIANTS[i].price || 0),
+          stock_quantity: Number(req.body.stock_quantity || PRODUCT_VARIANTS[i].stock_quantity || 0),
+        };
+        return { ok: true, message: "Cập nhật tồn kho (mock) thành công!" };
+      }
+
+      const url = `${BACKEND}/api/product/variants/${id}/stock`;
+      const payload = {
+        price: req.body.price !== undefined ? Number(req.body.price) : undefined,
+        stock_quantity: req.body.stock_quantity !== undefined ? Number(req.body.stock_quantity) : undefined,
+      };
+      Object.keys(payload).forEach((k) => payload[k] === undefined && delete payload[k]);
+
+      const data = await fetchJSONAuth(req, url, {
+        method: "PUT",
+        body: JSON.stringify(payload),
+      });
+
+      if (!data?.success) {
+        throw new Error(data?.message || "Cập nhật tồn kho thất bại");
+      }
+
+      return { ok: true, message: "Cập nhật tồn kho thành công!" };
+    } catch (err) {
+      console.error("Update VARIANT STOCK failed:", err.message);
+      return { ok: false, message: err.message || "Không thể cập nhật tồn kho" };
+    }
+  }
+
+  // ===== Lấy 1 variant theo id cho trang Admin =====
+  async function fetchVariantByIdAdmin(req, id) {
+    try {
+      // Mock mode: dùng dữ liệu local
+      if (!BACKEND) {
+        await tryLoadVariants(req); // đảm bảo PRODUCT_VARIANTS đã được fill
+        return (
+          PRODUCT_VARIANTS.find(
+            (x) => String(x._id || x.sku) === String(id)
+          ) || null
+        );
+      }
+
+      const url = `${BACKEND}/api/product/variants/${id}`;
+      const data = await fetchJSONAuth(req, url).catch(() => null);
+
+      console.log(
+        "VARIANT DETAIL payload:",
+        data ? JSON.stringify(data).slice(0, 500) : "null"
+      );
+
+      let v = null;
+
+      // BE trả { success: true, data: {...} }
+      if (data?.success && data?.data) {
+        v = data.data;
+      }
+      // Hoặc trả thẳng object variant
+      else if (data && (data._id || data.id || data.sku)) {
+        v = data;
+      }
+
+      if (!v) return null;
+
+      const productName = v.product?.name || v.product_name || "";
+      const productId = v.product?._id || v.product_id || "";
+      const colorName = v.color?.color_name || v.color_name || "";
+      const sizeName = v.size?.size_name || v.size_name || "";
+      const imageUrl =
+        (Array.isArray(v.images) && (v.images[0]?.url || v.images[0])) ||
+        (Array.isArray(v.product?.images) &&
+          (v.product.images[0]?.url || v.product.images[0])) ||
+        "";
+
+      // Trả về dạng phẳng giống tryLoadVariants để form dùng chung
+      return {
+        _id: v._id || v.id || v.sku,
+        sku: v.sku,
+        product: productName,
+        product_id: productId,
+        color: colorName,
+        size: sizeName,
+        price: v.price,
+        stock_quantity: v.stock_quantity,
+        image_url: imageUrl,
+      };
+    } catch (err) {
+      console.error("Fetch VARIANT by id failed:", err.message);
+      return null;
     }
   }
 
@@ -738,90 +1344,164 @@ module.exports = function createAdminRouter({ BACKEND, proxy } = {}) {
   });
   router.post("/products/:id/delete", (req, res) => { PRODUCTS = PRODUCTS.filter(x => x._id !== req.params.id); res.redirect("/admin/products"); });
 
-  // ========== Variants / Colors / Sizes ==========
-  router.get("/product-variants", (req, res) => {
-    const p = paginate(PRODUCT_VARIANTS, 1, 50);
-    res.render("entity_index", {
-      title: "Biến thể", pageHeading: "Biến thể",
-      items: p.items,
-      fields: ["sku", "product", "color", "size", "price", "stock_quantity"],
-      pagination: { ...p, baseUrl: "/admin/product-variants?page=" }
-    });
-  });
-  router.get("/product-variants/new", (req, res) => res.render("entity_form", {
-    title: "Thêm biến thể", pageHeading: "Thêm biến thể", item: null,
-    fields: ["product", "sku", "color", "size", "price", "stock_quantity"],
-    actionBase: "/admin/product-variants"
-  }));
-  router.get("/product-variants/:id", (req, res) => {
-    const item = PRODUCT_VARIANTS.find(x => x.sku == req.params.id);
-    if (!item) return res.status(404).send("Not found");
-    res.render("entity_form", {
-      title: "Sửa biến thể", pageHeading: "Sửa biến thể", item,
-      fields: ["product", "sku", "color", "size", "price", "stock_quantity"],
-      actionBase: "/admin/product-variants"
-    });
-  });
-  router.post("/product-variants", (req, res) => {
-    PRODUCT_VARIANTS.unshift({
-      sku: req.body.sku, product: req.body.product, color: req.body.color, size: req.body.size,
-      price: Number(req.body.price || 0), stock_quantity: Number(req.body.stock_quantity || 0)
-    });
-    res.redirect("/admin/product-variants");
-  });
-  router.post("/product-variants/:id", (req, res) => {
-    const i = PRODUCT_VARIANTS.findIndex(x => x.sku == req.params.id);
-    if (i > -1) {
-      PRODUCT_VARIANTS[i] = {
-        ...PRODUCT_VARIANTS[i],
-        product: req.body.product, color: req.body.color, size: req.body.size,
-        price: Number(req.body.price || 0), stock_quantity: Number(req.body.stock_quantity || 0)
-      };
+  router.get("/product-variants", async (req, res) => {
+    const { items: rawItems, pagination } = await tryLoadVariants(req);
+
+    let items = rawItems || [];
+
+    const {
+      q,
+      color,
+      price_min,
+      price_max,
+      stock_min,
+      stock_max,
+    } = req.query || {};
+
+    // Tìm theo SKU hoặc tên sản phẩm
+    if (q) {
+      const qLower = String(q).toLowerCase();
+      items = items.filter((v) => {
+        const sku = (v.sku || "").toLowerCase();
+        const productName = (v.product && v.product.name
+          ? v.product.name
+          : v.product_name || ""
+        ).toLowerCase();
+        return sku.includes(qLower) || productName.includes(qLower);
+      });
     }
-    res.redirect("/admin/product-variants");
-  });
-  router.post("/product-variants/:id/delete", (req, res) => {
-    PRODUCT_VARIANTS = PRODUCT_VARIANTS.filter(x => x.sku != req.params.id);
-    res.redirect("/admin/product-variants");
+
+    // Lọc theo màu (theo color.color_name hoặc color_name)
+    if (color) {
+      const cLower = String(color).toLowerCase();
+      items = items.filter((v) => {
+        const colorName =
+          (v.color && v.color.color_name) ||
+          v.color_name ||
+          "";
+        return String(colorName).toLowerCase() === cLower;
+      });
+    }
+
+    // Lọc theo giá
+    if (price_min) {
+      const min = Number(price_min);
+      items = items.filter((v) => Number(v.price || 0) >= min);
+    }
+    if (price_max) {
+      const max = Number(price_max);
+      items = items.filter((v) => Number(v.price || 0) <= max);
+    }
+
+    // Lọc theo tồn kho
+    if (stock_min) {
+      const minS = Number(stock_min);
+      items = items.filter((v) => Number(v.stock_quantity || 0) >= minS);
+    }
+    if (stock_max) {
+      const maxS = Number(stock_max);
+      items = items.filter((v) => Number(v.stock_quantity || 0) <= maxS);
+    }
+
+    // Danh sách màu để đổ vào select lọc màu
+    const colorOptions = Array.from(
+      new Set(
+        (rawItems || []).map((v) => {
+          const colorName =
+            (v.color && v.color.color_name) ||
+            v.color_name ||
+            "";
+          return colorName || null;
+        })
+      )
+    ).filter(Boolean);
+
+    res.render("entity_index", {
+      title: "Tồn kho",
+      pageHeading: "Tồn kho",
+      items,
+      fields: ["sku", "product", "color", "size", "price", "stock_quantity"],
+      pagination: {
+        ...pagination,
+        baseUrl: baseUrl(req), // /admin/product-variants?...&page=
+      },
+      query: req.query || {},
+      colorOptions,
+    });
   });
 
-  router.get("/product-colors", (req, res) => {
-    const p = paginate(PRODUCT_COLORS, 1, 50);
-    res.render("entity_index", {
-      title: "Màu sắc", pageHeading: "Màu sắc",
-      items: p.items, fields: ["product", "color_name", "color_code", "createdAt"],
-      pagination: { ...p, baseUrl: "/admin/product-colors?page=" }
+
+  router.get("/product-variants/:id", async (req, res) => {
+    const item = await fetchVariantByIdAdmin(req, req.params.id);
+
+    if (!item) return res.status(404).send("Not found");
+
+    res.render("entity_form", {
+      title: "Sửa tồn kho",
+      pageHeading: "Sửa tồn kho",
+      item,
+      // thực tế chỉ cần sửa price + stock_quantity
+      fields: ["sku", "product", "color", "size", "price", "stock_quantity"],
+      actionBase: "/admin/product-variants",
     });
   });
+  router.post("/product-variants/:id", async (req, res) => {
+    const r = await fetchUpdateVariantStockAdmin(req, req.params.id);
+    const q = new URLSearchParams(r.ok ? { s: r.message } : { e: r.message });
+    res.redirect(`/admin/product-variants?${q.toString()}`);
+  });
+  router.get("/product-colors", async (req, res) => {
+    await tryLoadColors(req);
+    const p = paginate(PRODUCT_COLORS, 1, 50);
+
+    res.render("entity_index", {
+      title: "Màu sắc",
+      pageHeading: "Màu sắc",
+      items: p.items,
+      // fields để entity_index.ejs render cột
+      fields: ["product", "color_name", "color_code", "createdAt"],
+      pagination: {
+        ...p,
+        baseUrl: "/admin/product-colors?page=",
+      },
+    });
+  });
+
   router.get("/product-colors/new", (req, res) => res.render("entity_form", {
     title: "Thêm màu", pageHeading: "Thêm màu", item: null,
     fields: ["product", "color_name", "color_code"], actionBase: "/admin/product-colors"
   }));
-  router.get("/product-colors/:id", (req, res) => {
-    const item = PRODUCT_COLORS.find(x => x._id == req.params.id);
+  router.get("/product-colors", async (req, res) => { const p = paginate(PRODUCT_COLORS, 1, 50); res.render("entity_index", { title: "Màu sắc", pageHeading: "Màu sắc", items: p.items, fields: ["product", "color_name", "color_code", "createdAt"], pagination: { ...p, baseUrl: "/admin/product-colors?page=" } }); });
+  router.get("/product-colors/:id", async (req, res) => {
+    await tryLoadColors(req);
+    const item = PRODUCT_COLORS.find(x => String(x._id) == String(req.params.id));
     if (!item) return res.status(404).send("Not found");
     res.render("entity_form", {
       title: "Sửa màu", pageHeading: "Sửa màu", item,
       fields: ["product", "color_name", "color_code"], actionBase: "/admin/product-colors"
     });
   });
-  router.post("/product-colors", (req, res) => {
-    PRODUCT_COLORS.unshift({ _id: "pc" + Date.now(), product: req.body.product, color_name: req.body.color_name, color_code: req.body.color_code, createdAt: new Date() });
-    res.redirect("/admin/product-colors");
-  });
-  router.post("/product-colors/:id", (req, res) => {
-    const i = PRODUCT_COLORS.findIndex(x => x._id == req.params.id);
-    if (i > -1) {
-      PRODUCT_COLORS[i] = { ...PRODUCT_COLORS[i], product: req.body.product, color_name: req.body.color_name, color_code: req.body.color_code };
-    }
-    res.redirect("/admin/product-colors");
-  });
-  router.post("/product-colors/:id/delete", (req, res) => {
-    PRODUCT_COLORS = PRODUCT_COLORS.filter(x => x._id != req.params.id);
-    res.redirect("/admin/product-colors");
+
+  router.post("/product-colors", async (req, res) => {
+    const r = await fetchCreateColor(req);
+    const q = new URLSearchParams(r.ok ? { s: r.message } : { e: r.message });
+    res.redirect(`/admin/product-colors?${q.toString()}`);
   });
 
-  router.get("/product-sizes", (req, res) => {
+  router.post("/product-colors/:id", async (req, res) => {
+    const r = await fetchUpdateColor(req, req.params.id);
+    const q = new URLSearchParams(r.ok ? { s: r.message } : { e: r.message });
+    res.redirect(`/admin/product-colors?${q.toString()}`);
+  });
+
+  router.post("/product-colors/:id/delete", async (req, res) => {
+    const r = await fetchDeleteColor(req, req.params.id);
+    const q = new URLSearchParams(r.ok ? { s: r.message } : { e: r.message });
+    res.redirect(`/admin/product-colors?${q.toString()}`);
+  });
+
+  router.get("/product-sizes", async (req, res) => {
+    await tryLoadSizes(req);
     const p = paginate(PRODUCT_SIZES, 1, 50);
     res.render("entity_index", {
       title: "Kích cỡ", pageHeading: "Kích cỡ",
@@ -829,32 +1509,38 @@ module.exports = function createAdminRouter({ BACKEND, proxy } = {}) {
       pagination: { ...p, baseUrl: "/admin/product-sizes?page=" }
     });
   });
+
   router.get("/product-sizes/new", (req, res) => res.render("entity_form", {
     title: "Thêm size", pageHeading: "Thêm size", item: null,
     fields: ["product", "size_name", "size_order"], actionBase: "/admin/product-sizes"
   }));
-  router.get("/product-sizes/:id", (req, res) => {
-    const item = PRODUCT_SIZES.find(x => x._id == req.params.id);
+
+  router.get("/product-sizes/:id", async (req, res) => {
+    await tryLoadSizes(req);
+    const item = PRODUCT_SIZES.find(x => String(x._id) == String(req.params.id));
     if (!item) return res.status(404).send("Not found");
     res.render("entity_form", {
       title: "Sửa size", pageHeading: "Sửa size", item,
       fields: ["product", "size_name", "size_order"], actionBase: "/admin/product-sizes"
     });
   });
-  router.post("/product-sizes", (req, res) => {
-    PRODUCT_SIZES.unshift({ _id: "ps" + Date.now(), product: req.body.product, size_name: req.body.size_name, size_order: Number(req.body.size_order || 0), createdAt: new Date() });
-    res.redirect("/admin/product-sizes");
+
+  router.post("/product-sizes", async (req, res) => {
+    const r = await fetchCreateSize(req);
+    const q = new URLSearchParams(r.ok ? { s: r.message } : { e: r.message });
+    res.redirect(`/admin/product-sizes?${q.toString()}`);
   });
-  router.post("/product-sizes/:id", (req, res) => {
-    const i = PRODUCT_SIZES.findIndex(x => x._id == req.params.id);
-    if (i > -1) {
-      PRODUCT_SIZES[i] = { ...PRODUCT_SIZES[i], product: req.body.product, size_name: req.body.size_name, size_order: Number(req.body.size_order || 0) };
-    }
-    res.redirect("/admin/product-sizes");
+
+  router.post("/product-sizes/:id", async (req, res) => {
+    const r = await fetchUpdateSize(req, req.params.id);
+    const q = new URLSearchParams(r.ok ? { s: r.message } : { e: r.message });
+    res.redirect(`/admin/product-sizes?${q.toString()}`);
   });
-  router.post("/product-sizes/:id/delete", (req, res) => {
-    PRODUCT_SIZES = PRODUCT_SIZES.filter(x => x._id != req.params.id);
-    res.redirect("/admin/product-sizes");
+
+  router.post("/product-sizes/:id/delete", async (req, res) => {
+    const r = await fetchDeleteSize(req, req.params.id);
+    const q = new URLSearchParams(r.ok ? { s: r.message } : { e: r.message });
+    res.redirect(`/admin/product-sizes?${q.toString()}`);
   });
 
   // ========== Brands / Categories (generic) ==========
@@ -863,22 +1549,98 @@ module.exports = function createAdminRouter({ BACKEND, proxy } = {}) {
     const p = paginate(BRANDS, 1, 100);
     res.render("entity_index", { title: "Thương hiệu", pageHeading: "Thương hiệu", items: p.items, fields: ["name", "slug", "createdAt"], pagination: { ...p, baseUrl: "/admin/brands?page=" } });
   });
-  router.get("/brands/new", (req, res) => res.render("entity_form", { title: "Thêm thương hiệu", pageHeading: "Thêm thương hiệu", item: null, fields: ["name", "slug"], actionBase: "/admin/brands" }));
-  router.get("/brands/:id", (req, res) => { const item = BRANDS.find(x => x._id == req.params.id); if (!item) return res.status(404).send("Not found"); res.render("entity_form", { title: "Sửa thương hiệu", pageHeading: "Sửa thương hiệu", item, fields: ["name", "slug"], actionBase: "/admin/brands" }); });
-  router.post("/brands", (req, res) => { BRANDS.unshift({ _id: "b" + Date.now(), name: req.body.name, slug: req.body.slug, createdAt: new Date() }); res.redirect("/admin/brands"); });
-  router.post("/brands/:id", (req, res) => { const i = BRANDS.findIndex(x => x._id == req.params.id); if (i > -1) { BRANDS[i] = { ...BRANDS[i], name: req.body.name, slug: req.body.slug } } res.redirect("/admin/brands"); });
-  router.post("/brands/:id/delete", (req, res) => { BRANDS = BRANDS.filter(x => x._id != req.params.id); res.redirect("/admin/brands"); });
+  router.get("/brands/new", (req, res) =>
+    res.render("entity_form", {
+      title: "Thêm thương hiệu",
+      pageHeading: "Thêm thương hiệu",
+      item: null,
+      fields: ["name", "slug"],
+      actionBase: "/admin/brands",
+    })
+  );
+
+  router.get("/brands/:id", (req, res) => {
+    const item = BRANDS.find((x) => x._id == req.params.id);
+    if (!item) return res.status(404).send("Not found");
+    res.render("entity_form", {
+      title: "Sửa thương hiệu",
+      pageHeading: "Sửa thương hiệu",
+      item,
+      fields: ["name", "slug"],
+      actionBase: "/admin/brands",
+    });
+  });
+
+  // CREATE -> gọi BE POST /api/brand
+  router.post("/brands", async (req, res) => {
+    const r = await fetchCreateBrand(req);
+    const q = new URLSearchParams(r.ok ? { s: r.message } : { e: r.message });
+    res.redirect(`/admin/brands?${q.toString()}`);
+  });
+
+  // UPDATE -> gọi BE PUT /api/brand/brands/:id
+  router.post("/brands/:id", async (req, res) => {
+    const r = await fetchUpdateBrand(req, req.params.id);
+    const q = new URLSearchParams(r.ok ? { s: r.message } : { e: r.message });
+    res.redirect(`/admin/brands?${q.toString()}`);
+  });
+
+  // DELETE -> gọi BE DELETE /api/brand/brands/:id
+  router.post("/brands/:id/delete", async (req, res) => {
+    const r = await fetchDeleteBrand(req, req.params.id);
+    const q = new URLSearchParams(r.ok ? { s: r.message } : { e: r.message });
+    res.redirect(`/admin/brands?${q.toString()}`);
+  });
+
 
   router.get("/categories", async (req, res) => {
     await tryLoadCategories(req);
     const p = paginate(CATEGORIES, 1, 100);
     res.render("entity_index", { title: "Danh mục", pageHeading: "Danh mục", items: p.items, fields: ["name", "slug", "description", "createdAt"], pagination: { ...p, baseUrl: "/admin/categories?page=" } });
   });
-  router.get("/categories/new", (req, res) => res.render("entity_form", { title: "Thêm danh mục", pageHeading: "Thêm danh mục", item: null, fields: ["name", "slug", "description"], actionBase: "/admin/categories" }));
-  router.get("/categories/:id", (req, res) => { const item = CATEGORIES.find(x => x._id == req.params.id); if (!item) return res.status(404).send("Not found"); res.render("entity_form", { title: "Sửa danh mục", pageHeading: "Sửa danh mục", item, fields: ["name", "slug", "description"], actionBase: "/admin/categories" }); });
-  router.post("/categories", (req, res) => { CATEGORIES.unshift({ _id: "c" + Date.now(), name: req.body.name, slug: req.body.slug, description: req.body.description, createdAt: new Date() }); res.redirect("/admin/categories"); });
-  router.post("/categories/:id", (req, res) => { const i = CATEGORIES.findIndex(x => x._id == req.params.id); if (i > -1) { CATEGORIES[i] = { ...CATEGORIES[i], name: req.body.name, slug: req.body.slug, description: req.body.description } } res.redirect("/admin/categories"); });
-  router.post("/categories/:id/delete", (req, res) => { CATEGORIES = CATEGORIES.filter(x => x._id != req.params.id); res.redirect("/admin/categories"); });
+  router.get("/categories/new", (req, res) =>
+    res.render("entity_form", {
+      title: "Thêm danh mục",
+      pageHeading: "Thêm danh mục",
+      item: null,
+      fields: ["name", "slug", "description"],
+      actionBase: "/admin/categories",
+    })
+  );
+
+  router.get("/categories/:id", (req, res) => {
+    const item = CATEGORIES.find((x) => x._id == req.params.id);
+    if (!item) return res.status(404).send("Not found");
+    res.render("entity_form", {
+      title: "Sửa danh mục",
+      pageHeading: "Sửa danh mục",
+      item,
+      fields: ["name", "slug", "description"],
+      actionBase: "/admin/categories",
+    });
+  });
+
+  // CREATE -> BE POST /api/category
+  router.post("/categories", async (req, res) => {
+    const r = await fetchCreateCategory(req);
+    const q = new URLSearchParams(r.ok ? { s: r.message } : { e: r.message });
+    res.redirect(`/admin/categories?${q.toString()}`);
+  });
+
+  // UPDATE -> BE PUT /api/category/categories/:id
+  router.post("/categories/:id", async (req, res) => {
+    const r = await fetchUpdateCategory(req, req.params.id);
+    const q = new URLSearchParams(r.ok ? { s: r.message } : { e: r.message });
+    res.redirect(`/admin/categories?${q.toString()}`);
+  });
+
+  // DELETE -> BE DELETE /api/category/categories/:id
+  router.post("/categories/:id/delete", async (req, res) => {
+    const r = await fetchDeleteCategory(req, req.params.id);
+    const q = new URLSearchParams(r.ok ? { s: r.message } : { e: r.message });
+    res.redirect(`/admin/categories?${q.toString()}`);
+  });
+
 
   // ========== Orders ==========
   router.get("/orders", (req, res) => {

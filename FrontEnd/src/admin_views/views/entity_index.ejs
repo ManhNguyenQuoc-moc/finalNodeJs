@@ -1,8 +1,16 @@
 <% layout('layouts/admin') %>
 
 <%
-  const isColorPage = activePath && activePath.startsWith('/admin/product-colors');
-  const isSizePage  = activePath && activePath.startsWith('/admin/product-sizes');
+  const isColorPage   = activePath && activePath.startsWith('/admin/product-colors');
+  const isSizePage    = activePath && activePath.startsWith('/admin/product-sizes');
+  const isVariantPage = activePath && activePath.startsWith('/admin/product-variants');
+
+  const q          = (typeof query !== 'undefined' && query.q) ? query.q : '';
+  const qColor     = (typeof query !== 'undefined' && query.color) ? query.color : '';
+  const qPriceMin  = (typeof query !== 'undefined' && query.price_min) ? query.price_min : '';
+  const qPriceMax  = (typeof query !== 'undefined' && query.price_max) ? query.price_max : '';
+  const qStockMin  = (typeof query !== 'undefined' && query.stock_min) ? query.stock_min : '';
+  const qStockMax  = (typeof query !== 'undefined' && query.stock_max) ? query.stock_max : '';
 %>
 
 <section class="space-y-6">
@@ -12,22 +20,110 @@
       <%= pageHeading %>
     </h2>
 
-    <a
-      href="<%= '/admin' + activePath.replace(/\/[^/]*$/, '') + '/new' %>"
-      class="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white shadow-md hover:bg-emerald-700 active:translate-y-[0.5px] focus:outline-none focus:ring-2 focus:ring-emerald-500/70 focus:ring-offset-2 focus:ring-offset-slate-50 transition"
-    >
-      <i class="lucide lucide-plus text-[18px]"></i>
-      <span>Thêm</span>
-    </a>
+    <% if (isVariantPage) { %>
+      <!-- Form tìm kiếm / lọc cho trang tồn kho -->
+      <form method="get" action="<%= activePath %>"
+            class="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-2">
+
+        <div class="flex flex-wrap gap-2">
+          <!-- Search SKU / tên sản phẩm -->
+          <div class="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-1.5 shadow-sm">
+            <i data-lucide="search" class="h-4 w-4 text-slate-400"></i>
+            <input
+              type="text"
+              name="q"
+              value="<%= q %>"
+              placeholder="Tìm SKU hoặc tên sản phẩm..."
+              class="w-40 sm:w-56 border-0 bg-transparent text-xs sm:text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-0"
+            />
+          </div>
+
+          <!-- Lọc theo màu -->
+          <% if (typeof colorOptions !== 'undefined' && colorOptions && colorOptions.length) { %>
+            <select
+              name="color"
+              class="rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs sm:text-sm text-slate-800 shadow-sm">
+              <option value="">Tất cả màu</option>
+              <% colorOptions.forEach(function(c) { %>
+                <option value="<%= c %>" <%= qColor === c ? 'selected' : '' %>><%= c %></option>
+              <% }); %>
+            </select>
+          <% } %>
+
+          <!-- Giá từ / đến -->
+          <div class="flex items-center gap-1 text-[11px] sm:text-xs text-slate-500">
+            <span>Giá:</span>
+            <input
+              type="number"
+              name="price_min"
+              value="<%= qPriceMin %>"
+              placeholder="Từ"
+              class="w-20 rounded-lg border border-slate-200 px-2 py-1 text-xs focus:border-emerald-500 focus:outline-none"
+            />
+            <span>-</span>
+            <input
+              type="number"
+              name="price_max"
+              value="<%= qPriceMax %>"
+              placeholder="Đến"
+              class="w-20 rounded-lg border border-slate-200 px-2 py-1 text-xs focus:border-emerald-500 focus:outline-none"
+            />
+          </div>
+
+          <!-- Tồn kho từ / đến -->
+          <div class="flex items-center gap-1 text-[11px] sm:text-xs text-slate-500">
+            <span>Tồn:</span>
+            <input
+              type="number"
+              name="stock_min"
+              value="<%= qStockMin %>"
+              placeholder="Từ"
+              class="w-16 rounded-lg border border-slate-200 px-2 py-1 text-xs focus:border-emerald-500 focus:outline-none"
+            />
+            <span>-</span>
+            <input
+              type="number"
+              name="stock_max"
+              value="<%= qStockMax %>"
+              placeholder="Đến"
+              class="w-16 rounded-lg border border-slate-200 px-2 py-1 text-xs focus:border-emerald-500 focus:outline-none"
+            />
+          </div>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <button
+            type="submit"
+            class="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 px-4 py-2 text-xs sm:text-sm font-semibold text-white shadow-md hover:bg-emerald-700 active:translate-y-[0.5px] focus:outline-none focus:ring-2 focus:ring-emerald-500/70 focus:ring-offset-2 focus:ring-offset-slate-50 transition">
+            <i data-lucide="filter" class="h-4 w-4"></i>
+            <span>Lọc</span>
+          </button>
+
+          <a
+            href="<%= activePath %>"
+            class="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs sm:text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50">
+            <i data-lucide="x-circle" class="h-4 w-4"></i>
+            <span>Xóa lọc</span>
+          </a>
+        </div>
+      </form>
+    <% } else { %>
+      <!-- Các trang khác vẫn có nút Thêm -->
+      <a href="<%= activePath + '/new' %>"
+        class="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white shadow-md hover:bg-emerald-700 active:translate-y-[0.5px] focus:outline-none focus:ring-2 focus:ring-emerald-500/70 focus:ring-offset-2 focus:ring-offset-slate-50 transition">
+        <span>Thêm</span>
+      </a>
+    <% } %>
   </div>
 
   <!-- Table Card -->
   <div class="rounded-2xl border border-slate-200 bg-white/90 shadow-lg shadow-slate-200/70 overflow-hidden">
-    <!-- Card header (nhẹ nhàng) -->
+    <!-- Card header -->
     <div class="flex items-center justify-between border-b border-slate-100 bg-slate-50/80 px-4 py-3">
       <div class="flex items-center gap-2">
-        <span class="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-100 text-emerald-600 text-sm">
-          <i class="lucide lucide-table"></i>
+        <span
+          class="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-100 text-emerald-600 text-sm">
+          <i data-lucide="lucide-table"></i>
         </span>
         <div class="text-sm">
           <div class="font-semibold text-slate-800">Danh sách</div>
@@ -42,83 +138,222 @@
       <table class="w-full text-[13px] sm:text-[14px]">
         <thead class="sticky top-0 z-10 bg-slate-50/95 backdrop-blur supports-[backdrop-filter]:bg-slate-50/80">
           <tr class="text-left text-slate-500 uppercase text-[11px] tracking-wide border-b border-slate-200">
-            <% fields.forEach(f => { %>
-              <% if ((isColorPage || isSizePage) && (f === 'product' || f === 'products')) { return; } %>
-              <th class="p-3.5 font-semibold">
-                <span class="inline-flex items-center gap-1">
-                  <span><%= f %></span>
-                </span>
-              </th>
-            <% }) %>
+            <% if (isVariantPage) { %>
+              <th class="p-3.5 font-semibold w-16">Ảnh</th>
+              <th class="p-3.5 font-semibold">SKU</th>
+              <th class="p-3.5 font-semibold">Sản phẩm</th>
+              <th class="p-3.5 font-semibold">Màu</th>
+              <th class="p-3.5 font-semibold">Size</th>
+              <th class="p-3.5 font-semibold text-right">Giá</th>
+              <th class="p-3.5 font-semibold text-right">Tồn kho</th>
+              <th class="p-3.5 font-semibold w-40 text-right">Thao tác</th>
+            <% } else { %>
+              <% fields.forEach(function(f) { %>
+                <% if ((isColorPage || isSizePage) && (f === 'product' || f === 'products')) { return; } %>
+                <th class="p-3.5 font-semibold">
+                  <span class="inline-flex items-center gap-1">
+                    <span><%= f %></span>
+                  </span>
+                </th>
+              <% }) %>
 
-            <% if (isColorPage) { %>
-              <th class="p-3.5 font-semibold">Màu sắc</th>
+              <% if (isColorPage) { %>
+                <th class="p-3.5 font-semibold">Màu sắc</th>
+              <% } %>
+
+              <th class="p-3.5 w-36 text-right">Thao tác</th>
             <% } %>
-
-            <th class="p-3.5 w-36 text-right">Thao tác</th>
           </tr>
         </thead>
 
         <tbody class="divide-y divide-slate-100">
-          <% (items||[]).forEach(it=>{ %>
-            <tr class="odd:bg-white even:bg-slate-50/40 hover:bg-emerald-50/60 transition-colors">
-              <% fields.forEach(f=>{ 
-                   if ((isColorPage || isSizePage) && (f === 'product' || f === 'products')) { return; }
-              %>
-                <td class="p-3.5 align-middle whitespace-nowrap max-w-[320px]">
-                  <div class="truncate text-slate-800 text-[13px] sm:text-[14px]">
-                    <%= (it[f]!==undefined && it[f]!==null)
-                          ? it[f]
-                          : (f==='items.length' && it.items ? it.items.length : '—') %>
-                  </div>
-                </td>
-              <% }) %>
+          <% if (isVariantPage) { %>
+            <% (items || []).forEach(function(it, idx) {
+              const img =
+                (Array.isArray(it.images) && it.images[0] && (it.images[0].url || it.images[0])) ||
+                (it.product && Array.isArray(it.product.images) && it.product.images[0] && (it.product.images[0].url || it.product.images[0])) ||
+                "/images/default.png";
 
-              <% if (isColorPage) { 
-                   const colorValue = it.hex || it.code || it.color_code || it.colorHex || '';
-              %>
+              const productName = it.product && it.product.name ? it.product.name : "—";
+              const productId   = it.product && (it.product._id || it.product.id) ? (it.product._id || it.product.id) : "—";
+              const colorName   = it.color && it.color.color_name ? it.color.color_name : (it.color_name || "—");
+              const colorCode   = it.color && it.color.color_code ? it.color.color_code : (it.color_code || "");
+              const sizeName    = it.size && it.size.size_name ? it.size.size_name : (it.size_name || "—");
+              const rowId       = `variant-row-${(it._id || it.sku || idx)}`;
+            %>
+              <!-- Row chính -->
+              <tr class="odd:bg-white even:bg-slate-50/40 hover:bg-emerald-50/60 transition-colors">
                 <td class="p-3.5 align-middle whitespace-nowrap">
                   <div class="flex items-center gap-2">
-                    <span
-                      class="inline-flex h-6 w-6 rounded-full border border-slate-300 shadow-sm"
-                      style="background-color:<%= colorValue || '#000000' %>;"
-                    ></span>
-                    <span class="text-xs sm:text-[13px] text-slate-600 font-medium">
-                      <%= colorValue || '—' %>
+                    <img src="<%= img %>" alt="image"
+                         class="h-10 w-10 rounded-lg object-cover border border-slate-200" />
+                  </div>
+                </td>
+
+                <td class="p-3.5 align-middle whitespace-nowrap">
+                  <div class="font-mono text-xs sm:text-[13px] text-slate-800 truncate">
+                    <%= it.sku %>
+                  </div>
+                </td>
+
+                <td class="p-3.5 align-middle whitespace-nowrap max-w-[260px]">
+                  <div class="text-[13px] text-slate-800 truncate">
+                    <%= productName %>
+                  </div>
+                  <div class="text-[11px] text-slate-500 mt-0.5">
+                    ID: <%= productId %>
+                  </div>
+                </td>
+
+                <td class="p-3.5 align-middle whitespace-nowrap">
+                  <div class="flex items-center gap-2">
+                    <% if (colorCode) { %>
+                      <span class="inline-flex h-5 w-5 rounded-full border border-slate-300"
+                            style="background-color:<%= colorCode %>;"></span>
+                    <% } %>
+                    <span class="text-[13px] text-slate-800">
+                      <%= colorName %>
                     </span>
                   </div>
                 </td>
-              <% } %>
 
-              <td class="p-3.5 text-right align-middle">
-                <div class="inline-flex items-center gap-1.5">
-                  <a
-                    class="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs sm:text-[13px] font-medium text-slate-700 shadow-sm hover:bg-slate-50 hover:border-slate-300 focus:outline-none focus:ring-1 focus:ring-slate-300"
-                    href="<%= activePath %>/<%= it._id || it.code || it.sku %>"
-                  >
-                    <i class="lucide lucide-pencil-line h-3.5 w-3.5"></i>
-                    <span>Sửa</span>
-                  </a>
-                  <form
-                    action="<%= activePath %>/<%= it._id || it.code || it.sku %>/delete"
-                    method="post"
-                    class="inline"
-                    onsubmit="return confirm('Xóa mục này?')"
-                  >
-                    <button
-                      class="inline-flex items-center gap-1 rounded-lg border border-transparent bg-rose-600 px-3 py-1.5 text-xs sm:text-[13px] font-medium text-white shadow-sm hover:bg-rose-700 focus:outline-none focus:ring-1 focus:ring-rose-500"
-                      type="submit"
-                    >
-                      <i class="lucide lucide-trash-2 h-3.5 w-3.5"></i>
-                      <span>Xóa</span>
+                <td class="p-3.5 align-middle whitespace-nowrap">
+                  <span class="text-[13px] font-medium text-slate-800">
+                    <%= sizeName %>
+                  </span>
+                </td>
+
+                <td class="p-3.5 align-middle whitespace-nowrap text-right">
+                  <span class="text-[13px] font-semibold text-slate-800">
+                    <%= money ? money(it.price) : it.price %>
+                  </span>
+                </td>
+
+                <td class="p-3.5 align-middle whitespace-nowrap text-right">
+                  <span
+                    class="text-[13px] font-semibold <%= it.stock_quantity > 0 ? 'text-emerald-600' : 'text-rose-600' %>">
+                    <%= it.stock_quantity %>
+                  </span>
+                </td>
+
+                <td class="p-3.5 text-right align-middle">
+                  <div class="inline-flex items-center gap-1.5">
+                    <!-- Xem chi tiết (dropdown) -->
+                    <button type="button"
+                      class="inline-flex items-center justify-center rounded-lg bg-white px-2.5 py-1.5 text-xs sm:text-[13px] font-medium text-slate-700 shadow-sm hover:bg-slate-50"
+                      onclick="const el = document.getElementById('<%= rowId %>'); if (el) el.classList.toggle('hidden');">
+                      <i data-lucide="eye" class="h-4 w-4"></i>
+                      <span class="sr-only">Chi tiết</span>
                     </button>
-                  </form>
-                </div>
-              </td>
-            </tr>
-          <% }) %>
+                    <!-- Nhập hàng (sửa tồn kho) -->
+                    <a class="inline-flex items-center rounded-lg border border-slate-200 bg-emerald-50 p-1.5 text-xs sm:text-[13px] font-medium text-emerald-700 shadow-sm hover:bg-emerald-100"
+                      href="<%= activePath %>/<%= it._id || it.sku %>">
+                      <span>Nhập hàng</span>
+                    </a>
+                  </div>
+                </td>
+              </tr>
+
+              <!-- Row dropdown chi tiết -->
+              <tr id="<%= rowId %>" class="hidden bg-slate-50/60">
+                <td colspan="8" class="px-4 pb-4">
+                  <div
+                    class="rounded-xl border border-slate-200 bg-white/90 px-4 py-3 text-[13px] text-slate-700 grid gap-3 md:grid-cols-2">
+                    <div>
+                      <div class="font-semibold text-slate-900 mb-1">Thông tin sản phẩm</div>
+                      <div><span class="text-slate-500">Tên:</span> <%= productName %></div>
+                      <div><span class="text-slate-500">Product ID:</span> <%= productId %></div>
+                      <div>
+                        <span class="text-slate-500">Status:</span>
+                        <%= (it.product && it.product.productStatus && it.product.productStatus.statusName) || '—' %>
+                      </div>
+                    </div>
+                    <div>
+                      <div class="font-semibold text-slate-900 mb-1">Biến thể</div>
+                      <div>
+                        <span class="text-slate-500">Màu:</span>
+                        <%= colorName %> <%= colorCode ? '(' + colorCode + ')' : '' %>
+                      </div>
+                      <div><span class="text-slate-500">Size:</span> <%= sizeName %></div>
+                      <div><span class="text-slate-500">SKU:</span> <%= it.sku %></div>
+                      <div><span class="text-slate-500">Giá:</span> <%= money ? money(it.price) : it.price %></div>
+                      <div><span class="text-slate-500">Tồn kho:</span> <%= it.stock_quantity %></div>
+                    </div>
+                  </div>
+                </td>
+              </tr>
+            <% }) %>
+          <% } else { %>
+            <!-- PHẦN CHO COLOR / SIZE / BRAND / CATEGORY ... -->
+            <% (items || []).forEach(function(it) { %>
+              <tr class="odd:bg-white even:bg-slate-50/40 hover:bg-emerald-50/60 transition-colors">
+                <% fields.forEach(function(f) {
+                     if ((isColorPage || isSizePage) && (f === 'product' || f === 'products')) { return; }
+                %>
+                  <td class="p-3.5 align-middle whitespace-nowrap max-w-[320px]">
+                    <div class="truncate text-slate-800 text-[13px] sm:text-[14px]">
+                      <%= (it[f] !== undefined && it[f] !== null)
+                            ? it[f]
+                            : (f === 'items.length' && it.items ? it.items.length : '—') %>
+                    </div>
+                  </td>
+                <% }) %>
+
+                <% if (isColorPage) {
+                     const colorValue = it.hex || it.code || it.color_code || it.colorHex || '';
+                %>
+                  <td class="p-3.5 align-middle whitespace-nowrap">
+                    <div class="flex items-center gap-2">
+                      <span class="inline-flex h-6 w-6 rounded-full border border-slate-300 shadow-sm"
+                            style="background-color:<%= colorValue || '#000000' %>;"></span>
+                      <span class="text-xs sm:text-[13px] text-slate-600 font-medium">
+                        <%= colorValue || '—' %>
+                      </span>
+                    </div>
+                  </td>
+                <% } %>
+
+                <td class="p-3.5 text-right align-middle">
+                  <div class="inline-flex items-center gap-1.5">
+                    <a class="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs sm:text-[13px] font-medium text-slate-700 shadow-sm hover:bg-slate-50 hover:border-slate-300 focus:outline-none focus:ring-1 focus:ring-slate-300"
+                      href="<%= activePath %>/<%= it._id || it.code || it.sku %>">
+                      <span>Sửa</span>
+                    </a>
+                    <form action="<%= activePath %>/<%= it._id || it.code || it.sku %>/delete"
+                          method="post" class="inline"
+                          onsubmit="return confirm('Xóa mục này?')">
+                      <button
+                        class="inline-flex items-center gap-1 rounded-lg border border-transparent bg-rose-600 px-3 py-1.5 text-xs sm:text-[13px] font-medium text-white shadow-sm hover:bg-rose-700 focus:outline-none focus:ring-1 focus:ring-rose-500"
+                        type="submit">
+                        <span>Xóa</span>
+                      </button>
+                    </form>
+                  </div>
+                </td>
+              </tr>
+            <% }) %>
+          <% } %>
         </tbody>
       </table>
     </div>
   </div>
+
+  <!-- Pagination -->
+  <% if (pagination && pagination.totalPages > 0) { %>
+    <nav class="mt-6 flex items-center justify-between">
+      <div class="text-sm text-slate-500 px-4">
+        Trang <%= pagination.page %> / <%= pagination.totalPages %> • Tổng <%= pagination.totalItems %> mục
+      </div>
+      <ul class="inline-flex items-center gap-1">
+        <% for (let i = 1; i <= pagination.totalPages; i++) { %>
+          <li>
+            <a href="<%= pagination.baseUrl %><%= i %>"
+               class="px-3 py-2 rounded-lg border text-sm <%= i === pagination.page ? 'bg-brand-500 text-white border-brand-500' : 'bg-white text-black hover:bg-slate-50' %>">
+              <%= i %>
+            </a>
+          </li>
+        <% } %>
+      </ul>
+    </nav>
+  <% } %>
 </section>

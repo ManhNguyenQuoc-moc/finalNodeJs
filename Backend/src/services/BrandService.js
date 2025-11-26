@@ -2,7 +2,7 @@ const brandRepo = require("../repositories/BrandRepository");
 
 class BrandService {
   async createBrand(data) {
-    const brand = await brandRepo.findById(data.name);
+    const brand = await brandRepo.findOne({ name: data.name })
     if (!brand) {return brandRepo.create(data);}
     throw new Error("Brand not found");
   }
