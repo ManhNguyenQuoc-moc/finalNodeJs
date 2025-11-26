@@ -30,7 +30,10 @@ router.delete("/size/:id", sizeController.delete);
 
 // ===== Variants (đặt TRƯỚC /:id) =====
 router.put("/variants/:id", upload.any(), productController.addVariant);
-
+router.get("/variants", productController.getAllVariants);
+// 1 biến thể
+router.get("/variants/:id", productController.getVariantById);
+router.put("/variants/:id/stock", productController.updateVariantStock);
 // ===== Cuối cùng mới là /:id (bắt-mọi) =====
 router.get("/:id", productController.getProductbyID);
 router.put("/:id", upload.any(), productController.updateProduct);

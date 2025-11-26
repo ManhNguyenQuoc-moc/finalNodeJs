@@ -36,16 +36,94 @@ class userService {
     return await userRepository.updateById(userId, updateData);
   }
 
-  async updateProfile(userId, data) {
-    const allowedFields = ["full_name", "phone", "gender", "birthday"];
-    const updateData = {};
-
-    allowedFields.forEach((field) => {
-      if (data[field] !== undefined) updateData[field] = data[field];
-    });
-
-    return await userRepository.updateById(userId, updateData);
+ async  updateProfile(userId, data) {
+  const user = await userRepository.findById(userId);
+  if (!user) {
+    throw new Error("User không tồn tại");
   }
+
+  const updateData = {};
+  let hasChanges = false;
+
+  // 1. full_name
+  if (
+    data.full_name !== undefined &&
+    data.full_name !== user.full_name
+  ) {
+    updateData.full_name = data.full_name;
+    hasChanges = true;
+  }
+
+  // 2. gender
+  if (
+    data.gender !== undefined &&
+    data.gender !== user.gender
+  ) {
+    updateData.gender = data.gender;
+    hasChanges = true;
+  }
+
+  // 3. birthday (data.birthday là Date hoặc string YYYY-MM-DD)
+  if (data.birthday !== undefined) {
+    const incoming =
+      data.birthday instanceof Date
+        ? data.birthday
+        : new Date(data.birthday);
+
+    const current = user.birthday ? new Date(user.birthday) : null;
+
+    const changed =
+      !current ||
+      current.getTime() !== incoming.getTime();
+
+    if (changed) {
+      updateData.birthday = incoming;
+      hasChanges = true;
+    }
+  }
+
+  // 4. email – cho phép đổi nhưng phải unique
+  if (
+    data.email !== undefined &&
+    data.email !== user.email
+  ) {
+    const existingEmail = await userRepository.findOne({
+      email: data.email,
+      _id: { $ne: userId },
+    });
+    if (existingEmail) {
+      throw new Error("Email đã được sử dụng bởi tài khoản khác");
+    }
+    updateData.email = data.email;
+    hasChanges = true;
+  }
+
+  // 5. phone – cho phép đổi nhưng phải unique
+  if (
+    data.phone !== undefined &&
+    data.phone !== user.phone
+  ) {
+    const existingPhone = await userRepository.findOne({
+      phone: data.phone,
+      _id: { $ne: userId },
+    });
+    if (existingPhone) {
+      throw new Error("Số điện thoại đã được sử dụng bởi tài khoản khác");
+    }
+    updateData.phone = data.phone;
+    hasChanges = true;
+  }
+
+  // Nếu không có gì thay đổi thì trả lại user luôn
+  if (!hasChanges) {
+    return user;
+  }
+
+  // Update
+  const updatedUser = await userRepository.updateById(userId, updateData);
+  return updatedUser;
+}
+
 
   async deleteUser(id) {
     return await userRepository.deleteById(id);

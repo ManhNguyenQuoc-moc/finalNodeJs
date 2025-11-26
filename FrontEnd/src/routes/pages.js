@@ -462,6 +462,56 @@ module.exports = function createPagesRouter({ BACKEND, proxy }) {
         if (!data || data.redirectToLogin) return res.redirect("/login");
         res.render("account_profile", { title: "Tài khoản", activeAccountTab: "profile", ...data });
     });
+    router.post("/account/profile/update", async (req, res) => {
+        const profile = await fetchJSONAuth(req, `${BACKEND}/api/page/account/profile`).catch(() => null);
+        if (!profile || profile.redirectToLogin) return res.redirect("/login");
+
+        try {
+            // Forward dữ liệu form lên BE /api/account/profile (PUT)
+            const resp = await fetch(`${BACKEND}/api/account/profile`, {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                    cookie: req.headers.cookie || "",
+                },
+                // Có thể filter các field cụ thể nếu muốn, còn không thì forward thẳng:
+                body: JSON.stringify(req.body),
+            });
+
+            const data = await resp.json().catch(() => null);
+
+            if (!resp.ok) {
+                return res.render("account_profile", {
+                    title: "Tài khoản",
+                    activeAccountTab: "profile",
+                    error: (data && data.message) || "Cập nhật thông tin thất bại.",
+                    success: null,
+                    ...profile,
+                });
+            }
+
+            // Re-fetch profile sau khi update để EJS có data mới nhất (nếu cần)
+            const updatedProfile =
+                (await fetchJSONAuth(req, `${BACKEND}/api/page/account/profile`).catch(() => null)) || profile;
+
+            return res.render("account_profile", {
+                title: "Tài khoản",
+                activeAccountTab: "profile",
+                error: null,
+                success: (data && data.message) || "Cập nhật thông tin thành công.",
+                ...updatedProfile,
+            });
+        } catch (e) {
+            console.error("Update-profile FE error:", e);
+            return res.render("account_profile", {
+                title: "Tài khoản",
+                activeAccountTab: "profile",
+                error: "Có lỗi xảy ra, vui lòng thử lại.",
+                success: null,
+                ...profile,
+            });
+        }
+    });
     router.post("/account/profile/change-password", async (req, res) => {
         const { current_password, new_password, confirm_password } = req.body;
 

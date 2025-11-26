@@ -16,6 +16,26 @@ const userSchema = new mongoose.Schema(
     },
     password_hash: { type: String, default: null },
     full_name: String,
+    // 🔥 thêm phone
+    phone: {
+      type: String,
+      unique: true,
+      sparse: true, // cho phép null, nhưng nếu có thì unique
+    },
+
+    // 🔥 thêm gender
+    gender: {
+      type: String,
+      enum: ["male", "female", "other", null],
+      default: null,
+    },
+
+    // 🔥 thêm birthday
+    birthday: {
+      type: Date,
+      default: null,
+    },
+
     role: { type: String, enum: ["customer", "admin"], default: "customer" },
     loyalty_points: { type: Number, default: 0 },
 

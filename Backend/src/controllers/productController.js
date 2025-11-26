@@ -140,5 +140,65 @@ exports.getProductById = async (req, res) => {
     });
   }
 };
+exports.getAllVariants = async (req, res) => {
+  try {
+    const { page, limit } = req.query; // lấy từ query ?page=&limit=
 
+    const variants = await productService.getAllVariants(page, limit);
+
+    return res.status(200).json({
+      success: true,
+      data: variants,
+    });
+  } catch (err) {
+    console.error("Error fetching variants:", err);
+    return res.status(500).json({
+      success: false,
+      message: err.message,
+    });
+  }
+};
+
+// Lấy 1 variant
+exports.getVariantById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const variant = await productService.getVariantById(id);
+    return res.status(200).json({
+      success: true,
+      data: variant,
+    });
+  } catch (err) {
+    console.error("Error fetching variant:", err);
+    const code = /not found/i.test(err.message) ? 404 : 500;
+    return res.status(code).json({
+      success: false,
+      message: err.message,
+    });
+  }
+};
+
+// Cập nhật tồn kho (và giá nếu muốn)
+exports.updateVariantStock = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { price, stock_quantity } = req.body;
+    const updated = await productService.updateVariantStock(id, {
+      price,
+      stock_quantity,
+    });
+    return res.status(200).json({
+      success: true,
+      message: "Variant updated successfully",
+      data: updated,
+    });
+  } catch (err) {
+    console.error("Error updating variant:", err);
+    const code = /not found/i.test(err.message) ? 404 : 400;
+    return res.status(code).json({
+      success: false,
+      message: err.message,
+    });
+  }
+};
 
