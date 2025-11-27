@@ -108,11 +108,197 @@
     height: 220px;
     object-fit: cover;
   }
+  .mixi-best-thumb {
+    height: 260px;
+    object-fit: cover;
+    transition: transform 0.25s ease;
+  }
+  .mixi-latest-card:hover .mixi-best-thumb {
+    transform: scale(1.02);
+  }
+  .mixi-status-pill {
+    position: absolute;
+    top: 1rem;
+    left: 1rem;
+    padding: 0.25rem 0.75rem;
+    border-radius: 999px;
+    background: rgba(13,18,54,0.85);
+    color: #fff;
+    font-size: 0.75rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
   .mixi-latest-card__body {
     padding: 1.25rem;
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
+  }
+  .mixi-product-card {
+    background: #fff;
+    border-radius: 1.25rem;
+    box-shadow: 0 18px 48px rgba(15, 23, 42, 0.08);
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+  }
+  .mixi-product-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 25px 70px rgba(15, 23, 42, 0.14);
+  }
+  .mixi-product-thumb {
+    position: relative;
+    display: block;
+    overflow: hidden;
+    border-radius: 1.25rem 1.25rem 0 0;
+    background: #f6f7fb;
+  }
+  .mixi-product-thumb img {
+    width: 100%;
+    height: 260px;
+    object-fit: cover;
+    display: block;
+    transition: transform 0.35s ease, opacity 0.35s ease;
+  }
+  .mixi-product-thumb__hover {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    z-index: 2;
+  }
+  .mixi-product-card:hover .mixi-product-thumb img:first-child {
+    transform: scale(1.05);
+  }
+  .mixi-product-card:hover .mixi-product-thumb__hover {
+    opacity: 1;
+    transform: scale(1.02);
+  }
+  .mixi-product-body {
+    padding: 1.25rem 1.35rem 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+    height: 100%;
+  }
+  .mixi-product-meta {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #94a3b8;
+  }
+  .mixi-product-title {
+    font-size: 1rem;
+    margin-bottom: 0;
+  }
+  .mixi-product-title a {
+    color: #0f172a;
+    text-decoration: none;
+  }
+  .mixi-product-desc {
+    font-size: 0.9rem;
+    color: #6b7280;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.5;
+    max-height: 3em; /* 2 dòng x 1.5 line-height */
+  }
+  .mixi-rating {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    flex-wrap: wrap;
+  }
+  .mixi-rating__value {
+    font-weight: 700;
+    color: #0f172a;
+    font-size: 1rem;
+  }
+  .mixi-rating__stars {
+    display: flex;
+    gap: 0.1rem;
+    font-size: 0.85rem;
+    color: #cbd5f5;
+  }
+  .mixi-rating__star.is-active {
+    color: #f6ad55;
+  }
+  .mixi-rating__count {
+    font-size: 0.85rem;
+    color: #64748b;
+  }
+  .mixi-color-swatches {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin-top: 0.35rem;
+  }
+  .mixi-swatch {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: 2px solid transparent;
+    background-size: cover;
+    background-position: center;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: border-color 0.2s ease, transform 0.2s ease;
+    position: relative;
+  }
+  .mixi-swatch::after {
+    content: "";
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    border: 1px solid rgba(255,255,255,0.6);
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+  }
+  .mixi-swatch.is-active {
+    border-color: #0f172a;
+    transform: scale(1.05);
+  }
+  .mixi-swatch span {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+  .mixi-product-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: auto;
+  }
+  .mixi-price {
+    font-weight: 700;
+    font-size: 1.1rem;
+    color: #111827;
+  }
+  .mixi-product-badge {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    padding: 0.35rem 0.9rem;
+    border-radius: 999px;
+    background: rgba(15, 23, 42, 0.85);
+    color: #fff;
+    font-size: 0.72rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .products-grid .mixi-product-thumb img,
+  .products-grid .mixi-product-thumb__hover {
+    height: 220px;
   }
   .mixi-subtle-btn {
     text-transform: uppercase;
@@ -148,6 +334,11 @@
   const safeCategories = Array.isArray(categories) ? categories : [];
   const safeProducts = Array.isArray(products) ? products : [];
   const curatedShowcase = safeProducts.slice(0, 4);
+  const bestSellerPool = safeProducts.filter((item) => {
+    const statusName = (item?.productStatus?.statusName || "").toLowerCase();
+    return statusName.includes("bán chạy") || statusName.includes("best");
+  });
+  const bestSellerShowcase = (bestSellerPool.length ? bestSellerPool : safeProducts).slice(0, 8);
 %>
 
 <main>
@@ -250,7 +441,7 @@
           <div class="mixi-latest-card__body">
             <small class="text-uppercase text-muted"><%= item.brand?.name || "Mixi Original" %></small>
             <h6 class="mb-1"><a href="/product_detail/<%= item._id || item.id %>" class="text-dark"><%= item.name %></a></h6>
-            <p class="text-muted small mb-2"><%= item.short_description || "Phiên bản giới hạn dành riêng cho cộng đồng Mixi." %></p>
+            <p class="text-muted small mb-2 mixi-product-desc"><%= item.short_description || "Phiên bản giới hạn dành riêng cho cộng đồng Mixi." %></p>
             <div class="d-flex justify-content-between align-items-center">
               <span class="fw-semibold"><%= item.price ? new Intl.NumberFormat('vi-VN').format(item.price) + " đ" : "Giá cập nhật" %></span>
               <a href="/product_detail/<%= item._id || item.id %>" class="btn btn-sm btn-outline-primary mixi-subtle-btn">Chi tiết</a>
@@ -423,96 +614,62 @@
                   }
                 }'>
               <div class="swiper-wrapper">
-                <% (products.length > 5 ? products.slice(0, 5) : products).forEach(product => { %>
-                  <div class="swiper-slide product-card product-card_style3">
-                    <div class="pc__img-wrapper position-relative">
-                      <a href="/product_detail/<%= product._id %>">
-                        <img loading="lazy"
-                            src="<%= product.colors.length > 0 ? product.colors[0].imageUrls[0] : '/images/default.png' %>"
-                            width="258" height="313"
-                            alt="<%= product.name %>" class="pc__img">
-
-                        <img loading="lazy"
-                            src="<%= product.colors.length > 0 && product.colors[0].imageUrls.length > 1 
-                                      ? product.colors[0].imageUrls[1] 
-                                      : '/images/default.png' %>"
-                            width="258" height="313"
-                            alt="<%= product.name %>" class="pc__img pc__img-second">
-
-                        <img class="category-banner__frame" src="/mixishop/images/frame_trending.png" alt="Nền">
+        <% (products.length > 5 ? products.slice(0, 5) : products).forEach(product => { 
+             const colorOptions = Array.isArray(product.colors) ? product.colors : [];
+             const firstColor = colorOptions.length ? colorOptions[0] : null;
+             const mainImage = firstColor && firstColor.imageUrls && firstColor.imageUrls[0] ? firstColor.imageUrls[0] : '/images/default.png';
+             const hoverImage = firstColor && firstColor.imageUrls && firstColor.imageUrls[1] ? firstColor.imageUrls[1] : mainImage;
+             const avgRating = Number(product.avg_rating || 0);
+             const safeAvg = Number.isFinite(avgRating) ? avgRating : 0;
+             const reviewCount = Number(product.rating_count || product.total_reviews || 0);
+             const safeReview = Number.isFinite(reviewCount) ? reviewCount : 0;
+                %>
+                  <div class="swiper-slide">
+            <article class="mixi-product-card" data-product-id="hot-<%= product._id %>">
+                      <a href="/product_detail/<%= product._id %>" class="mixi-product-thumb">
+                        <img loading="lazy" src="<%= mainImage %>" alt="<%= product.name %>">
+                        <img loading="lazy" src="<%= hoverImage %>" alt="<%= product.name %>" class="mixi-product-thumb__hover">
+                        <span class="mixi-product-badge">Hot trend</span>
                       </a>
-                    </div>
-
-                    <!-- Swatch images -->
-                    <div class="d-flex align-items-center mt-1 custom-swatch-container">
-                      <% (product && Array.isArray(product.colors) ? product.colors : []).forEach(productColor => { 
-                          const imgs = Array.isArray(productColor.imageUrls) ? productColor.imageUrls : [];
-                          const first = imgs.length ? imgs[0] : '/images/placeholder.png'; // đổi path placeholder theo dự án của bạn
-                      %>
-                        <a
-                          href="#"
-                          class="swatch-color custom-swatch-color"
-                          style="background-image: url('<%= encodeURI(first) %>'); background-size: cover;"
-                          data-images="<%= imgs.map(u => encodeURI(u)).join('|') %>"
-                          onclick="changeColor(this); return false;"
-                          title="<%= productColor.color || '' %>">
-                        </a>
-                      <% }) %>
-                    </div>
-
-
-                    <div class="pc__info position-relative d-flex flex-column justify-content-between">
-                      <h1 class="pc__title">
-                        <a href="/product_detail/<%= product.id %>"><%= product.name %></a>
-                      </h1>
-
-                      <!-- ✅ thêm short_description -->
-                      <p class="small text-muted mb-1"><%= product.short_description %></p>
-
-                      <!-- ✅ thêm rating -->
-                      <div class="d-flex align-items-center mb-2">
-                        <% for (let i = 1; i <= 5; i++) { %>
-                          <% if (i <= Math.round(product.avg_rating)) { %>
-                            <span class="text-warning">★</span>
-                          <% } else { %>
-                            <span class="text-muted">☆</span>
-                          <% } %>
-                        <% } %>
-                        <span class="ms-2">(<%= product.rating_count %> đánh giá)</span>
-                      </div>
-
-                      <!-- Giá -->
-                      <div class="product-card__price d-flex align-items-center justify-content-between">
-                        <span class="money price-old">
-                          <%= (typeof product.price === "number" ? (product.price + 100000).toLocaleString() : "0") %> đ
-                        </span>
-                        <span class="money price text-secondary small-price" style="color: blue;">
-                          <%= (typeof product.price === "number" ? product.price.toLocaleString() : "0") %> đ
-                        </span>
-
-                      </div>
-                    </div>
-
-
-                    <div class="anim_appear-bottom position-absolute bottom-0 start-0 end-0 d-none d-sm-flex justify-content-between align-items-center bg-body px-3">
-                      <!-- Nút thêm giỏ hàng (bên trái) -->
-                      <a href="/product_detail/<%= product.id %>"
-                        class="btn-icon btn-link btn-link_lg fw-medium"
-                        title="Thêm vào giỏ hàng">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-                          <use href="#icon_cart" />
-                        </svg>
-                        <span class="ms-2 small-text">Thêm giỏ hàng</span>
-                      </a>
-
-                      <!-- Nút yêu thích (bên phải) -->
-                      <button class="pc__btn-wl bg-transparent border-0 js-add-wishlist" title="Thêm yêu thích">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-                          <use href="#icon_heart" />
-                        </svg>
+                      <div class="mixi-product-body">
+                        <span class="mixi-product-meta"><%= product.brand?.name || 'Mixi Original' %></span>
+                        <h3 class="mixi-product-title">
+                          <a href="/product_detail/<%= product._id %>"><%= product.name %></a>
+                        </h3>
+                        <p class="mixi-product-desc"><%= product.short_description || 'Phiên bản giới hạn dành cho cộng đồng Mixi.' %></p>
+                        <div class="mixi-rating">
+                          <span class="mixi-rating__value"><%= safeAvg.toFixed(1) %></span>
+                          <div class="mixi-rating__stars">
+                            <% for (let i = 1; i <= 5; i++) { %>
+                              <span class="mixi-rating__star <%= i <= Math.round(safeAvg) ? 'is-active' : '' %>">★</span>
+                            <% } %>
+                          </div>
+                          <span class="mixi-rating__count"><%= safeReview %> đánh giá</span>
+                        </div>
+                <% if (colorOptions.length) { %>
+                  <div class="mixi-color-swatches">
+                    <% colorOptions.slice(0, 6).forEach((productColor, idx) => { 
+                         const imgs = Array.isArray(productColor.imageUrls) ? productColor.imageUrls.filter(Boolean) : [];
+                         const preview = imgs.length ? imgs[0] : '/images/default.png';
+                         const second = imgs[1] || imgs[0] || preview;
+                    %>
+                      <button type="button"
+                              class="mixi-swatch <%= idx === 0 ? 'is-active' : '' %>"
+                              data-product-target="hot-<%= product._id %>"
+                              data-images="<%= [preview, second].filter(Boolean).map(encodeURI).join('|') %>"
+                              style="background-image:url('<%= encodeURI(preview) %>')"
+                              aria-label="Màu <%= productColor.color || productColor.color_id?.color_name || '' %>">
+                        <span><%= productColor.color || productColor.color_id?.color_name || '' %></span>
                       </button>
-                    </div>
-
+                    <% }) %>
+                  </div>
+                <% } %>
+                        <div class="mixi-product-footer">
+                          <span class="mixi-price"><%= (typeof product.price === "number" ? new Intl.NumberFormat('vi-VN').format(product.price) + " đ" : "Giá cập nhật") %></span>
+                          <a href="/product_detail/<%= product._id %>" class="btn btn-outline-dark btn-sm rounded-pill">Mua ngay</a>
+                        </div>
+                      </div>
+                    </article>
                   </div>
                 <% }) %>
               </div>
@@ -578,99 +735,69 @@
 
       <div class="row">
 
-        <% (products.length > 16 ? products.slice(0, 16) : products).forEach(product_list => { %>
+        <% (products.length > 16 ? products.slice(0, 16) : products).forEach(product_list => { 
+             const colorList = Array.isArray(product_list.colors) ? product_list.colors : [];
+             const firstColorList = colorList.length ? colorList[0] : null;
+             const mainImageList = firstColorList && firstColorList.imageUrls && firstColorList.imageUrls[0] ? firstColorList.imageUrls[0] : '/images/default.png';
+             const hoverImageList = firstColorList && firstColorList.imageUrls && firstColorList.imageUrls[1] ? firstColorList.imageUrls[1] : mainImageList;
+             const avgList = Number(product_list.avg_rating || 0);
+             const safeAvgList = Number.isFinite(avgList) ? avgList : 0;
+             const reviewList = Number(product_list.rating_count || product_list.total_reviews || 0);
+             const safeReviewList = Number.isFinite(reviewList) ? reviewList : 0;
+             const statusLabel = product_list.productStatus?.statusName || null;
+             const detailUrl = `/product_detail/${product_list._id || product_list.id}`;
+             const priceLabel = typeof product_list.price === "number"
+               ? new Intl.NumberFormat('vi-VN').format(product_list.price) + " đ"
+               : (product_list.getFormattedPrice ? product_list.getFormattedPrice(product_list.price) : "Liên hệ");
+        %>
           <div class="col-6 col-md-4 col-lg-3">
-            <div class="product-card product-card_style3 mb-3 mb-md-4 mb-xxl-5">
-              <div class="pc__img-wrapper">
-                <a href="/product_detail/<%= product_list.id %>">
-                  <img loading="lazy"
-                      src="<%= product_list.colors && product_list.colors.length > 0 && product_list.colors[0].imageUrls.length > 0 
-                              ? product_list.colors[0].imageUrls[0] 
-                              : '/images/default.png' %>"
-                      width="258" height="313"
-                      alt="<%= product_list.name %>" class="pc__img">
-
-                  <img loading="lazy"
-                      src="<%= product_list.colors && product_list.colors.length > 0 && product_list.colors[0].imageUrls.length > 1 
-                              ? product_list.colors[0].imageUrls[1] 
-                              : (product_list.colors.length > 0 && product_list.colors[0].imageUrls.length > 0 
-                                  ? product_list.colors[0].imageUrls[0] 
-                                  : '/images/default.png') %>"
-                      width="258" height="313"
-                      alt="<%= product_list.name %>" class="pc__img pc__img-second">
-
-                  <img class="category-banner__frame" 
-                      src="<%= product_list.productStatus && product_list.productStatus.statusName === 'Bán chạy' 
-                              ? '/mixishop/images/frame_banchay.png' 
-                              : (product_list.productStatus && product_list.productStatus.statusName === 'Trending' 
-                                  ? '/mixishop/images/frame_trending.png' 
-                                  : '/mixishop/images/frame_new.png') %>" 
-                      alt="Status Frame">
-                </a>
-              </div>
-
-              <!-- Swatch images -->
-              <div class="d-flex align-items-center mt-1 custom-swatch-container">
-                <% const colorsSafe = (product_list && Array.isArray(product_list.colors)) ? product_list.colors : []; %>
-                <% if (colorsSafe.length > 0) { %>
-                  <% colorsSafe.forEach((productColor) => { 
-                      const imgs = Array.isArray(productColor.imageUrls) ? productColor.imageUrls : [];
-                      const first = imgs.length ? imgs[0] : '/images/placeholder.png'; // đổi path placeholder nếu cần
-                      const dataImages = imgs.map(u => encodeURI(u)).join('|');       // dùng '|' thay vì ','
-                  %>
-                    <a
-                      href="#"
-                      class="swatch-color custom-swatch-color"
-                      style="background-image: url('<%= encodeURI(first) %>'); background-size: cover;"
-                      data-images="<%= dataImages %>"
-                      onclick="changeColor(this); return false;"
-                      title="<%= productColor.color || '' %>">
-                    </a>
-                  <% }) %>
+            <article class="mixi-product-card mb-3 mb-md-4 mb-xxl-5" data-product-id="grid-<%= product_list._id || product_list.id %>">
+              <a href="<%= detailUrl %>" class="mixi-product-thumb">
+                <img loading="lazy" src="<%= mainImageList %>" alt="<%= product_list.name %>">
+                <img loading="lazy" src="<%= hoverImageList %>" alt="<%= product_list.name %>" class="mixi-product-thumb__hover">
+                <% if (statusLabel) { %>
+                  <span class="mixi-product-badge"><%= statusLabel %></span>
                 <% } %>
-              </div>
-
-
-              <div class="pc__info position-relative">
-                <h3 class="pc__title">
-                  <a href="/product_detail/<%= product_list.id %>"><%= product_list.name %></a>
+              </a>
+              <div class="mixi-product-body">
+                <span class="mixi-product-meta"><%= product_list.brand?.name || product_list.category?.name || 'Mixi Original' %></span>
+                <h3 class="mixi-product-title">
+                  <a href="<%= detailUrl %>"><%= product_list.name %></a>
                 </h3>
-
-                <p class="small text-muted"><%= product_list.short_description %></p>
-
-                <div class="product-card__rating mb-1">
-                  ⭐ <%= product_list.avg_rating %> / 5 
-                  (<%= product_list.rating_count %> đánh giá)
+                <p class="mixi-product-desc"><%= product_list.short_description || 'Thiết kế độc quyền MixiShop.' %></p>
+                <div class="mixi-rating">
+                  <span class="mixi-rating__value"><%= safeAvgList.toFixed(1) %></span>
+                  <div class="mixi-rating__stars">
+                    <% for (let i = 1; i <= 5; i++) { %>
+                      <span class="mixi-rating__star <%= i <= Math.round(safeAvgList) ? 'is-active' : '' %>">★</span>
+                    <% } %>
+                  </div>
+                  <span class="mixi-rating__count"><%= safeReviewList %> đánh giá</span>
                 </div>
-
-                <div class="product-card__price d-flex align-items-center">
-                  <span class="money price text-secondary" style="color: blue;">
-                    <%= product_list.getFormattedPrice ? product_list.getFormattedPrice(product_list.price) : ('$' + product_list.price) %>
-                  </span>
-                  
+                <% if (colorList.length) { %>
+                  <div class="mixi-color-swatches">
+                    <% colorList.slice(0, 6).forEach((productColor, idx) => { 
+                         const imgs = Array.isArray(productColor.imageUrls) ? productColor.imageUrls.filter(Boolean) : [];
+                         const preview = imgs.length ? imgs[0] : '/images/default.png';
+                         const second = imgs[1] || imgs[0] || preview;
+                    %>
+                      <button type="button"
+                              class="mixi-swatch <%= idx === 0 ? 'is-active' : '' %>"
+                              data-product-target="grid-<%= product_list._id || product_list.id %>"
+                              data-images="<%= [preview, second].filter(Boolean).map(encodeURI).join('|') %>"
+                              style="background-image:url('<%= encodeURI(preview) %>')"
+                              aria-label="Màu <%= productColor.color || productColor.color_id?.color_name || '' %>">
+                        <span><%= productColor.color || productColor.color_id?.color_name || '' %></span>
+                      </button>
+                    <% }) %>
+                  </div>
+                <% } %>
+                <div class="mixi-product-footer">
+                  <span class="mixi-price"><%= priceLabel %></span>
+                  <a href="<%= detailUrl %>" class="btn btn-sm btn-outline-dark rounded-pill">Xem chi tiết</a>
                 </div>
-
-                <div class="anim_appear-bottom position-absolute bottom-0 start-0 end-0 d-none d-sm-flex justify-content-between align-items-center bg-body px-3">
-                  <!-- Nút thêm giỏ hàng (bên trái) -->
-                  <a href="/product_detail/<%= product_list.id %>"
-                    class="btn-icon btn-link btn-link_lg fw-medium"
-                    title="Thêm vào giỏ hàng">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-                      <use href="#icon_cart" />
-                    </svg>
-                    <span class="ms-2 small-text">Thêm giỏ hàng</span>
-                  </a>
-
-                  <!-- Nút yêu thích (bên phải) -->
-                  <button class="pc__btn-wl bg-transparent border-0 js-add-wishlist" title="Thêm yêu thích">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-                      <use href="#icon_heart" />
-                    </svg>
-                  </button>
-                </div>
-
               </div>
-            </div>
+            </article>
           </div>
         <% }) %>
 
@@ -678,6 +805,81 @@
 
       <div class="text-center mt-2">
         <a class="btn-link btn-link_lg default-underline text-uppercase fw-medium" href="/category/alls">Xem tất cả</a>
+      </div>
+    </section>
+
+    <section class="container my-5">
+      <div class="d-flex flex-column flex-lg-row align-items-lg-center justify-content-between mb-4 gap-3">
+        <div>
+          <span class="mixi-badge">Best Sellers</span>
+          <h2 class="mt-3 mb-0">Sản phẩm bán chạy</h2>
+          <p class="text-muted mb-0">Tổng hợp các item có trạng thái “Bán chạy”, được cộng đồng quan tâm nhiều nhất.</p>
+        </div>
+        <a href="/category/alls?sort=price_high_to_low" class="btn btn-outline-dark px-4 rounded-pill">Xem tất cả</a>
+      </div>
+      <div class="row g-4">
+        <% bestSellerShowcase.forEach((product) => { 
+             const colorBest = Array.isArray(product.colors) ? product.colors : [];
+             const firstColor = colorBest.length ? colorBest[0] : null;
+             const firstImg = firstColor && Array.isArray(firstColor.imageUrls) && firstColor.imageUrls.length ? firstColor.imageUrls[0] : '/images/default.png';
+             const secondaryImg = firstColor && Array.isArray(firstColor.imageUrls) && firstColor.imageUrls[1] ? firstColor.imageUrls[1] : firstImg;
+             const badge = product.productStatus?.statusName || 'Bán chạy';
+             const avgBest = Number(product.avg_rating || 0);
+             const safeAvgBest = Number.isFinite(avgBest) ? avgBest : 0;
+             const reviewBest = Number(product.rating_count || product.total_reviews || 0);
+             const safeReviewBest = Number.isFinite(reviewBest) ? reviewBest : 0;
+             const detailUrlBest = `/product_detail/${product._id || product.id}`;
+        %>
+          <div class="col-12 col-sm-6 col-xl-3">
+            <article class="mixi-product-card h-100" data-product-id="best-<%= product._id || product.id %>">
+              <a href="<%= detailUrlBest %>" class="mixi-product-thumb">
+                <img loading="lazy" class="mixi-best-thumb" src="<%= firstImg %>" alt="<%= product.name %>">
+                <img loading="lazy" class="mixi-product-thumb__hover" src="<%= secondaryImg %>" alt="<%= product.name %>">
+                <span class="mixi-status-pill"><%= badge %></span>
+              </a>
+              <div class="mixi-product-body">
+                <small class="mixi-product-meta d-block"><%= product.brand?.name || 'Mixi Original' %></small>
+                <h6 class="mixi-product-title">
+                  <a href="<%= detailUrlBest %>" class="text-dark text-decoration-none"><%= product.name %></a>
+                </h6>
+                <p class="mixi-product-desc"><%= product.short_description || 'Phiên bản được săn đón nhiều nhất tuần này.' %></p>
+                <div class="mixi-rating">
+                  <span class="mixi-rating__value"><%= safeAvgBest.toFixed(1) %></span>
+                  <div class="mixi-rating__stars">
+                    <% for (let i = 1; i <= 5; i++) { %>
+                      <span class="mixi-rating__star <%= i <= Math.round(safeAvgBest) ? 'is-active' : '' %>">★</span>
+                    <% } %>
+                  </div>
+                  <span class="mixi-rating__count"><%= safeReviewBest %> đánh giá</span>
+                </div>
+                <% if (colorBest.length) { %>
+                  <div class="mixi-color-swatches">
+                    <% colorBest.slice(0, 6).forEach((productColor, idx) => { 
+                         const imgs = Array.isArray(productColor.imageUrls) ? productColor.imageUrls.filter(Boolean) : [];
+                         const preview = imgs.length ? imgs[0] : '/images/default.png';
+                         const second = imgs[1] || imgs[0] || preview;
+                    %>
+                      <button type="button"
+                              class="mixi-swatch <%= idx === 0 ? 'is-active' : '' %>"
+                              data-product-target="best-<%= product._id || product.id %>"
+                              data-images="<%= [preview, second].filter(Boolean).map(encodeURI).join('|') %>"
+                              style="background-image:url('<%= encodeURI(preview) %>')"
+                              aria-label="Màu <%= productColor.color || productColor.color_id?.color_name || '' %>">
+                        <span><%= productColor.color || productColor.color_id?.color_name || '' %></span>
+                      </button>
+                    <% }) %>
+                  </div>
+                <% } %>
+                <div class="mixi-product-footer">
+                  <span class="mixi-price">
+                    <%= product.price ? new Intl.NumberFormat('vi-VN').format(product.price) + " đ" : "Giá cập nhật" %>
+                  </span>
+                  <a href="<%= detailUrlBest %>" class="btn btn-sm btn-outline-primary rounded-pill">Chi tiết</a>
+                </div>
+              </div>
+            </article>
+          </div>
+        <% }) %>
       </div>
     </section>
   </div>
@@ -816,6 +1018,24 @@
     if (mainEl && instagramSection) {
       mainEl.appendChild(instagramSection);
     }
+  });
+
+  document.addEventListener('click', (event) => {
+    const swatch = event.target.closest('.mixi-swatch');
+    if (!swatch) return;
+    event.preventDefault();
+    const targetId = swatch.dataset.productTarget;
+    const card = targetId ? document.querySelector(`[data-product-id="${targetId}"]`) : swatch.closest('.mixi-product-card');
+    if (!card) return;
+    const images = (swatch.dataset.images || '').split('|').map(decodeURIComponent).filter(Boolean);
+    const thumbImages = card.querySelectorAll('.mixi-product-thumb img');
+    if (thumbImages.length) {
+      if (images[0]) thumbImages[0].src = images[0];
+      if (thumbImages[1]) thumbImages[1].src = images[1] || images[0] || thumbImages[1].src;
+    }
+    const related = document.querySelectorAll(`.mixi-swatch[data-product-target="${targetId}"]`);
+    (related.length ? related : card.querySelectorAll('.mixi-swatch')).forEach((btn) => btn.classList.remove('is-active'));
+    swatch.classList.add('is-active');
   });
 </script>
 
