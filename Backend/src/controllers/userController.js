@@ -72,7 +72,7 @@ exports.updateUser = async (req, res) => {
     const adminId = req.currentUser?.id || req.user?._id;
 
     const updateData = { ...req.body };
-    delete updateData.password_hash; // không cho cập nhật trực tiếp hash
+    delete updateData.password_hash;
 
     const updated = await userService.adminUpdateUser(adminId, userId, updateData);
     if (!updated) {
@@ -261,7 +261,16 @@ exports.getAddressesOfUserAdmin = async (req, res) => {
     return res.status(500).json({ success: false, message: err.message });
   }
 };
-
+// POST /api/user/:id/addresses (admin thêm địa chỉ cho user bất kỳ)
+exports.adminAddAddress = async (req, res) => {
+  try {
+    const userId = req.params.id;
+    const address = await userService.addAddress(userId, req.body);
+    return res.status(201).json({ success: true, address });
+  } catch (err) {
+    return res.status(400).json({ success: false, message: err.message });
+  }
+};
 // PUT /api/user/:userId/addresses/:addressId (admin update địa chỉ)
 exports.adminUpdateAddress = async (req, res) => {
   try {

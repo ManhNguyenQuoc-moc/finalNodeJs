@@ -26,6 +26,11 @@ module.exports = function createPagesRouter({ BACKEND, proxy }) {
         const one = resp.headers.get("set-cookie");
         return one ? [one] : [];
     }
+    function getAccessTokenFromCookie(req) {
+        const cookie = req.headers.cookie || "";
+        const match = cookie.match(/accessToken=([^;]+)/);
+        return match ? decodeURIComponent(match[1]) : null;
+    }
     async function fetchJSONRaw(url, init = {}) {
         const resp = await fetch(url, { redirect: "manual", ...init });
         const ct = resp.headers.get("content-type") || "";
@@ -43,7 +48,18 @@ module.exports = function createPagesRouter({ BACKEND, proxy }) {
         return fetchJSONRaw(url, { ...init, headers });
     }
     async function fetchJSONAuth(req, url, init = {}) {
-        const headers = { "Content-Type": "application/json", cookie: req?.headers?.cookie || "", ...(init.headers || {}) };
+        const token = getAccessTokenFromCookie(req);
+
+        const headers = {
+            "Content-Type": "application/json",
+            cookie: req?.headers?.cookie || "",
+            ...(init.headers || {}),
+        };
+
+        if (token && !headers.Authorization) {
+            headers.Authorization = `Bearer ${token}`;  // 👈 thêm auth header
+        }
+
         return fetchJSONRaw(url, { ...init, headers });
     }
     async function postFormAndForwardCookies(req, res, url, bodyObj) {
@@ -458,57 +474,72 @@ module.exports = function createPagesRouter({ BACKEND, proxy }) {
     });
     router.get("/my-account", (_req, res) => res.redirect("/account/profile"));
     router.get("/account/profile", async (req, res) => {
-        const data = await fetchJSONAuth(req, `${BACKEND}/api/page/account/profile`).catch(() => null);
-        if (!data || data.redirectToLogin) return res.redirect("/login");
-        res.render("account_profile", { title: "Tài khoản", activeAccountTab: "profile", ...data });
+        console.log("FE /account/profile COOKIE từ browser:", req.headers.cookie);
+        const data = await fetchJSONAuth(req, `${BACKEND}/api/user/account/profile`).catch(() => null);
+
+        if (!data || !data.success || !data.user) {
+            return res.redirect("/login");
+        }
+
+        res.render("account_profile", {
+            title: "Tài khoản",
+            activeAccountTab: "profile",
+            user: data.user,   // <<< QUAN TRỌNG!!!
+            error: null,
+            success: null
+        });
     });
     router.post("/account/profile/update", async (req, res) => {
-        const profile = await fetchJSONAuth(req, `${BACKEND}/api/page/account/profile`).catch(() => null);
-        if (!profile || profile.redirectToLogin) return res.redirect("/login");
+        const profile = await fetchJSONAuth(req, `${BACKEND}/api/user/account/profile`).catch(() => null);
+        const currentUser = profile?.user || null;
+
+        if (!profile || !profile.success) {
+            return res.redirect("/login");
+        }
 
         try {
-            // Forward dữ liệu form lên BE /api/account/profile (PUT)
-            const resp = await fetch(`${BACKEND}/api/account/profile`, {
+            const payload = {
+                full_name: req.body.full_name,
+                phone: req.body.phone,
+                gender: req.body.gender,
+                birthday: req.body.birthday || null
+            };
+
+            const token = getAccessTokenFromCookie(req);
+
+            const headers = {
+                "Content-Type": "application/json",
+                cookie: req.headers.cookie || "",
+            };
+            if (token) {
+                headers.Authorization = `Bearer ${token}`;
+            }
+
+            const resp = await fetch(`${BACKEND}/api/user/account/profile`, {
                 method: "PUT",
-                headers: {
-                    "Content-Type": "application/json",
-                    cookie: req.headers.cookie || "",
-                },
-                // Có thể filter các field cụ thể nếu muốn, còn không thì forward thẳng:
-                body: JSON.stringify(req.body),
+                headers,
+                body: JSON.stringify(payload)
             });
 
             const data = await resp.json().catch(() => null);
 
-            if (!resp.ok) {
-                return res.render("account_profile", {
-                    title: "Tài khoản",
-                    activeAccountTab: "profile",
-                    error: (data && data.message) || "Cập nhật thông tin thất bại.",
-                    success: null,
-                    ...profile,
-                });
-            }
-
-            // Re-fetch profile sau khi update để EJS có data mới nhất (nếu cần)
-            const updatedProfile =
-                (await fetchJSONAuth(req, `${BACKEND}/api/page/account/profile`).catch(() => null)) || profile;
+            const newUser = data?.user || currentUser;
 
             return res.render("account_profile", {
                 title: "Tài khoản",
                 activeAccountTab: "profile",
-                error: null,
-                success: (data && data.message) || "Cập nhật thông tin thành công.",
-                ...updatedProfile,
+                user: newUser,
+                error: resp.ok ? null : (data?.message || "Cập nhật thất bại."),
+                success: resp.ok ? (data?.message || "Cập nhật thành công.") : null
             });
+
         } catch (e) {
-            console.error("Update-profile FE error:", e);
             return res.render("account_profile", {
                 title: "Tài khoản",
                 activeAccountTab: "profile",
-                error: "Có lỗi xảy ra, vui lòng thử lại.",
-                success: null,
-                ...profile,
+                user: currentUser,
+                error: "Có lỗi xảy ra.",
+                success: null
             });
         }
     });
@@ -585,10 +616,173 @@ module.exports = function createPagesRouter({ BACKEND, proxy }) {
     });
 
     router.get("/account/addresses", async (req, res) => {
-        const data = await fetchJSONAuth(req, `${BACKEND}/api/page/account/addresses`).catch(() => null);
-        if (!data || data.redirectToLogin) return res.redirect("/login");
-        res.render("account_addresses", { title: "Địa chỉ", activeAccountTab: "addresses", ...data });
+        const data = await fetchJSONAuth(req, `${BACKEND}/api/user/account/addresses`).catch(() => null);
+
+        if (!data || !data.success) return res.redirect("/login");
+
+        res.render("account_addresses", {
+            title: "Địa chỉ",
+            activeAccountTab: "addresses",
+            addresses: data.addresses || [],
+            error: null,
+            success: null
+        });
     });
+    router.post("/account/addresses/add", async (req, res) => {
+        const { address_line, is_default } = req.body;
+        console.log("Client cookie:", req.headers.cookie);
+
+        try {
+            const token = getAccessTokenFromCookie(req);
+
+            const headers = {
+                "Content-Type": "application/json",
+                "Cookie": req.headers.cookie || "",
+            };
+            if (token) {
+                headers.Authorization = `Bearer ${token}`;
+            }
+
+            const resp = await fetch(`${BACKEND}/api/user/account/addresses`, {
+                method: "POST",
+                headers,
+                body: JSON.stringify({
+                    address_line,
+                    is_default: is_default === "on",
+                }),
+            });
+
+            const data = await resp.json().catch(() => null);
+
+            const list = await fetchJSONAuth(
+                req,
+                `${BACKEND}/api/user/account/addresses`
+            ).catch(() => null);
+
+            return res.render("account_addresses", {
+                title: "Địa chỉ",
+                activeAccountTab: "addresses",
+                addresses: list?.addresses || [],
+                error: resp.ok ? null : (data?.message || "Không thể thêm địa chỉ"),
+                success: resp.ok ? "Thêm địa chỉ thành công" : null,
+            });
+        } catch (err) {
+            const list = await fetchJSONAuth(
+                req,
+                `${BACKEND}/api/user/account/addresses`
+            ).catch(() => null);
+
+            return res.render("account_addresses", {
+                title: "Địa chỉ",
+                activeAccountTab: "addresses",
+                addresses: list?.addresses || [],
+                error: "Có lỗi xảy ra",
+                success: null,
+            });
+        }
+    });
+
+    router.post("/account/addresses/update/:id", async (req, res) => {
+        const addressId = req.params.id;
+        const { address_line, is_default } = req.body;
+
+        try {
+            const token = getAccessTokenFromCookie(req);
+
+            const headers = {
+                "Content-Type": "application/json",
+                "Cookie": req.headers.cookie || "",
+            };
+            if (token) {
+                headers.Authorization = `Bearer ${token}`;
+            }
+
+            const resp = await fetch(`${BACKEND}/api/user/account/addresses/${addressId}`, {
+                method: "PUT",
+                headers,
+                body: JSON.stringify({
+                    address_line,
+                    is_default: is_default === "on",
+                }),
+            });
+
+            const data = await resp.json().catch(() => null);
+            const list = await fetchJSONAuth(
+                req,
+                `${BACKEND}/api/user/account/addresses`
+            ).catch(() => null);
+
+            return res.render("account_addresses", {
+                title: "Địa chỉ",
+                activeAccountTab: "addresses",
+                addresses: list?.addresses || [],
+                error: resp.ok ? null : (data?.message || "Cập nhật thất bại"),
+                success: resp.ok ? "Cập nhật địa chỉ thành công" : null,
+            });
+        } catch (err) {
+            const list = await fetchJSONAuth(
+                req,
+                `${BACKEND}/api/user/account/addresses`
+            ).catch(() => null);
+
+            return res.render("account_addresses", {
+                title: "Địa chỉ",
+                activeAccountTab: "addresses",
+                addresses: list?.addresses || [],
+                error: "Lỗi server",
+                success: null,
+            });
+        }
+    });
+
+    router.post("/account/addresses/delete/:id", async (req, res) => {
+        const addressId = req.params.id;
+
+        try {
+            const token = getAccessTokenFromCookie(req);
+
+            const headers = {
+                "Content-Type": "application/json",
+                "Cookie": req.headers.cookie || "",
+            };
+            if (token) {
+                headers.Authorization = `Bearer ${token}`;
+            }
+
+            const resp = await fetch(`${BACKEND}/api/user/account/addresses/${addressId}`, {
+                method: "DELETE",
+                headers,
+            });
+
+            const data = await resp.json().catch(() => null);
+            const list = await fetchJSONAuth(
+                req,
+                `${BACKEND}/api/user/account/addresses`
+            ).catch(() => null);
+
+            return res.render("account_addresses", {
+                title: "Địa chỉ",
+                activeAccountTab: "addresses",
+                addresses: list?.addresses || [],
+                error: resp.ok ? null : (data?.message || "Xóa địa chỉ thất bại"),
+                success: resp.ok ? "Xóa địa chỉ thành công" : null,
+            });
+        } catch (err) {
+            const list = await fetchJSONAuth(
+                req,
+                `${BACKEND}/api/user/account/addresses`
+            ).catch(() => null);
+
+            return res.render("account_addresses", {
+                title: "Địa chỉ",
+                activeAccountTab: "addresses",
+                addresses: list?.addresses || [],
+                error: "Có lỗi server",
+                success: null,
+            });
+        }
+    });
+
     router.get("/account-orders", async (req, res) => {
         const data = await fetchJSONAuth(req, `${BACKEND}/api/page/account/orders`).catch(() => null);
         if (!data || data.redirectToLogin) return res.redirect("/login");
@@ -615,7 +809,6 @@ module.exports = function createPagesRouter({ BACKEND, proxy }) {
         if (!data || data.redirectToLogin) return res.redirect("/login");
         res.render("account_points", { title: "Điểm thưởng", activeAccountTab: "points", ...data });
     });
-
     router.post("/login", async (req, res) => {
         try {
             const resp = await fetch(`${BACKEND}/api/auth/login`, {
@@ -631,14 +824,26 @@ module.exports = function createPagesRouter({ BACKEND, proxy }) {
                 redirect: "manual",
             });
 
-            const setCookie = getSetCookie(resp);
-            console.log("setCookie:", setCookie);
-            if (setCookie?.length) res.set("set-cookie", setCookie);
-
             let data = null;
             try { data = await resp.json(); } catch { }
 
             if (resp.ok && data) {
+                // 👇 LƯU TOKEN VÀO COOKIE
+                if (data.tokens?.accessToken) {
+                    res.cookie("accessToken", data.tokens.accessToken, {
+                        httpOnly: true,
+                        sameSite: "lax",
+                        path: "/",
+                    });
+                }
+                if (data.tokens?.refreshToken) {
+                    res.cookie("refreshToken", data.tokens.refreshToken, {
+                        httpOnly: true,
+                        sameSite: "lax",
+                        path: "/",
+                    });
+                }
+
                 return res.redirect("/my-account");
             }
 
@@ -677,13 +882,26 @@ module.exports = function createPagesRouter({ BACKEND, proxy }) {
                 redirect: "manual",
             });
 
-            const setCookie = getSetCookie(resp);
-            if (setCookie?.length) res.set("set-cookie", setCookie);
-
             let data = null;
             try { data = await resp.json(); } catch { }
 
             if (resp.ok && data) {
+                // 👇 LƯU TOKEN VÀO COOKIE
+                if (data.tokens?.accessToken) {
+                    res.cookie("accessToken", data.tokens.accessToken, {
+                        httpOnly: true,
+                        sameSite: "lax",
+                        path: "/",
+                    });
+                }
+                if (data.tokens?.refreshToken) {
+                    res.cookie("refreshToken", data.tokens.refreshToken, {
+                        httpOnly: true,
+                        sameSite: "lax",
+                        path: "/",
+                    });
+                }
+
                 return res.status(200).json({ ok: true, redirect: "/my-account", ...data });
             }
 

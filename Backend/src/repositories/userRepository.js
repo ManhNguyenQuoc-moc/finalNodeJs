@@ -17,7 +17,9 @@ class UserRepository {
   async findByEmail(email) {
     return await User.findOne({ email });
   }
-
+  async findOne(filter) {
+    return await User.findOne(filter);
+  }
   // Tìm user theo ID
   async findById(id) {
     return await User.findById(id).select("-password_hash");

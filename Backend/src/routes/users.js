@@ -84,17 +84,22 @@ router.patch(
   userController.unbanUser
 );
 
-
 // ========== ADMIN: QUẢN LÝ ĐỊA CHỈ CỦA USER ==========
 //
-// Ví dụ admin muốn chỉnh sửa địa chỉ của user bất kỳ
-
 // GET /api/user/:id/addresses  (admin xem địa chỉ của user X)
 router.get(
   "/:id/addresses",
   // requireAuth,
   // requireRole("admin"),
   userController.getAddressesOfUserAdmin
+);
+
+// POST /api/user/:id/addresses (admin thêm địa chỉ cho user X)
+router.post(
+  "/:id/addresses",
+  // requireAuth,
+  // requireRole("admin"),
+  userController.adminAddAddress
 );
 
 // PUT /api/user/:userId/addresses/:addressId (admin update địa chỉ)
@@ -105,30 +110,27 @@ router.put(
   userController.adminUpdateAddress
 );
 
-
 // ========== USER PROFILE (TỰ XEM / TỰ SỬA) ==========
 //
-// Những route này hợp lý nếu bạn mount thêm:
-//    app.use("/api/account", router);
-// hoặc tách sang file accountRoutes.
+// Nếu muốn mount riêng dưới /api/account thì tách router,
+// ở đây giữ chung cho đơn giản:
 
-// GET /api/account/profile
+// GET /api/user/account/profile
 router.get("/account/profile", requireAuth, userController.getMyProfile);
 
-// PUT /api/account/profile
+// PUT /api/user/account/profile
 router.put("/account/profile", requireAuth, userController.updateMyProfile);
 
-// GET /api/account/addresses
+// GET /api/user/account/addresses
 router.get("/account/addresses", requireAuth, userController.getMyAddresses);
 
-// POST /api/account/addresses
+// POST /api/user/account/addresses
 router.post("/account/addresses", requireAuth, userController.addMyAddress);
 
-// PUT /api/account/addresses/:id
+// PUT /api/user/account/addresses/:id
 router.put("/account/addresses/:id", requireAuth, userController.updateMyAddress);
 
-// DELETE /api/account/addresses/:id
+// DELETE /api/user/account/addresses/:id
 router.delete("/account/addresses/:id", requireAuth, userController.deleteMyAddress);
-
 
 module.exports = router;
