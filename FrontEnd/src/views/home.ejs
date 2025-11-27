@@ -198,7 +198,14 @@
   .mixi-product-desc {
     font-size: 0.9rem;
     color: #6b7280;
-    min-height: 48px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.5;
+    max-height: 3em; /* 2 dòng x 1.5 line-height */
   }
   .mixi-rating {
     display: flex;
@@ -434,7 +441,7 @@
           <div class="mixi-latest-card__body">
             <small class="text-uppercase text-muted"><%= item.brand?.name || "Mixi Original" %></small>
             <h6 class="mb-1"><a href="/product_detail/<%= item._id || item.id %>" class="text-dark"><%= item.name %></a></h6>
-            <p class="text-muted small mb-2"><%= item.short_description || "Phiên bản giới hạn dành riêng cho cộng đồng Mixi." %></p>
+            <p class="text-muted small mb-2 mixi-product-desc"><%= item.short_description || "Phiên bản giới hạn dành riêng cho cộng đồng Mixi." %></p>
             <div class="d-flex justify-content-between align-items-center">
               <span class="fw-semibold"><%= item.price ? new Intl.NumberFormat('vi-VN').format(item.price) + " đ" : "Giá cập nhật" %></span>
               <a href="/product_detail/<%= item._id || item.id %>" class="btn btn-sm btn-outline-primary mixi-subtle-btn">Chi tiết</a>
