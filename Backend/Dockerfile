@@ -2,6 +2,7 @@
 FROM node:20-alpine AS base
 WORKDIR /app
 ENV CI=true
+RUN apk add --no-cache curl
 COPY package*.json ./
 FROM base AS dev
 RUN npm install

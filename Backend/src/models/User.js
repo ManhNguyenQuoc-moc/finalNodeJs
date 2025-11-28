@@ -16,6 +16,7 @@ const userSchema = new mongoose.Schema(
     },
     password_hash: { type: String, default: null },
     full_name: String,
+    phone: { type: String, default: null },
     role: { type: String, enum: ["customer", "admin"], default: "customer" },
     loyalty_points: { type: Number, default: 0 },
 

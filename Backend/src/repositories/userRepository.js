@@ -1,5 +1,6 @@
 // src/repositories/userRepository.js
 const User = require("../models/User");
+const Address = require("../models/Address");
 
 class UserRepository {
   // Tạo user mới
@@ -34,6 +35,12 @@ class UserRepository {
       reset_password_expires: { $gt: new Date() },
     });
   }
+
+  async findLatestAddress(userId) {
+    // Sắp xếp theo thời gian tạo giảm dần (mới nhất lên đầu)
+    return await Address.findOne({ user: userId }).sort({ createdAt: -1 });
+  }
+
   // Update user
   async updateById(id, updateData) {
     return await User.findByIdAndUpdate(id, updateData, { new: true });
@@ -63,8 +70,8 @@ class UserRepository {
     return await User.countDocuments({
       createdAt: {
         $gte: new Date(startDate),
-        $lte: new Date(endDate)
-      }
+        $lte: new Date(endDate),
+      },
     });
   }
 }
