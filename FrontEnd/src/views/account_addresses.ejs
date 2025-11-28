@@ -55,7 +55,6 @@
               <div class="addr-card p-3 border rounded-3 d-flex justify-content-between align-items-start">
                 <div>
                   <div class="fw-semibold">
-                    <!-- Hiện chỉ có address_line + is_default, không có name/phone -->
                     <% if (addr.is_default) { %>
                       <span class="badge bg-warning text-dark ms-0">Mặc định</span>
                     <% } %>
@@ -68,15 +67,19 @@
                   </div>
 
                   <div class="mt-2">
-                    <% if (addr.ward_name || addr.district_name || addr.province_name) { %>
+                    <% 
+                      const ward  = addr.ward      || addr.ward_name;
+                      const dist  = addr.district  || addr.district_name;
+                      const city  = addr.city      || addr.province_name;
+                    %>
+
+                    <% if (ward || dist || city) { %>
                       <div class="text-muted small">
-                        <%= [addr.ward_name, addr.district_name, addr.province_name]
-                          .filter(function (x) { return x; })
-                          .join(", ") %>
+                        <%= [ward, dist, city].filter(function (x) { return x; }).join(", ") %>
                       </div>
                     <% } %>
 
-                    <div><%= addr.address_line %></div>
+                    <div><%= addr.address_line || addr.detail %></div>
                   </div>
 
                   <% if (typeof addr.lat === "number" && typeof addr.lng === "number") { %>
@@ -132,30 +135,35 @@
             <div class="col-md-4">
               <label class="form-label">Tỉnh/Thành phố</label>
               <select id="addrProvince" class="form-select" required></select>
+
+              <!-- Nếu sau này cần lưu code riêng thì dùng -->
               <input type="hidden" name="province_code" id="provinceCode">
-              <input type="hidden" name="province_name" id="provinceName">
+
+              <!-- city cho backend AddressService -->
+              <input type="hidden" name="city" id="provinceName">
             </div>
 
             <div class="col-md-4">
               <label class="form-label">Quận/Huyện</label>
               <select id="addrDistrict" class="form-select" disabled required></select>
               <input type="hidden" name="district_code" id="districtCode">
-              <input type="hidden" name="district_name" id="districtName">
+              <input type="hidden" name="district" id="districtName">
             </div>
 
             <div class="col-md-4">
               <label class="form-label">Phường/Xã</label>
               <select id="addrWard" class="form-select" disabled required></select>
               <input type="hidden" name="ward_code" id="wardCode">
-              <input type="hidden" name="ward_name" id="wardName">
+              <input type="hidden" name="ward" id="wardName">
             </div>
 
-            <!-- Địa chỉ cụ thể (sẽ được ghép lại trước khi submit) -->
+            <!-- Địa chỉ cụ thể (detail) -->
             <div class="col-12">
               <label class="form-label">Địa chỉ cụ thể</label>
-              <textarea name="address_line" id="addrLine" class="form-control" rows="2" required></textarea>
+              <!-- gửi detail cho AddressService, address_line sẽ được backend tự ghép -->
+              <textarea name="detail" id="addrLine" class="form-control" rows="2" required></textarea>
               <div class="form-text">
-                Ví dụ: "12 Nguyễn Trãi" – hệ thống sẽ tự ghép thêm Phường/Xã, Quận/Huyện, Tỉnh/TP.
+                Ví dụ: "393 Lê Văn Lương" – hệ thống backend sẽ tự ghép thêm Phường/Xã, Quận/Huyện, Tỉnh/TP.
               </div>
             </div>
 
@@ -210,9 +218,10 @@
       var dCode = document.getElementById('districtCode');
       var wCode = document.getElementById('wardCode');
 
-      var pName = document.getElementById('provinceName');
-      var dName = document.getElementById('districtName');
-      var wName = document.getElementById('wardName');
+      // Lưu tên city/district/ward để gửi cho backend
+      var pName = document.getElementById('provinceName');  // name="city"
+      var dName = document.getElementById('districtName');  // name="district"
+      var wName = document.getElementById('wardName');      // name="ward"
 
       if (!provSel) return;
 
@@ -305,7 +314,7 @@
       var lngInp = document.getElementById('addrLng');
       var coordPreview = document.getElementById('coordPreview');
       var addrTextarea = document.getElementById('addrLine');
-      var provName = document.getElementById('provinceName');
+      var cityName = document.getElementById('provinceName');
       var distName = document.getElementById('districtName');
       var wardName = document.getElementById('wardName');
 
@@ -349,7 +358,7 @@
             .then(function (res) { return res.json(); })
             .then(function (data) {
               if (!data || !data.display_name) return;
-              var admin = [wardName.value, distName.value, provName.value]
+              var admin = [wardName.value, distName.value, cityName.value]
                 .filter(function (x) { return x; })
                 .join(', ');
 
@@ -392,7 +401,7 @@
       });
     })();
 
-    // ===== GHÉP address_line trước khi submit (chi tiết + phường + quận + tỉnh) =====
+    // ===== GHÉP dữ liệu trước khi submit (backend sẽ tự build address_line) =====
     (function BindAddressSubmit() {
       var modal = document.getElementById('addrAddModal');
       if (!modal) return;
@@ -400,21 +409,13 @@
       if (!form) return;
 
       form.addEventListener('submit', function () {
-        var ward = document.getElementById('wardName').value || '';
-        var dist = document.getElementById('districtName').value || '';
-        var prov = document.getElementById('provinceName').value || '';
-        var textarea = document.getElementById('addrLine');
-        var detail = textarea && textarea.value ? textarea.value.trim() : '';
-
-        var parts = [];
-        if (detail) parts.push(detail);
-        if (ward) parts.push(ward);
-        if (dist) parts.push(dist);
-        if (prov) parts.push(prov);
-
-        if (textarea) {
-          textarea.value = parts.join(', ');
-        }
+        // Không cần chỉnh sửa detail ở đây nữa.
+        // AddressService sẽ dùng:
+        // city  (provinceName.value)
+        // district (districtName.value)
+        // ward (wardName.value)
+        // detail (textarea addrLine)
+        // để build address_line = `${detail}, ${ward}, ${district}, ${city}`;
       });
     })();
   </script>
