@@ -28,3 +28,7 @@ router.use("/auth", authRouter);
 const orderRouter = require("./order.route"); //import
 router.use("/order", orderRouter);
 module.exports = router; //export
+const userRouter = require("./users");//import
+router.use("/user", userRouter);
+module.exports = router;//export
+

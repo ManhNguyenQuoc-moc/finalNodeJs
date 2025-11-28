@@ -1,119 +1,227 @@
-<!-- footer.ejs -->
-<footer class="footer footer_type_2">
-    <div class="footer-middle container">
-        <div class="row row-cols-lg-5 row-cols-2">
-            <div class="footer-column footer-store-info col-12 mb-4 mb-lg-0">
-                <div class="logo">
-                    <a href="/home">
-                        <img src="/mixishop/images/logo_mixishop.png" alt="Uomo" class="logo__image d-block">
-                    </a>
-                </div><!-- /.logo -->
-                <p class="footer-address">1418 River Drive, Suite 35 Cottonhall, CA 9622 United States</p>
+<style>
+  .mixi-footer {
+    background: #050505;
+    color: #f6f6f6;
+    font-family: "Poppins", "Helvetica Neue", Arial, sans-serif;
+  }
+  .mixi-footer__top,
+  .mixi-footer__middle,
+  .mixi-footer__bottom {
+    padding: 2.25rem 0;
+  }
+  .mixi-footer__top {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  }
+  .mixi-footer__eyebrow {
+    text-transform: uppercase;
+    letter-spacing: 0.35rem;
+    font-size: 0.8rem;
+    color: #9a9a9a;
+  }
+  .mixi-footer__title {
+    font-size: 2.1rem;
+    font-weight: 600;
+    margin: 0.35rem 0 0.75rem;
+  }
+  .mixi-footer__subtitle {
+    color: #bdbdbd;
+    max-width: 520px;
+  }
+  .mixi-footer__newsletter input {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid transparent;
+    color: #fff;
+    padding: 0.95rem 1rem;
+  }
+  .mixi-footer__newsletter input::placeholder {
+    color: rgba(255, 255, 255, 0.6);
+  }
+  .mixi-footer__newsletter .btn {
+    text-transform: uppercase;
+    letter-spacing: 0.12rem;
+    min-width: 150px;
+  }
+  .mixi-footer__badge {
+    display: inline-flex;
+    gap: 0.5rem;
+    align-items: center;
+    padding: 0.65rem 1rem;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    color: #9cdcff;
+    margin-bottom: 1rem;
+  }
+  .mixi-footer__metric {
+    margin-bottom: 0.75rem;
+  }
+  .mixi-footer__metric-value {
+    font-size: 1.6rem;
+    font-weight: 600;
+  }
+  .mixi-footer__column-title {
+    text-transform: uppercase;
+    letter-spacing: 0.18rem;
+    font-size: 0.85rem;
+    color: #8f8f8f;
+    margin-bottom: 1rem;
+  }
+  .mixi-footer__list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  .mixi-footer__list li {
+    margin-bottom: 0.45rem;
+  }
+  .mixi-footer__link {
+    color: rgba(255, 255, 255, 0.75);
+    text-decoration: none;
+    transition: color 0.2s ease, padding-left 0.2s ease;
+  }
+  .mixi-footer__link:hover {
+    color: #00c2ff;
+    padding-left: 0.3rem;
+  }
+  .mixi-footer__contact {
+    color: #d2d2d2;
+  }
+  .mixi-footer__social a {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: #050505;
+    background: #fff;
+    margin-right: 0.6rem;
+    transition: transform 0.2s ease, background 0.2s ease;
+  }
+  .mixi-footer__social a:hover {
+    transform: translateY(-2px);
+    background: #00c2ff;
+  }
+  .mixi-footer__bottom {
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    font-size: 0.85rem;
+    color: #9b9b9b;
+  }
+  .mixi-footer__payments img {
+    height: 26px;
+    margin-right: 0.4rem;
+    opacity: 0.75;
+  }
+  @media (max-width: 767.98px) {
+    .mixi-footer__title {
+      font-size: 1.5rem;
+    }
+    .mixi-footer__newsletter {
+      width: 100%;
+    }
+  }
+</style>
 
-                <p class="m-0">
-                    <strong class="fw-medium">sale@uomo.com</strong>
-                </p>
-                <p>
-                    <strong class="fw-medium">+1 246-345-0695</strong>
-                </p>
+<footer class="mixi-footer">
+  <div class="mixi-footer__top">
+    <div class="container d-flex flex-column flex-lg-row align-items-start justify-content-between gap-4">
+      <div>
+        <div class="mixi-footer__eyebrow">Mixishop insider</div>
+        <div class="mixi-footer__title">Nhận sản phẩm giới hạn và ưu đãi dành riêng cho bạn</div>
+        <p class="mixi-footer__subtitle mb-0">Đăng ký newsletter để được thông báo sớm về drop mới, sự kiện offline, và các chương trình cộng đồng Mixi.</p>
+      </div>
+      <form class="mixi-footer__newsletter d-flex flex-column flex-sm-row gap-2" action="/newsletter" method="POST">
+        <input type="email" name="email" class="form-control" placeholder="Nhập email của bạn" required>
+        <button class="btn btn-primary fw-semibold" type="submit">Đăng ký</button>
+      </form>
+    </div>
+  </div>
 
-                <ul class="social-links list-unstyled d-flex flex-wrap mb-0">
-                    <li>
-                        <a href="https://www.facebook.com/" class="footer__social-link d-block">
-                            <svg class="svg-icon svg-icon_facebook" width="9" height="15" viewBox="0 0 9 15" xmlns="http://www.w3.org/2000/svg"><use href="#icon_facebook" /></svg>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="https://www.twitter.com/" class="footer__social-link d-block">
-                            <svg class="svg-icon svg-icon_twitter" width="14" height="13" viewBox="0 0 14 13" xmlns="http://www.w3.org/2000/svg"><use href="#icon_twitter" /></svg>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="https://www.instagram.com/" class="footer__social-link d-block">
-                            <svg class="svg-icon svg-icon_instagram" width="14" height="13" viewBox="0 0 14 13" xmlns="http://www.w3.org/2000/svg"><use href="#icon_instagram" /></svg>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="https://www.youtube.com/" class="footer__social-link d-block">
-                            <svg class="svg-icon svg-icon_youtube" width="16" height="11" viewBox="0 0 16 11" xmlns="http://www.w3.org/2000/svg"><path d="M15.0117 1.8584C14.8477 1.20215 14.3281 0.682617 13.6992 0.518555C12.5234 0.19043 7.875 0.19043 7.875 0.19043C7.875 0.19043 3.19922 0.19043 2.02344 0.518555C1.39453 0.682617 0.875 1.20215 0.710938 1.8584C0.382812 3.00684 0.382812 5.46777 0.382812 5.46777C0.382812 5.46777 0.382812 7.90137 0.710938 9.07715C0.875 9.7334 1.39453 10.2256 2.02344 10.3896C3.19922 10.6904 7.875 10.6904 7.875 10.6904C7.875 10.6904 12.5234 10.6904 13.6992 10.3896C14.3281 10.2256 14.8477 9.7334 15.0117 9.07715C15.3398 7.90137 15.3398 5.46777 15.3398 5.46777C15.3398 5.46777 15.3398 3.00684 15.0117 1.8584ZM6.34375 7.68262V3.25293L10.2266 5.46777L6.34375 7.68262Z"/></svg>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="https://www.pinterest.com/" class="footer__social-link d-block">
-                            <svg class="svg-icon svg-icon_pinterest" width="14" height="15" viewBox="0 0 14 15" xmlns="http://www.w3.org/2000/svg"><use href="#icon_pinterest" /></svg>
-                        </a>
-                    </li>
-                </ul>
-            </div><!-- /.footer-column -->
+  <div class="mixi-footer__middle">
+    <div class="container">
+      <div class="row gy-4">
+        <div class="col-lg-4">
+          <div class="mixi-footer__badge">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M9 0l2.472 5.175 5.7.829-4.086 3.984.965 5.628L9 12.915 3.949 15.616l.965-5.628L.828 6.004l5.7-.83L9 0z" fill="#00c2ff"/>
+            </svg>
+            Trusted by 1M+ customers
+          </div>
+          <p class="text-muted">MixiShop được xây dựng bởi cộng đồng. Chúng tôi tuyển chọn sản phẩm chính hãng, tối ưu logistics và đồng hành cùng người hâm mộ 24/7.</p>
+          <div class="mixi-footer__metric">
+            <div class="mixi-footer__metric-value">280+</div>
+            <div class="text-muted">Sản phẩm độc quyền</div>
+          </div>
+          <div class="mixi-footer__metric">
+            <div class="mixi-footer__metric-value">72h</div>
+            <div class="text-muted">Giao nhanh toàn quốc</div>
+          </div>
+          <div class="mixi-footer__metric">
+            <div class="mixi-footer__metric-value">4.9/5</div>
+            <div class="text-muted">Đánh giá trung bình</div>
+          </div>
+        </div>
 
-            <div class="footer-column footer-menu mb-4 mb-lg-0">
-                <h6 class="sub-menu__title text-uppercase">Company</h6>
-                <ul class="sub-menu__list list-unstyled">
-                    <li class="sub-menu__item"><a href="/about" class="menu-link menu-link_us-s">About Us</a></li>
-                    <li class="sub-menu__item"><a href="/about" class="menu-link menu-link_us-s">Careers</a></li>
-                    <li class="sub-menu__item"><a href="/about" class="menu-link menu-link_us-s">Affiliates</a></li>
-                    <li class="sub-menu__item"><a href="/blog_list1" class="menu-link menu-link_us-s">Blog</a></li>
-                    <li class="sub-menu__item"><a href="/contact" class="menu-link menu-link_us-s">Contact Us</a></li>
-                </ul>
-            </div><!-- /.footer-column -->
+        <div class="col-6 col-lg-2">
+          <div class="mixi-footer__column-title">Khám phá</div>
+          <ul class="mixi-footer__list">
+            <li><a class="mixi-footer__link" href="/category/alls">Bộ sưu tập mới</a></li>
+            <li><a class="mixi-footer__link" href="/category/alls?sort=price_high_to_low">Best Seller</a></li>
+            <li><a class="mixi-footer__link" href="/blog">Blog & Stories</a></li>
+            <li><a class="mixi-footer__link" href="/about">Về MixiShop</a></li>
+            <li><a class="mixi-footer__link" href="/contact">Liên hệ</a></li>
+          </ul>
+        </div>
 
-            <div class="footer-column footer-menu mb-4 mb-lg-0">
-                <h6 class="sub-menu__title text-uppercase">Shop</h6>
-                <ul class="sub-menu__list list-unstyled">
-                    <li class="sub-menu__item"><a href="/category" class="menu-link menu-link_us-s">New Arrivals</a></li>
-                    <li class="sub-menu__item"><a href="/shop3" class="menu-link menu-link_us-s">Accessories</a></li>
-                    <li class="sub-menu__item"><a href="/shop4" class="menu-link menu-link_us-s">Men</a></li>
-                    <li class="sub-menu__item"><a href="/shop5" class="menu-link menu-link_us-s">Women</a></li>
-                    <li class="sub-menu__item"><a href="/shop1" class="menu-link menu-link_us-s">Shop All</a></li>
-                </ul>
-            </div><!-- /.footer-column -->
+        <div class="col-6 col-lg-2">
+          <div class="mixi-footer__column-title">Hỗ trợ</div>
+          <ul class="mixi-footer__list">
+            <li><a class="mixi-footer__link" href="/account/orders">Theo dõi đơn hàng</a></li>
+            <li><a class="mixi-footer__link" href="/account/profile">Tài khoản của tôi</a></li>
+            <li><a class="mixi-footer__link" href="/account/vouchers">Mã ưu đãi</a></li>
+            <li><a class="mixi-footer__link" href="/contact">Chính sách đổi trả</a></li>
+            <li><a class="mixi-footer__link" href="/contact">Bảo hành & CSKH</a></li>
+          </ul>
+        </div>
 
-            <div class="footer-column footer-menu mb-4 mb-lg-0">
-                <h6 class="sub-menu__title text-uppercase">Help</h6>
-                <ul class="sub-menu__list list-unstyled">
-                    <li class="sub-menu__item"><a href="/about" class="menu-link menu-link_us-s">Customer Service</a></li>
-                    <li class="sub-menu__item"><a href="/account_dashboard" class="menu-link menu-link_us-s">My Account</a></li>
-                    <li class="sub-menu__item"><a href="/store_location" class="menu-link menu-link_us-s">Find a Store</a></li>
-                    <li class="sub-menu__item"><a href="/about" class="menu-link menu-link_us-s">Legal & Privacy</a></li>
-                    <li class="sub-menu__item"><a href="/contact" class="menu-link menu-link_us-s">Contact</a></li>
-                    <li class="sub-menu__item"><a href="/about" class="menu-link menu-link_us-s">Gift Card</a></li>
-                </ul>
-            </div><!-- /.footer-column -->
+        <div class="col-lg-4">
+          <div class="mixi-footer__column-title">Kết nối</div>
+          <div class="mixi-footer__contact mb-3">
+            <div class="text-uppercase text-muted small mb-1">Trụ sở</div>
+            <div>Yên Lãng, Đống Đa, Hà Nội</div>
+          </div>
+          <div class="mixi-footer__contact mb-3">
+            <div class="text-uppercase text-muted small mb-1">Hotline</div>
+            <a class="mixi-footer__link" href="tel:0822221992">0822 221 992</a>
+          </div>
+          <div class="mixi-footer__contact mb-4">
+            <div class="text-uppercase text-muted small mb-1">Email</div>
+            <a class="mixi-footer__link" href="mailto:hello@mixishop.vn">hello@mixishop.vn</a>
+          </div>
+          <div class="mixi-footer__column-title mb-2 text-uppercase">Social Hub</div>
+          <div class="mixi-footer__social d-flex">
+            <a href="https://www.facebook.com/" aria-label="Facebook"><svg width="16" height="16"><use href="#icon_facebook" /></svg></a>
+            <a href="https://www.instagram.com/" aria-label="Instagram"><svg width="16" height="16"><use href="#icon_instagram" /></svg></a>
+            <a href="https://www.youtube.com/" aria-label="YouTube"><svg width="18" height="18"><use href="#icon_youtube" /></svg></a>
+            <a href="https://www.tiktok.com/" aria-label="TikTok"><svg width="16" height="16"><use href="#icon_tiktok" /></svg></a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 
-            <div class="footer-column mb-4 mb-lg-0">
-                <h6 class="sub-menu__title text-uppercase">Opening Time</h6>
-                <ul class="list-unstyled">
-                    <li><span class="menu-link">Mon - Fri: 8AM - 9PM</span></li>
-                    <li><span class="menu-link">Sat: 9AM - 8PM</span></li>
-                    <li><span class="menu-link">Sun: Closed</span></li>
-                </ul>
-            </div><!-- /.footer-column -->
-        </div><!-- /.row-cols-5 -->
-    </div><!-- /.footer-middle container -->
-
-    <div class="footer-bottom">
-        <div class="container d-md-flex align-items-center">
-            <span class="footer-copyright me-auto">©2023 Uomo</span>
-            <div class="footer-settings d-md-flex align-items-center">
-                <select id="footerSettingsLanguage" class="form-select form-select-sm bg-transparent border-0" aria-label="Default select example" name="store-language">
-                    <option class="footer-select__option" selected>United Kingdom | English</option>
-                    <option class="footer-select__option" value="1">United States | English</option>
-                    <option class="footer-select__option" value="2">German</option>
-                    <option class="footer-select__option" value="3">French</option>
-                    <option class="footer-select__option" value="4">Swedish</option>
-                </select>
-
-                <select id="footerSettingsCurrency" class="form-select form-select-sm bg-transparent border-0" aria-label="Default select example" name="store-language">
-                    <option class="footer-select__option" selected>$ USD</option>
-                    <option class="footer-select__option" value="1">£ GBP</option>
-                    <option class="footer-select__option" value="2">€ EURO</option>
-                </select>
-            </div><!-- /.footer-settings -->
-        </div><!-- /.container d-flex align-items-center -->
-    </div><!-- /.footer-bottom container -->
+  <div class="mixi-footer__bottom">
+    <div class="container d-flex flex-column flex-md-row align-items-center justify-content-between gap-3">
+      <span>© <%= new Date().getFullYear() %> MixiShop. All rights reserved.</span>
+      <div class="mixi-footer__payments d-flex align-items-center">
+        <img src="/mixishop/images/payments/visa.svg" alt="Visa">
+        <img src="/mixishop/images/payments/mastercard.svg" alt="Mastercard">
+        <img src="/mixishop/images/payments/napas.svg" alt="Napas">
+        <img src="/mixishop/images/payments/momo.svg" alt="MoMo">
+      </div>
+    </div>
+  </div>
 </footer>
 
-<!-- Mobile Fixed Footer -->
 <footer class="footer-mobile container w-100 px-5 d-md-none bg-body">
     <div class="row text-center">
         <div class="col-4">
@@ -121,23 +229,24 @@
                 <svg class="d-block" width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg"><use href="#icon_home" /></svg>
                 <span>Home</span>
             </a>
-        </div><!-- /.col-3 -->
+        </div>
 
         <div class="col-4">
-            <a href="/home" class="footer-mobile__link d-flex flex-column align-items-center">
+            <a href="/category/alls" class="footer-mobile__link d-flex flex-column align-items-center">
                 <svg class="d-block" width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg"><use href="#icon_hanger" /></svg>
                 <span>Shop</span>
             </a>
-        </div><!-- /.col-3 -->
+        </div>
 
         <div class="col-4">
-            <a href="/home" class="footer-mobile__link d-flex flex-column align-items-center">
+            <a href="/account/orders" class="footer-mobile__link d-flex flex-column align-items-center">
                 <div class="position-relative">
                     <svg class="d-block" width="18" height="18" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><use href="#icon_heart" /></svg>
                     <span class="wishlist-amount d-block position-absolute js-wishlist-count"><%= 3 %></span>
                 </div>
                 <span>Wishlist</span>
             </a>
-        </div><!-- /.col-3 -->
-    </div><!-- /.row -->
+        </div>
+    </div>
 </footer>
+

@@ -9,7 +9,9 @@ class BrandRepository {
   async findAll() {
     return Brand.find();
   }
-
+  async findOne(filter) {
+    return Brand.findOne(filter);
+  }
   async findById(id) {
     return Brand.findById(id);
   }

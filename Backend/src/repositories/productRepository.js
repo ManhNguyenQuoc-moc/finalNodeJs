@@ -141,7 +141,6 @@ class ProductRepository {
       page = 1,
       limit = 200,
       sort = { createdAt: -1 },
-      // optional: selectFields = null, // nếu muốn giới hạn fields
     } = options;
 
     // Chuẩn hóa sort để tránh key rỗng gây lỗi

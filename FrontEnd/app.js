@@ -37,7 +37,7 @@ app.locals.basedir = app.get("views");
 // Static FE
 app.use(express.static(FE_PUBLIC_DIR));
 // Static Admin served dưới prefix /admin/*
-app.use("/admin", express.static(ADMIN_PUBLIC_DIR));
+app.use("/admin_public", express.static(ADMIN_PUBLIC_DIR));
 
 /* ===================== PARSERS ===================== */
 app.use(express.urlencoded({ extended: true }));

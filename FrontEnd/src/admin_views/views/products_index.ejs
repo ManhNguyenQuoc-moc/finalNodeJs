@@ -1,203 +1,421 @@
+<style>
+  .checkbox-custom {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 1rem;
+    /* h-4 */
+    height: 1rem;
+    border-radius: 0.25rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    border: 1.5px solid #cbd5e1;
+    /* slate-300 */
+    background-color: #f1f5f9;
+    /* slate-100 */
+    transition: all .15s ease;
+  }
+
+  .checkbox-custom:hover {
+    border-color: #94a3b8;
+    /* slate-400 */
+  }
+
+  .checkbox-custom:checked {
+    background-color: #059669;
+    /* emerald-600 */
+    border-color: #059669;
+  }
+
+  .checkbox-custom:checked::after {
+    content: "✓";
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: white;
+    margin-top: -1px;
+  }
+</style>
+
 <% layout('layouts/admin') %>
+
   <section class="space-y-6">
-    <!-- Header -->
+    <!-- HEADER -->
     <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
       <div>
-        <p class="text-sm text-slate-500">Tìm kiếm, lọc và quản trị danh sách sản phẩm của bạn.</p>
+        <h1 class="flex items-center gap-2 text-2xl font-semibold tracking-tight text-slate-900">
+          <i data-lucide="box" class="h-8 w-8 text-emerald-500"></i>
+          Sản phẩm
+        </h1>
+        <p class="mt-1 text-sm text-slate-500">
+          Tìm kiếm, lọc và quản trị danh sách sản phẩm trong hệ thống Mixishop.
+        </p>
       </div>
-      <a href="/admin/products/new"
-        class="inline-flex items-center justify-center gap-2 rounded-xl bg-green-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-green-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-green-400">
-        Thêm sản phẩm
-      </a>
+
+      <div class="flex items-center gap-2">
+        <!-- Tổng số sản phẩm -->
+        <div class="hidden sm:flex flex-col items-end text-sm text-slate-600">
+
+          <div class="inline-flex items-center gap-2 rounded-xl bg-slate-100 px-3 py-1.5 shadow-sm">
+            <span class="text-[12px] uppercase font-semibold tracking-wide text-slate-500">
+              Tổng sản phẩm
+            </span>
+
+            <span class="text-base font-bold text-slate-900 leading-none">
+              <%= (total||0).toLocaleString?.('vi-VN') || total || 0 %>
+            </span>
+          </div>
+
+        </div>
+
+
+        <a href="/admin/products/new"
+          class="inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-all duration-150 hover:-translate-y-0.5 hover:bg-emerald-700 hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400">
+          <i data-lucide="plus" class="h-6 w-6"></i>
+          <span>Thêm sản phẩm</span>
+        </a>
+      </div>
     </div>
 
-    <!-- Filters -->
+    <!-- FILTERS -->
     <form
-      class="rounded-2xl border border-slate-200 bg-white/60 p-4 shadow-sm backdrop-blur-sm grid grid-cols-1 lg:grid-cols-6 gap-3"
+      class="grid grid-cols-1 gap-3 rounded-2xl border border-slate-200 bg-white/70 p-4 shadow-sm backdrop-blur-sm lg:grid-cols-6"
       method="get">
       <div class="lg:col-span-2">
-        <label class="mb-1 block text-xs font-medium text-slate-600">Từ khóa / SKU</label>
+        <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">
+          Từ khóa / SKU
+        </label>
         <div class="relative">
-          <i class="lucide lucide-search absolute left-3 top-1/2 -translate-y-1/2 size-4 text-slate-400"></i>
+          <i data-lucide="search"
+            class="pointer-events-none absolute left-3 top-1/2 h-6 w-6 -translate-y-1/2 text-slate-400"></i>
           <input
-            class="w-full rounded-xl border border-slate-200 bg-white px-9 py-2.5 text-sm shadow-sm outline-none ring-0 placeholder:text-slate-400 focus:border-slate-300 focus:ring-2 focus:ring-slate-200"
-            name="q" value="<%= (query && query.q) || '' %>" placeholder="Từ khóa / SKU...">
+            class="w-full rounded-xl border border-slate-200 bg-white px-9 py-2.5 text-sm text-slate-800 shadow-sm outline-none ring-0 placeholder:text-slate-400 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-400/30"
+            name="q" value="<%= (query && query.q) || '' %>" placeholder="Nhập tên sản phẩm, SKU..." />
         </div>
       </div>
 
       <div>
-        <label class="mb-1 block text-xs font-medium text-slate-600">Thương hiệu</label>
-        <select
-          class="w-full appearance-none rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm shadow-sm outline-none focus:border-slate-300 focus:ring-2 focus:ring-slate-200"
-          name="brand">
-          <option value="">— Thương hiệu —</option>
-          <% (brands||[]).forEach(b=>{ %>
-            <option value="<%= b._id %>" <%=(query && query.brand)===String(b._id)?'selected':'' %>><%= b.name %>
-            </option>
-            <% }) %>
-        </select>
+        <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">
+          Thương hiệu
+        </label>
+        <div class="relative">
+          <select
+            class="w-full appearance-none rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-800 shadow-sm outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-400/30"
+            name="brand">
+            <option value="">— Tất cả thương hiệu —</option>
+            <% (brands||[]).forEach(b=>{ %>
+              <option value="<%= b._id %>" <%=(query && query.brand)===String(b._id)?'selected':'' %>>
+                <%= b.name %>
+              </option>
+              <% }) %>
+          </select>
+          <i data-lucide="chevron-down"
+            class="pointer-events-none absolute right-3 top-1/2 h-6 w-6 -translate-y-1/2 text-slate-400"></i>
+        </div>
       </div>
 
       <div>
-        <label class="mb-1 block text-xs font-medium text-slate-600">Danh mục</label>
-        <select
-          class="w-full appearance-none rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm shadow-sm outline-none focus:border-slate-300 focus:ring-2 focus:ring-slate-200"
-          name="category">
-          <option value="">— Danh mục —</option>
-          <% (categories||[]).forEach(c=>{ %>
-            <option value="<%= c._id %>" <%=(query && query.category)===String(c._id)?'selected':'' %>><%= c.name %>
-            </option>
-            <% }) %>
-        </select>
+        <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">
+          Danh mục
+        </label>
+        <div class="relative">
+          <select
+            class="w-full appearance-none rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-800 shadow-sm outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-400/30"
+            name="category">
+            <option value="">— Tất cả danh mục —</option>
+            <% (categories||[]).forEach(c=>{ %>
+              <option value="<%= c._id %>" <%=(query && query.category)===String(c._id)?'selected':'' %>>
+                <%= c.name %>
+              </option>
+              <% }) %>
+          </select>
+          <i data-lucide="chevron-down"
+            class="pointer-events-none absolute right-3 top-1/2 h-6 w-6 -translate-y-1/2 text-slate-400"></i>
+        </div>
       </div>
 
       <div>
-        <label class="mb-1 block text-xs font-medium text-slate-600">Giá từ</label>
+        <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">
+          Giá từ
+        </label>
         <input
-          class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm shadow-sm outline-none focus:border-slate-300 focus:ring-2 focus:ring-slate-200"
-          type="number" name="min" step="1000" placeholder="Giá từ" value="<%= (query && query.min) || '' %>">
+          class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-800 shadow-sm outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-400/30"
+          type="number" name="min" step="1000" placeholder="Tối thiểu" value="<%= (query && query.min) || '' %>" />
       </div>
 
       <div>
-        <label class="mb-1 block text-xs font-medium text-slate-600">Đến</label>
+        <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">
+          Đến
+        </label>
         <input
-          class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm shadow-sm outline-none focus:border-slate-300 focus:ring-2 focus:ring-slate-200"
-          type="number" name="max" step="1000" placeholder="đến" value="<%= (query && query.max) || '' %>">
+          class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-800 shadow-sm outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-400/30"
+          type="number" name="max" step="1000" placeholder="Tối đa" value="<%= (query && query.max) || '' %>" />
       </div>
 
       <div>
-        <label class="mb-1 block text-xs font-medium text-slate-600">Sắp xếp</label>
-        <select
-          class="w-full appearance-none rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm shadow-sm outline-none focus:border-slate-300 focus:ring-2 focus:ring-slate-200"
-          name="sort">
-          <option value="">— Sắp xếp —</option>
-          <option value="name_asc" <%=(query && query.sort)==='name_asc' ?'selected':'' %>>Tên A→Z</option>
-          <option value="name_desc" <%=(query && query.sort)==='name_desc' ?'selected':'' %>>Tên Z→A</option>
-          <option value="price_asc" <%=(query && query.sort)==='price_asc' ?'selected':'' %>>Giá tăng dần</option>
-          <option value="price_desc" <%=(query && query.sort)==='price_desc' ?'selected':'' %>>Giá giảm dần</option>
-          <option value="created_desc" <%=(query && query.sort)==='created_desc' ?'selected':'' %>>Mới nhất</option>
-        </select>
+        <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">
+          Sắp xếp
+        </label>
+        <div class="relative">
+          <select
+            class="w-full appearance-none rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-800 shadow-sm outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-400/30"
+            name="sort">
+            <option value="">— Mặc định —</option>
+            <option value="name_asc" <%=(query && query.sort)==='name_asc' ?'selected':'' %>>Tên A→Z</option>
+            <option value="name_desc" <%=(query && query.sort)==='name_desc' ?'selected':'' %>>Tên Z→A</option>
+            <option value="price_asc" <%=(query && query.sort)==='price_asc' ?'selected':'' %>>Giá tăng dần</option>
+            <option value="price_desc" <%=(query && query.sort)==='price_desc' ?'selected':'' %>>Giá giảm dần</option>
+            <option value="created_desc" <%=(query && query.sort)==='created_desc' ?'selected':'' %>>Mới nhất</option>
+          </select>
+          <i data-lucide="chevron-down"
+            class="pointer-events-none absolute right-3 top-1/2 h-6 w-6 -translate-y-1/2 text-slate-400"></i>
+        </div>
       </div>
 
-      <div class="lg:col-span-6 mt-1 flex flex-wrap items-center justify-end gap-2">
+      <div class="mt-1 flex flex-wrap items-center justify-end gap-2 lg:col-span-6">
         <a href="/admin/products"
-          class="inline-flex items-center justify-center gap-2 rounded-xl border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-300">
+          class="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-300">
+          <i data-lucide="rotate-ccw" class="h-6 w-6"></i>
           Xóa lọc
         </a>
         <button
-          class="inline-flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400">
+          class="inline-flex items-center justify-center gap-2 rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-900/70">
+          <i data-lucide="filter" class="h-6 w-6"></i>
           Lọc
         </button>
       </div>
     </form>
 
-    <!-- Table Card -->
-    <div class="rounded-2xl border border-slate-200 bg-white/70 shadow-sm overflow-hidden">
-      <div class="flex items-center justify-between px-4 py-3 border-b border-slate-100">
-        <div class="text-sm text-slate-600"><span class="font-medium">
-            <%= (total||0).toLocaleString?.('vi-VN') || total || 0 %>
-          </span> sản phẩm</div>
-        <!-- Room for bulk actions if needed -->
+    <!-- TABLE CARD -->
+    <div class="overflow-hidden rounded-2xl border border-slate-200 bg-white/80 shadow-sm">
+      <!-- Header row: tổng / quick info -->
+      <div class="flex items-center justify-between border-b border-slate-100 px-4 py-3 text-sm">
+        <div class="flex items-center gap-2 text-slate-600">
+          <i data-lucide="list-tree" class="h-6 w-6 text-slate-400"></i>
+          <span>
+            Có
+            <span class="font-semibold text-slate-900">
+              <%= (total||0).toLocaleString?.('vi-VN') || total || 0 %>
+            </span>
+            sản phẩm trong hệ thống
+          </span>
+        </div>
       </div>
 
-      <div class="overflow-x-auto">
-        <table class="w-full text-sm">
-          <thead class="bg-slate-50/80 sticky top-0 z-10">
-            <tr class="text-left text-slate-500 uppercase text-[11px] tracking-wide">
-              <th class="p-3">Sản phẩm</th>
-              <th class="p-3">Thương hiệu</th>
-              <th class="p-3">Danh mục</th>
-              <th class="p-3">Trạng thái</th>
-              <th class="p-3 text-center">Biến thể</th>
-              <th class="p-3">Giá</th>
-              <th class="p-3 text-center">Tồn kho</th>
-              <th class="p-3 w-40"></th>
-            </tr>
-          </thead>
-          <tbody class="divide-y divide-slate-100">
-            <% (items||[]).forEach(p=>{ %>
-              <% const statusName=(p.productStatus && p.productStatus.statusName) || 'New' ; %>
-                <% const statusColor={ 'New' : 'bg-sky-100 text-sky-700' , 'Active' : 'bg-emerald-100 text-emerald-700'
-                  , 'Inactive' : 'bg-slate-100 text-slate-700' , 'Draft' : 'bg-amber-100 text-amber-700'
-                  , 'Out of stock' : 'bg-rose-100 text-rose-700' }[statusName] || 'bg-slate-100 text-slate-700' ; %>
-                  <tr class="hover:bg-slate-50/70">
-                    <td class="p-3">
-                      <div class="flex items-center gap-3">
-                        <img src="<%= p.cover || '/placeholder.png' %>" alt="cover"
-                          class="h-12 w-12 rounded-xl border border-slate-200 object-cover shadow-sm">
-                        <div class="min-w-0">
-                          <div class="truncate font-medium text-slate-900">
-                            <%= p.name %>
+      <!-- BULK FORM (multi delete) -->
+      <form id="bulkProductsForm" action="/admin/products/bulk-delete" method="post">
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead class="sticky top-0 z-10 bg-slate-50/90 backdrop-blur">
+              <tr class="text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                <th class="w-10 px-3 py-2.5">
+                  <input id="select-all-products" type="checkbox" class="checkbox-custom" />
+                </th>
+                <th class="px-3 py-2.5">Sản phẩm</th>
+                <th class="px-3 py-2.5">Thương hiệu</th>
+                <th class="px-3 py-2.5">Danh mục</th>
+                <th class="px-3 py-2.5 text-center">Biến thể</th>
+                <th class="px-3 py-2.5">Giá</th>
+                <th class="px-3 py-2.5 text-center">Tồn kho</th>
+                <th class="px-3 py-2.5">Trạng thái</th>
+                <th class="w-32 px-3 py-2.5 text-right"></th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100">
+              <% (items||[]).forEach(p=>{ %>
+                <% const statusName=(p.productStatus && p.productStatus.statusName) || 'New' ; %>
+                  <% const statusColor={ 'New' : 'bg-sky-100 text-sky-700' , 'Bán chạy'
+                    : 'bg-emerald-100 text-emerald-700' , 'Trending' : 'bg-amber-100 text-amber-700' , 'Active'
+                    : 'bg-emerald-100 text-emerald-700' , 'Inactive' : 'bg-slate-100 text-slate-700' , 'Draft'
+                    : 'bg-slate-100 text-slate-700' , 'Out of stock' : 'bg-rose-100 text-rose-700' }[statusName]
+                    || 'bg-slate-100 text-slate-700' ; %>
+
+                    <tr class="transition-colors hover:bg-slate-50/80">
+                      <!-- Checkbox -->
+                      <td class="px-3 py-2.5 align-top">
+                        <input type="checkbox" name="ids[]" class="product-row-check checkbox-custom"
+                          value="<%= p._id %>" />
+                      </td>
+
+                      <!-- Sản phẩm -->
+                      <td class="px-3 py-2.5 align-top">
+                        <div class="flex items-center gap-3">
+                          <div
+                            class="relative h-12 w-12 shrink-0 overflow-hidden rounded-xl border border-slate-200 bg-slate-50 shadow-sm">
+                            <img src="<%= p.cover || '/placeholder.png' %>" alt="cover"
+                              class="h-full w-full object-cover transition-transform duration-200 group-hover:scale-105" />
                           </div>
-                          <div class="truncate text-xs text-slate-500">/<%= p.slug %>
+                          <div class="min-w-0">
+                            <div class="truncate text-[13px] font-semibold text-slate-900">
+                              <%= p.name %>
+                            </div>
+                            <div class="mt-0.5 flex items-center gap-2 text-[11px] text-slate-500">
+                              <span class="truncate">/<%= p.slug %></span>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    </td>
-                    <td class="p-3 text-slate-700">
-                      <%= p.brand && p.brand.name || '-' %>
-                    </td>
-                    <td class="p-3 text-slate-700">
-                      <%= p.category && p.category.name || '-' %>
-                    </td>
-                    <td class="p-3">
-                      <span
-                        class="inline-flex items-center rounded-full px-2 py-1 text-xs font-medium <%= statusColor %>">
-                        <%= statusName %>
-                      </span>
-                    </td>
-                    <td class="p-3 text-center text-slate-700">
-                      <%= p.variants_count || 0 %>
-                    </td>
-                    <td class="p-3 font-medium text-slate-900">
-                      <%= money(p.price_min || 0) %> - <%= money(p.price_max || 0) %>
-                    </td>
-                    <td class="p-3 text-center text-slate-700">
-                      <%= p.stock_total || 0 %>
-                    </td>
-                    <td class="p-3">
-                      <div class="flex items-center justify-end gap-2">
-                        <a class="inline-flex items-center gap-1.5 rounded-lg border border-blue-600 bg-blue-600 px-3 py-1.5 text-xs font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
-                          href="/admin/products/<%= p._id %>">
-                          Sửa
-                        </a>
-                        <form action="/admin/products/<%= p._id %>/delete" method="post" class="inline"
-                          onsubmit="return confirm('Xóa sản phẩm này?')">
-                          <button
-                            class="inline-flex items-center gap-1.5 rounded-lg border border-rose-600 bg-rose-600 px-3 py-1.5 text-xs font-medium text-white shadow-sm hover:bg-rose-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-400"
-                            type="submit">
-                            Xóa
-                          </button>
-                        </form>
-                      </div>
-                    </td>
-                  </tr>
-                  <% }) %>
+                      </td>
 
-                    <% if(!items || items.length===0){ %>
-                      <tr>
-                        <td colspan="8" class="p-10 text-center">
-                          <div class="mx-auto max-w-md">
-                            <div
-                              class="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-100">
-                              <i class="lucide lucide-package-open size-6 text-slate-500"></i>
+                      <!-- Thương hiệu -->
+                      <td class="px-3 py-2.5 align-top text-[13px] text-slate-700">
+                        <%= (p.brand && p.brand.name) || '-' %>
+                      </td>
+
+                      <!-- Danh mục -->
+                      <td class="px-3 py-2.5 align-top text-[13px] text-slate-700">
+                        <%= (p.category && p.category.name) || '-' %>
+                      </td>
+
+                      <!-- Biến thể -->
+                      <td class="px-3 py-2.5 align-top text-center text-[13px] text-slate-700">
+                        <span
+                          class="inline-flex items-center justify-center rounded-full bg-slate-50 px-2 py-1 text-[11px] font-medium text-slate-700">
+                          <i data-lucide="layers" class="mr-1 h-5 w-5"></i>
+                          <%= p.variants_count || 0 %>
+                        </span>
+                      </td>
+
+                      <!-- Giá -->
+                      <td class="px-3 py-2.5 align-top text-[13px] font-medium text-slate-900">
+                        <div class="flex flex-col gap-0.5">
+                          <span>
+                            <%= money(p.price_min || 0) %>
+                          </span>
+                          <span class="text-[11px] text-slate-500">→ <%= money(p.price_max || 0) %></span>
+                        </div>
+                      </td>
+
+                      <!-- Tồn kho -->
+                      <td class="px-3 py-2.5 align-top text-center text-[13px] text-slate-700">
+                        <span
+                          class="inline-flex items-center justify-center rounded-full bg-slate-50 px-2 py-1 text-[11px] font-medium text-slate-800">
+                          <i data-lucide="boxes" class="mr-1 h-5 w-5"></i>
+                          <%= p.stock_total || 0 %>
+                        </span>
+                      </td>
+
+                      <!-- Trạng thái -->
+                      <td class="px-3 py-2.5 align-top">
+                        <span
+                          class="inline-flex items-center gap-1 rounded-full px-2 py-1 text-[11px] font-medium <%= statusColor %>">
+                          <%= statusName %>
+                        </span>
+                      </td>
+
+                      <!-- Actions -->
+                      <td class="px-3 py-2.5 align-top">
+                        <div class="flex items-center justify-end gap-1.5">
+                          <a class="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-[11px] font-medium text-slate-800 shadow-sm transition hover:-translate-y-0.5 hover:border-emerald-500 hover:bg-emerald-50 hover:text-emerald-700"
+                            href="/admin/products/<%= p._id %>">
+                            <i data-lucide="pencil-line" class="h-4 w-4"></i>
+                            Sửa
+                          </a>
+
+                          <!-- Xoá đơn lẻ -->
+                          <form action="/admin/products/<%= p._id %>/delete" method="post" class="inline"
+                            onsubmit="return confirm('Xóa sản phẩm này?')">
+                            <button type="submit"
+                              class="inline-flex items-center gap-1.5 rounded-lg border border-rose-200 bg-rose-50 px-2.5 py-1.5 text-[11px] font-medium text-rose-700 shadow-sm transition hover:-translate-y-0.5 hover:border-rose-400 hover:bg-rose-100">
+                              <i data-lucide="trash-2" class="h-5 w-5"></i>
+                              Xóa
+                            </button>
+                          </form>
+                        </div>
+                      </td>
+                    </tr>
+                    <% }) %>
+
+                      <% if(!items || items.length===0){ %>
+                        <tr>
+                          <td colspan="9" class="p-10 text-center">
+                            <div class="mx-auto max-w-md">
+                              <div
+                                class="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-100">
+                                <i data-lucide="package-open" class="h-8 w-8 text-slate-500"></i>
+                              </div>
+                              <div class="text-base font-medium text-slate-900">Chưa có sản phẩm phù hợp</div>
+                              <p class="mt-1 text-sm text-slate-500">
+                                Hãy điều chỉnh bộ lọc hoặc thêm sản phẩm mới vào hệ thống.
+                              </p>
+                              <a href="/admin/products/new"
+                                class="mt-3 inline-flex items-center justify-center gap-2 rounded-xl bg-slate-900 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-slate-800">
+                                <i data-lucide="plus" class="h-6 w-6"></i>
+                                Thêm sản phẩm
+                              </a>
                             </div>
-                            <div class="text-base font-medium text-slate-900">Chưa có sản phẩm phù hợp</div>
-                            <p class="mt-1 text-sm text-slate-500">Hãy điều chỉnh bộ lọc hoặc thêm sản phẩm mới.</p>
-                            <a href="/admin/products/new"
-                              class="mt-3 inline-flex items-center justify-center gap-2 rounded-xl bg-slate-900 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-slate-800">
-                              Thêm sản phẩm
-                            </a>
-                          </div>
-                        </td>
-                      </tr>
-                      <% } %>
-          </tbody>
-        </table>
-      </div>
+                          </td>
+                        </tr>
+                        <% } %>
+            </tbody>
+          </table>
+        </div>
 
-      <div class="border-t border-slate-100 bg-white/70 px-4 py-3">
-        <%- include('partials/_pagination') %>
-      </div>
+        <!-- Bulk action bar + Pagination -->
+        <div class="border-t border-slate-100 bg-white/90 px-4 py-3">
+          <div class="flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <!-- Bulk bar -->
+            <div id="bulk-bar"
+              class="hidden items-center gap-3 rounded-2xl bg-slate-900 px-4 py-2 text-xs sm:text-[13px] text-slate-100 shadow-sm">
+              <!-- Count -->
+              <div class="inline-flex items-center gap-2 rounded-xl bg-slate-800/80 px-2.5 py-1">
+                <span id="bulk-count" class="text-sm font-semibold">0</span>
+                <span class="text-[12px]">sản phẩm đã chọn</span>
+              </div>
+
+              <!-- Delete selected -->
+              <button type="submit" onclick="return confirm('Bạn có chắc muốn xóa các sản phẩm đã chọn?')"
+                class="inline-flex items-center gap-1.5 rounded-xl bg-rose-500 px-3 py-1.5 text-xs font-semibold text-white shadow-sm transition hover:bg-rose-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-400/70">
+                <i data-lucide="trash-2" class="h-5 w-5"></i>
+                Xóa đã chọn
+              </button>
+            </div>
+
+            <!-- Pagination -->
+            <div class="w-full sm:w-auto sm:ml-auto">
+              <%- include('partials/_pagination') %>
+            </div>
+          </div>
+        </div>
+
+      </form>
     </div>
   </section>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      const master = document.getElementById("select-all-products");
+      const rowChecks = Array.from(document.querySelectorAll(".product-row-check"));
+      const bulkBar = document.getElementById("bulk-bar");
+      const bulkCount = document.getElementById("bulk-count");
+
+      if (!master || !rowChecks.length) return;
+
+      function updateBulkUI() {
+        const selected = rowChecks.filter(c => c.checked).length;
+        if (bulkCount) bulkCount.textContent = selected;
+        if (bulkBar) {
+          if (selected > 0) {
+            bulkBar.classList.remove("hidden");
+          } else {
+            bulkBar.classList.add("hidden");
+          }
+        }
+      }
+
+      master.addEventListener("change", function () {
+        const checked = master.checked;
+        rowChecks.forEach(c => { c.checked = checked; });
+        updateBulkUI();
+      });
+
+      rowChecks.forEach(c => {
+        c.addEventListener("change", function () {
+          const allChecked = rowChecks.every(x => x.checked);
+          master.checked = allChecked;
+          updateBulkUI();
+        });
+      });
+
+      updateBulkUI();
+    });
+  </script>

@@ -16,10 +16,22 @@ const userSchema = new mongoose.Schema(
     },
     password_hash: { type: String, default: null },
     full_name: String,
-    phone: { type: String, default: null },
+    phone: {
+      type: String,
+      unique: true,
+      sparse: true, 
+    },
+    gender: {
+      type: String,
+      enum: ["male", "female", "other", null],
+      default: null,
+    },
+    birthday: {
+      type: Date,
+      default: null,
+    },
     role: { type: String, enum: ["customer", "admin"], default: "customer" },
     loyalty_points: { type: Number, default: 0 },
-
     provider: {
       type: String,
       enum: ["local", "google", "facebook"],

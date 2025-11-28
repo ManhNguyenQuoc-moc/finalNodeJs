@@ -19,9 +19,180 @@
   .pc__img-wrapper{position:relative}
   .category-banner__frame{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
   .filter-item label{cursor:pointer}
+  .filter-section-title{font-size:.85rem;letter-spacing:.08em;color:#7c7c7c}
+  .category-list{display:flex;flex-direction:column;gap:10px}
+  .category-pill{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid #f0f0f0;border-radius:999px;text-decoration:none;color:#1a1a1a;transition:border-color .2s ease,box-shadow .2s ease}
+  .category-pill:hover{border-color:#d0d0d0;box-shadow:0 3px 10px rgba(0,0,0,.04)}
+  .category-pill-active{border-color:#111;background:#111;color:#fff}
+  .category-thumb{width:36px;height:36px;border-radius:50%;overflow:hidden;flex-shrink:0;background:#f5f5f5}
+  .category-thumb img{width:100%;height:100%;object-fit:cover}
+  .brand-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px}
+  .brand-chip{position:relative;border-radius:999px;border:1px solid #e6e6e6;padding:8px 14px;font-size:.9rem;display:flex;align-items:center;justify-content:center;gap:6px;background:#fff;cursor:pointer;transition:border-color .2s ease,color .2s ease,background .2s ease}
+  .brand-chip:hover{border-color:#bfbfbf}
+  .brand-chip input{position:absolute;opacity:0;pointer-events:none}
+  .brand-chip .checkmark{display:none;font-size:.85rem}
+  .brand-chip-active{border-color:#111;background:#111;color:#fff}
+  .brand-chip-active .checkmark{display:inline}
+  .brand-name-truncate{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:90px}
+  .color-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(80px,1fr));
+    gap:12px 10px;
+  }
+  .color-swatch{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:6px;
+    min-width:72px;
+  }
+  .color-swatch .color-name{
+    font-size:12px;
+    color:#111;
+    text-align:center;
+    line-height:1.2;
+    font-weight:500;
+  }
+  .color-selected{min-height:20px;}
+  .visually-hidden{
+    position:absolute;
+    width:1px;
+    height:1px;
+    padding:0;
+    margin:-1px;
+    overflow:hidden;
+    clip:rect(0 0 0 0);
+    white-space:nowrap;
+    border:0;
+  }
+  .color-swatch .swatch-color{
+    display:inline-flex;
+    width:34px;
+    height:34px;
+    border-radius:50%;
+    border:2px solid transparent;
+    box-shadow:inset 0 0 0 1px rgba(0,0,0,0.15);
+    transition:transform .2s ease,border-color .2s ease;
+  }
+  .color-swatch .swatch-color::after{
+    content:"";
+    flex:1;
+    border-radius:50%;
+    background:currentColor;
+  }
+  .color-swatch .swatch-color.swatch_active{
+    border-color:#111;
+    transform:scale(1.05);
+  }
 </style>
 
-<body>
+<%
+  const safeProducts = Array.isArray(products?.content) ? products.content : [];
+  const normalizeSlug = (text) => (text || "").toString().trim().toLowerCase();
+  const brandOptions = (Array.isArray(brands) ? brands : [])
+    .map((br) => {
+      if (typeof br === "string") return { name: br, slug: normalizeSlug(br) };
+      return {
+        name: br?.name || "",
+        slug: normalizeSlug(br?.slug || br?.name || br?._id || ""),
+      };
+    })
+    .filter((item) => item.name && item.slug);
+  const selectedBrandSet = new Set(
+    String(brand || "")
+      .split(",")
+      .map((b) => normalizeSlug(b))
+      .filter(Boolean)
+  );
+const namedColorMap = {
+  "đen": "#000000",
+  "black": "#000000",
+  "trắng": "#ffffff",
+  "white": "#ffffff",
+  "xám": "#bdbdbd",
+  "xám đậm": "#555555",
+  "xám nhạt": "#dcdcdc",
+  "nâu": "#8b4513",
+  "nâu nhạt": "#c49a6c",
+  "xanh dương": "#1757ff",
+  "xanh dương nhạt": "#88b8ff",
+  "xanh dương đậm": "#0a2a7a",
+  "xanh lá": "#1f8b24",
+  "xanh lá đậm": "#0a5221",
+  "cam": "#ff7f11",
+  "cam đậm": "#d35400",
+  "đỏ": "#d7263d",
+  "hồng": "#f889b6",
+  "be": "#f8e3c4",
+  "default": "#d9d9d9"
+};
+const resolveColorHex = (code, name) => {
+  const normalized = (code || "").trim();
+  if (/^#([0-9a-f]{3}){1,2}$/i.test(normalized)) return normalized;
+  const fallback = namedColorMap[(name || "").toLowerCase()];
+  return fallback || namedColorMap.default;
+};
+const colorMap = new Map();
+safeProducts.forEach((product) => {
+  (Array.isArray(product?.colors) ? product.colors : []).forEach((color) => {
+    const key =
+      color?.color_id?._id ||
+      color?.color ||
+      color?.color_code ||
+      color?.color_id?.color_name;
+    if (!key) return;
+    const mapKey = String(key);
+    const existing = colorMap.get(mapKey);
+    if (!existing) {
+      colorMap.set(mapKey, {
+        key: mapKey,
+        name: color?.color || color?.color_id?.color_name || "Không rõ",
+        code: resolveColorHex(color?.color_code, color?.color || color?.color_id?.color_name),
+      });
+    }
+  });
+});
+const colorOptions = Array.from(colorMap.values());
+const colorFoldLimit = 10;
+const hasMoreColors = colorOptions.length > colorFoldLimit;
+const selectedColorKey = String(color || "");
+const defaultCategoryImage = "/mixishop/images/default_category.png";
+const brandNameMap = new Map(brandOptions.map((opt) => [opt.slug, opt.name]));
+const brandSelectionText = selectedBrandSet.size
+  ? Array.from(selectedBrandSet)
+      .map((slug) => brandNameMap.get(slug) || slug)
+      .join(", ")
+  : "Tất cả";
+const currentColorLabel = (() => {
+  if (!selectedColorKey) return "Tất cả";
+  const found = colorOptions.find((opt) => String(opt.key) === selectedColorKey);
+  return found?.name || "Tất cả";
+})();
+  const buildFilterQuery = (overrides = {}) => {
+    const params = new URLSearchParams();
+    const baseEntries = {
+      sort,
+      price_range,
+      brand,
+      rating,
+      color,
+      q,
+      pageNo: "1",
+      ...overrides,
+    };
+    Object.entries(baseEntries).forEach(([key, value]) => {
+      if (value === undefined || value === null) return;
+      const text = String(value).trim();
+      if (text) params.set(key, text);
+    });
+    const str = params.toString();
+    return str ? `?${str}` : "";
+  };
+  const initialSearch = (q || "").trim();
+  const initialSort = sort || "";
+%>
+
+<body data-category-view="collections" data-page-size="8">
   <%- include('partials/header') %>
 
   <main>
@@ -44,13 +215,33 @@
             </h5>
             <div id="accordion-filter-1" class="accordion-collapse collapse show border-0">
               <div class="accordion-body px-0 pb-0 pt-3">
-                <ul class="list list-inline mb-0">
-                  <% (categories || []).forEach(c => { %>
-                    <li class="list-item">
-                      <a href="/category/<%= c._id %>" class="menu-link py-1"><%= c.name %></a>
-                    </li>
+                <div class="category-list">
+                  <% const isAllCategory = !selectedCategoryId || selectedCategoryId === 'alls'; %>
+                  <a href="/category/alls<%= buildFilterQuery() %>"
+                     data-category-url="/category/alls"
+                     class="category-pill js-category-link <%= isAllCategory ? 'category-pill-active' : '' %>">
+                    <span class="category-thumb">
+                      <img src="<%= defaultCategoryImage %>" alt="Tất cả">
+                    </span>
+                    <span class="fw-medium">Tất cả</span>
+                  </a>
+                  <% (categories || []).forEach(c => {
+                    const isActive = String(selectedCategoryId || '') === String(c._id);
+                  %>
+                    <a href="/category/<%= c._id %><%= buildFilterQuery() %>"
+                       data-category-url="/category/<%= c._id %>"
+                       class="category-pill js-category-link <%= isActive ? 'category-pill-active' : '' %>">
+                      <span class="category-thumb">
+                        <% if (c.image) { %>
+                          <img src="<%= c.image %>" alt="<%= c.name %>">
+                        <% } else { %>
+                          <img src="<%= defaultCategoryImage %>" alt="<%= c.name %>">
+                        <% } %>
+                      </span>
+                      <span class="fw-medium"><%= c.name %></span>
+                    </a>
                   <% }) %>
-                </ul>
+                </div>
               </div>
             </div>
           </div>
@@ -67,22 +258,35 @@
             </h5>
             <div id="accordion-filter-brand" class="accordion-collapse collapse show border-0">
               <div class="accordion-body px-0 pb-0">
-                <ul class="list-unstyled mb-0">
-                  <% 
-                    const picked = new Set((brand || '').split(',').filter(Boolean));
-                    (brands || []).forEach(b => {
-                      const name = typeof b === 'string' ? b : (b?.name || '');
-                      if (!name) return;
-                      const checked = picked.has(name);
-                  %>
-                    <li class="mb-2 filter-item">
-                      <label class="d-flex align-items-center gap-2">
-                        <input type="checkbox" class="form-check-input js-brand" value="<%= name %>" <%= checked ? 'checked' : '' %> >
-                        <span><%= name %></span>
+                <% if (!brandOptions.length) { %>
+                  <span class="text-muted small">Chưa có thương hiệu</span>
+                <% } else { %>
+                  <div class="brand-grid">
+                    <button type="button"
+                            class="brand-chip js-brand-clear <%= selectedBrandSet.size ? '' : 'brand-chip-active' %>">
+                      <span class="brand-name-truncate">Tất cả</span>
+                      <span class="checkmark">✓</span>
+                    </button>
+                    <% brandOptions.forEach((opt) => {
+                      const isChecked = selectedBrandSet.has(opt.slug);
+                    %>
+                      <label class="brand-chip <%= isChecked ? 'brand-chip-active' : '' %>">
+                        <input
+                          type="checkbox"
+                          class="js-brand"
+                          value="<%= opt.slug %>"
+                          data-label="<%= opt.name %>"
+                          <%= isChecked ? 'checked' : '' %>
+                        >
+                        <span class="brand-name-truncate"><%= opt.name %></span>
+                        <span class="checkmark">✓</span>
                       </label>
-                    </li>
-                  <% }) %>
-                </ul>
+                    <% }) %>
+                  </div>
+                  <div class="text-muted small mt-2" id="brandSelectionDisplay">
+                    Đang chọn: <%= brandSelectionText %>
+                  </div>
+                <% } %>
               </div>
             </div>
           </div>
@@ -99,23 +303,54 @@
             </h5>
             <div id="accordion-filter-color" class="accordion-collapse collapse show border-0">
               <div class="accordion-body px-0 pb-0">
-                <div class="d-flex flex-wrap">
-                  <div class="color-swatch text-center me-3 mb-3">
-                    <a href="#" class="swatch-color js-filter" style="color:#000000" data-color="Đen"></a>
-                    <div class="color-name">Đen</div>
-                  </div>
-                  <div class="color-swatch text-center me-3 mb-3">
-                    <a href="#" class="swatch-color js-filter" style="color:#FFFFFF" data-color="Trắng"></a>
-                    <div class="color-name">Trắng</div>
-                  </div>
-                  <div class="color-swatch text-center me-3 mb-3">
-                    <a href="#" class="swatch-color js-filter" style="color:#af0000" data-color="Đỏ"></a>
-                    <div class="color-name">Đỏ</div>
-                  </div>
-                  <div class="color-swatch text-center me-3 mb-3">
-                    <a href="#" class="swatch-color js-filter" style="color:#d38585" data-color="Hồng"></a>
-                    <div class="color-name">Hồng</div>
-                  </div>
+                <div class="color-grid" id="colorGrid" data-collapsed="<%= hasMoreColors ? 'true' : 'false' %>">
+                  <% if (!colorOptions.length) { %>
+                    <span class="text-muted small">Chưa có dữ liệu màu sắc.</span>
+                  <% } else { %>
+                    <label class="color-swatch text-center">
+                      <input
+                        type="radio"
+                        name="colorFilter"
+                        class="visually-hidden js-color-radio"
+                        value=""
+                        data-label="Tất cả"
+                        <%= !selectedColorKey ? 'checked' : '' %>
+                      >
+                      <span class="swatch-color js-color-swatch <%= !selectedColorKey ? 'swatch_active' : '' %>"
+                        data-color-code="#ffffff"
+                        title="Tất cả"></span>
+                      <div class="color-name">Tất cả</div>
+                    </label>
+                    <% colorOptions.forEach((opt, idx) => { %>
+                      <label class="color-swatch text-center" <%= idx >= colorFoldLimit ? 'data-extra="true" style="display:none;"' : '' %>>
+                        <input
+                          type="radio"
+                          name="colorFilter"
+                          class="visually-hidden js-color-radio"
+                          value="<%= opt.key %>"
+                          data-label="<%= opt.name %>"
+                          data-color-code="<%= opt.code || '#bdbdbd' %>"
+                          <%= selectedColorKey === opt.key ? 'checked' : '' %>
+                        >
+                        <span
+                          class="swatch-color js-color-swatch <%= selectedColorKey === opt.key ? 'swatch_active' : '' %>"
+                          data-color-code="<%= opt.code || '#bdbdbd' %>"
+                          title="<%= opt.name %>"
+                        ></span>
+                        <div class="color-name"><%= opt.name %></div>
+                      </label>
+                    <% }) %>
+                  <% } %>
+                </div>
+                <div class="color-selected text-muted small mt-2" id="colorSelectionDisplay">
+                  Đang chọn: <%= currentColorLabel %>
+                </div>
+                <div id="colorToggleWrapper">
+                  <% if (hasMoreColors) { %>
+                    <button type="button" class="btn btn-link px-0 small js-toggle-color-grid" id="toggleColorGrid">
+                      Xem thêm màu
+                    </button>
+                  <% } %>
                 </div>
               </div>
             </div>
@@ -220,14 +455,7 @@
         <div class="d-flex justify-content-between mb-4 pb-md-2">
           <div class="toolbar-left">
             <!-- Search -->
-            <form class="search-inline" method="GET" action="/category/<%= selectedCategoryId || 'alls' %>">
-              <input type="hidden" name="sort"        value="<%= sort || '' %>">
-              <input type="hidden" name="price_range" value="<%= price_range || '' %>">
-              <input type="hidden" name="brand"       value="<%= brand || '' %>">
-              <input type="hidden" name="rating"      value="<%= rating || '' %>">
-              <input type="hidden" name="color"       value="<%= color || '' %>">
-              <input type="hidden" name="pageNo"      value="1">
-
+            <form class="search-inline js-search-form" autocomplete="off">
               <div class="input-group search-pill">
                 <span class="input-group-text border-0 bg-transparent">
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
@@ -235,9 +463,9 @@
                           stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
                   </svg>
                 </span>
-                <input type="text" name="q" class="form-control border-0" placeholder="Tìm sản phẩm..."
-                       value="<%= q || '' %>" aria-label="Tìm sản phẩm"/>
-                <% if (q && q.trim() !== '') { %>
+                <input type="text" name="q" class="form-control border-0 js-search-input" placeholder="Tìm sản phẩm..."
+                       value="<%= initialSearch %>" aria-label="Tìm sản phẩm"/>
+                <% if (initialSearch) { %>
                   <button class="btn btn-clear" type="button" id="btnClearKeyword" title="Xóa tìm kiếm">×</button>
                 <% } %>
                 <button class="btn btn-primary px-4" type="submit">Tìm</button>
@@ -246,14 +474,14 @@
           </div>
 
           <!-- Sort -->
-          <form method="GET" action="/category/<%= selectedCategoryId || 'alls' %>">
+          <form class="js-sort-form">
             <div class="shop-acs d-flex align-items-center justify-content-between justify-content-md-end flex-grow-1">
-              <select class="shop-acs__select form-select w-auto border-0 py-0" aria-label="Sort Items" name="sort" onchange="this.form.submit();">
-                <option <%= sort == null ? 'selected' : '' %> value="">Mặc định</option>
-                <option <%= sort === 'a_z' ? 'selected' : '' %> value="a_z">Tên A-Z</option>
-                <option <%= sort === 'z_a' ? 'selected' : '' %> value="z_a">Tên Z-A</option>
-                <option <%= sort === 'price_low_to_high' ? 'selected' : '' %> value="price_low_to_high">Giá tăng dần</option>
-                <option <%= sort === 'price_high_to_low' ? 'selected' : '' %> value="price_high_to_low">Giá giảm dần</option>
+              <select class="shop-acs__select form-select w-auto border-0 py-0" aria-label="Sắp xếp" name="sort" id="sortSelect">
+                <option <%= initialSort === '' ? 'selected' : '' %> value="">Mặc định</option>
+                <option <%= initialSort === 'a_z' ? 'selected' : '' %> value="a_z">Tên A-Z</option>
+                <option <%= initialSort === 'z_a' ? 'selected' : '' %> value="z_a">Tên Z-A</option>
+                <option <%= initialSort === 'price_low_to_high' ? 'selected' : '' %> value="price_low_to_high">Giá tăng dần</option>
+                <option <%= initialSort === 'price_high_to_low' ? 'selected' : '' %> value="price_high_to_low">Giá giảm dần</option>
               </select>
             </div>
           </form>
@@ -265,118 +493,12 @@
         </div>
 
         <!-- GRID -->
-        <div class="products-grid row row-cols-2 row-cols-md-4" id="products-grid">
-          <% (products.content || []).forEach(product => { %>
-            <div class="product-card-wrapper">
-              <div class="product-card mb-3 mb-md-4 mb-xxl-5">
-                <div class="pc__img-wrapper">
-                  <a href="/product_detail/<%= product._id || product.id %>">
-                    <img loading="lazy"
-                         src="<%= product.colors?.length ? (product.colors[0]?.imageUrls?.[0] || '/images/default.png') : '/images/default.png' %>"
-                         width="258" height="313" alt="<%= product.name %>" class="pc__img">
-                    <img loading="lazy"
-                         src="<%= product.colors?.length && (product.colors[0]?.imageUrls?.length>1) ? product.colors[0].imageUrls[1] : (product.colors?.length ? product.colors[0].imageUrls?.[0] : '/images/default.png') %>"
-                         width="258" height="313" alt="<%= product.name %>" class="pc__img pc__img-second">
-                    <% 
-                      let statusFrame = '/mixishop/images/frame_new.png';
-                      const s = product.productStatus?.statusName;
-                      if (s === 'Bán chạy') statusFrame = '/mixishop/images/frame_banchay.png';
-                      else if (s === 'Trending') statusFrame = '/mixishop/images/frame_trending.png';
-                    %>
-                    <img class="category-banner__frame" src="<%= statusFrame %>" alt="Status Frame">
-                  </a>
-                </div>
-
-                <!-- Color swatches per product -->
-                <div class="d-flex align-items-center mt-1 custom-swatch-container">
-                  <% (product.colors || []).forEach(pc => { %>
-                    <a href="#"
-                       class="swatch-color custom-swatch-color"
-                       style="background-image:url('<%= pc.imageUrls?.[0] || '' %>');background-size:cover;"
-                       data-images="<%= (pc.imageUrls || []).join(',') %>"
-                       onclick="changeColor(this);return false;"
-                       title="<%= pc.color %>"></a>
-                  <% }) %>
-                </div>
-
-                <div class="pc__info position-relative">
-                  <p class="pc__category"><%= product.category?.name || product.category_id?.name || '' %></p>
-                  <h6 class="pc__title"><a href="/product_detail/<%= product._id || product.id %>"><%= product.name %></a></h6>
-
-                  <div class="rating-stars d-flex align-items-center mb-2">
-                    <% const _avg = Math.round(product.avg_rating || 0); %>
-                    <% for (let i=1;i<=5;i++){ %>
-                      <span class="<%= i<=_avg ? 'on' : 'off' %>">★</span>
-                    <% } %>
-                    <small class="ms-2 text-muted">(<%= product.rating_count || 0 %> đánh giá)</small>
-                  </div>
-
-                  <div class="product-card__price d-flex">
-                    <span class="money price" style="color:blue;"><%= formatPrice(product.price) %></span>
-                  </div>
-
-                  <div class="small text-muted">
-                    Thương hiệu: <strong><%= product.brand?.name || product.brand?.name || 'Đang cập nhật' %></strong>
-                  </div>
-
-                  <button class="pc__btn-wl position-absolute top-0 end-0 bg-transparent border-0 js-add-wishlist" title="Thêm vào danh sách yêu thích">
-                    <svg width="16" height="16" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><use href="/images/sprite.svg#icon_heart" /></svg>
-                  </button>
-                </div>
-              </div>
-            </div>
-          <% }) %>
+        <div class="products-grid row row-cols-2 row-cols-md-4 g-3" id="products-grid">
+          <div class="col-12 text-center text-muted py-5" data-placeholder="true">Đang tải sản phẩm...</div>
         </div>
 
         <!-- PAGINATION -->
-        <%
-          const totalPages  = Math.max((products && products.totalPages) || 1, 1);
-          const currentPage = ((products && products.number) || 0) + 1;
-          const hasPrev     = !!(products && products.hasPrevious);
-          const hasNext     = !!(products && products.hasNext);
-
-          const qs = (page) =>
-            `pageNo=${page}`
-            + `&sort=${encodeURIComponent(sort || '')}`
-            + `&price_range=${encodeURIComponent(price_range || '')}`
-            + `&brand=${encodeURIComponent(brand || '')}`
-            + `&rating=${encodeURIComponent(rating || '')}`
-            + `&color=${encodeURIComponent(color || '')}`
-            + `&q=${encodeURIComponent(q || '')}`;
-
-          const baseUrl = `/category/${selectedCategoryId || 'alls'}`;
-        %>
-
-        <nav class="shop-pages d-flex justify-content-between mt-3" aria-label="Phân trang">
-          <a href="<%= hasPrev ? (baseUrl + '?' + qs(currentPage - 1)) : '#' %>"
-             class="btn-link d-inline-flex align-items-center <%= hasPrev ? '' : 'disabled' %>"
-             aria-disabled="<%= hasPrev ? 'false' : 'true' %>"
-             style="opacity:<%= hasPrev ? 1 : 0.5 %>; pointer-events:<%= hasPrev ? 'auto' : 'none' %>;">
-            <svg class="me-1" width="7" height="11" viewBox="0 0 7 11" xmlns="http://www.w3.org/2000/svg">
-              <use href="/images/sprite.svg#icon_prev_sm" />
-            </svg>
-            <span class="fw-medium">TRƯỚC</span>
-          </a>
-
-          <ul class="pagination mb-0">
-            <% for (let i = 1; i <= totalPages; i++) { %>
-              <li class="page-item">
-                <a href="<%= baseUrl + '?' + qs(i) %>"
-                   class="btn-link px-1 mx-2 <%= currentPage === i ? 'btn-link_active' : '' %>"><%= i %></a>
-              </li>
-            <% } %>
-          </ul>
-
-          <a href="<%= hasNext ? (baseUrl + '?' + qs(currentPage + 1)) : '#' %>"
-             class="btn-link d-inline-flex align-items-center <%= hasNext ? '' : 'disabled' %>"
-             aria-disabled="<%= hasNext ? 'false' : 'true' %>"
-             style="opacity:<%= hasNext ? 1 : 0.5 %>; pointer-events:<%= hasNext ? 'auto' : 'none' %>;">
-            <span class="fw-medium me-1">TIẾP</span>
-            <svg width="7" height="11" viewBox="0 0 7 11" xmlns="http://www.w3.org/2000/svg">
-              <use href="/images/sprite.svg#icon_next_sm" />
-            </svg>
-          </a>
-        </nav>
+        <nav class="shop-pages d-flex justify-content-between mt-3" id="categoryPagination" aria-label="Phân trang"></nav>
       </div>
     </section>
   </main>
@@ -397,126 +519,775 @@
 
     <script src="/mixishop/js/theme.js"></script>
 
-  <script>
-    function changeColor(swatch){
-      const images = (swatch.getAttribute('data-images')||'').split(',').filter(Boolean);
-      const card = swatch.closest('.product-card');
-      const first = card?.querySelector('.pc__img');
-      const second = card?.querySelector('.pc__img-second');
-      if(first){ first.src = images[0] || first.src; }
-      if(second){ second.src = images[1] || images[0] || second.src; }
-      card?.querySelectorAll('.custom-swatch-color').forEach(el=>el.classList.remove('swatch_active'));
-      swatch.classList.add('swatch_active');
-    }
+  <script id="products-json" type="application/json">
+    <%- JSON.stringify(safeProducts) %>
+  </script>
+  <script id="color-meta-json" type="application/json">
+    <%- JSON.stringify({ foldLimit: colorFoldLimit, namedMap: namedColorMap }) %>
   </script>
 
   <script>
-    (function(){
-      const getURL = () => new URL(window.location.href);
-      const setParam = (url, key, val) => { if(!val) url.searchParams.delete(key); else url.searchParams.set(key,val); };
-      const go = (url) => { url.searchParams.set('pageNo','1'); window.location.href = url.toString(); };
-
-      // Brand (giữ cố định, multi-select)
-      document.querySelectorAll('.js-brand').forEach(cb=>{
-        cb.addEventListener('change', ()=>{
-          const url = getURL();
-          const values = [...document.querySelectorAll('.js-brand:checked')].map(x=>x.value.trim());
-          setParam(url,'brand', values.join(','));
-          go(url);
-        });
-      });
-
-      // Rating
-      document.querySelectorAll('.js-rating').forEach(r=>{
-        r.addEventListener('change', ()=>{
-          const url = getURL();
-          setParam(url, 'rating', r.checked ? r.value : '');
-          go(url);
-        });
-      });
-      document.getElementById('clearRating')?.addEventListener('click', (e)=>{
-        e.preventDefault();
-        const url = getURL();
-        setParam(url, 'rating', '');
-        go(url);
-      });
-
-      // Color
-      document.querySelectorAll('.swatch-color.js-filter').forEach(el=>{
-        el.addEventListener('click', (e)=>{
-          e.preventDefault();
-          const url = getURL();
-          setParam(url, 'color', el.dataset.color || '');
-          go(url);
-        });
-      });
-      // reflect color active from URL
-      const curColor = getURL().searchParams.get('color');
-      if(curColor){
-        document.querySelectorAll('.swatch-color.js-filter').forEach(el=>{
-          el.classList.toggle('swatch_active', el.dataset.color===curColor);
-        });
+    (() => {
+      const dataEl = document.getElementById('products-json');
+      if (!dataEl) return;
+      let products = [];
+      try {
+        products = JSON.parse(dataEl.textContent || '[]');
+      } catch (err) {
+        console.warn('Không thể parse dữ liệu sản phẩm:', err);
+        products = [];
       }
 
-      // Price
-      const minI = document.getElementById('minPrice');
-      const maxI = document.getElementById('maxPrice');
-      const uncheckQuick = () => document.querySelectorAll('.js-quick-price').forEach(cb => cb.checked = false);
-
-      function applyPrice(min, max){
-        const url = getURL();
-        if(!min && !max) url.searchParams.delete('price_range');
-        else url.searchParams.set('price_range', (min||'')+','+(max||''));
-        url.searchParams.set('pageNo','1');
-        window.location.href = url.toString();
-      }
-      document.getElementById('applyPrice')?.addEventListener('click', ()=>{ uncheckQuick(); applyPrice(minI.value, maxI.value); });
-      document.getElementById('clearPrice')?.addEventListener('click', ()=>{
-        minI.value=''; maxI.value='';
-        const allCb = document.querySelector('.js-quick-price[data-min=""][data-max=""]'); if(allCb) allCb.checked = true;
-        applyPrice('','');
-      });
-
-      // Quick price (single-select)
-      document.querySelectorAll('.js-quick-price').forEach(cb=>{
-        cb.addEventListener('change', ()=>{
-          document.querySelectorAll('.js-quick-price').forEach(o=>{ if(o!==cb) o.checked=false; });
-          applyPrice(cb.dataset.min || '', cb.dataset.max || '');
-        });
-      });
-
-      // Reflect quick price from URL on load
-      (function reflectQuickPrice(){
-        const url = getURL();
-        const pr = url.searchParams.get('price_range') || '';
-        const [curMin, curMax] = pr.split(',');
-        let matched = false;
-        document.querySelectorAll('.js-quick-price').forEach(cb=>{
-          const m = cb.dataset.min || '';
-          const x = cb.dataset.max || '';
-          const ok = (curMin ?? '')===m && (curMax ?? '')===x && pr !== null && (m!=='' || x!=='');
-          cb.checked = ok;
-          if(ok) matched = true;
-        });
-        if(!matched){
-          const allCb = document.querySelector('.js-quick-price[data-min=""][data-max=""]');
-          if(allCb) allCb.checked = true;
+      const dom = {
+        grid: document.getElementById('products-grid'),
+        pagination: document.getElementById('categoryPagination'),
+        searchForm: document.querySelector('.js-search-form'),
+        searchInput: document.querySelector('.js-search-input'),
+        clearKeyword: document.getElementById('btnClearKeyword'),
+        sortSelect: document.getElementById('sortSelect'),
+        minPrice: document.getElementById('minPrice'),
+        maxPrice: document.getElementById('maxPrice'),
+        applyPrice: document.getElementById('applyPrice'),
+        clearPrice: document.getElementById('clearPrice'),
+        ratingRadios: Array.from(document.querySelectorAll('.js-rating')),
+        clearRating: document.getElementById('clearRating'),
+        brandCheckboxes: Array.from(document.querySelectorAll('.js-brand')),
+        brandClear: document.querySelector('.js-brand-clear'),
+        brandDisplay: document.getElementById('brandSelectionDisplay'),
+        categoryLinks: Array.from(document.querySelectorAll('.js-category-link')),
+        colorRadios: Array.from(document.querySelectorAll('.js-color-radio')),
+        colorSwatches: Array.from(document.querySelectorAll('.js-color-swatch')),
+        colorDisplay: document.getElementById('colorSelectionDisplay'),
+        colorToggle: document.getElementById('toggleColorGrid'),
+        colorToggleWrapper: document.getElementById('colorToggleWrapper'),
+        colorGrid: document.getElementById('colorGrid'),
+        colorExtras: Array.from(document.querySelectorAll('.color-swatch[data-extra="true"]')),
+        quickPriceBoxes: Array.from(document.querySelectorAll('.js-quick-price')),
+      };
+      const colorMetaEl = document.getElementById('color-meta-json');
+      let colorFoldLimitClient = 10;
+      let namedColorMapClient = {};
+      if (colorMetaEl) {
+        try {
+          const meta = JSON.parse(colorMetaEl.textContent || '{}');
+          if (meta && typeof meta === 'object') {
+            const parsedLimit = Number(meta.foldLimit);
+            if (Number.isFinite(parsedLimit) && parsedLimit > 0) {
+              colorFoldLimitClient = parsedLimit;
+            }
+            if (meta.namedMap && typeof meta.namedMap === 'object') {
+              namedColorMapClient = meta.namedMap;
+            }
+          }
+        } catch (err) {
+          console.warn('Không thể parse metadata màu:', err);
         }
-      })();
+      }
 
-      // Clear keyword button
-      (function(){
-        const btn = document.getElementById('btnClearKeyword');
-        if(!btn) return;
-        btn.addEventListener('click', function(){
-          const form = this.closest('form');
-          const input = form.querySelector('input[name="q"]');
-          input.value = '';
-          const page = form.querySelector('input[name="pageNo"]');
-          if(page) page.value = '1';
-          form.submit();
+      const applyStaticSwatchColors = () => {
+        (dom.colorSwatches || []).forEach((el) => {
+          const code = el.dataset.colorCode || '#bdbdbd';
+          const image = el.dataset.colorImage;
+          if (image) {
+            el.style.backgroundImage = `url('${image}')`;
+            el.style.backgroundColor = '#f5f5f5';
+            el.style.borderColor = '#fff';
+          } else {
+            el.style.backgroundImage = 'none';
+            el.style.backgroundColor = code;
+            el.style.borderColor = code;
+          }
+          el.style.color = code;
         });
-      })();
+      };
+      const syncColorSwatchState = () => {
+        (dom.colorRadios || []).forEach((radio) => {
+          const swatch = radio.closest('.color-swatch')?.querySelector('.js-color-swatch');
+          if (swatch) swatch.classList.toggle('swatch_active', radio.checked);
+        });
+      };
+      const updateColorDisplay = () => {
+        if (!dom.colorDisplay) return;
+        if (!state.color) {
+          dom.colorDisplay.textContent = 'Đang chọn: Tất cả';
+          return;
+        }
+        const current = dom.colorRadios.find((radio) => radio.value === state.color);
+        const label = current?.dataset.label || state.color;
+        dom.colorDisplay.textContent = `Đang chọn: ${label}`;
+      };
+      const toggleExtraColors = (expand) => {
+        if (!dom.colorExtras?.length) return;
+        dom.colorExtras.forEach((item) => {
+          item.style.display = expand ? '' : 'none';
+        });
+        if (dom.colorToggle) {
+          dom.colorToggle.dataset.expanded = expand ? 'true' : 'false';
+          dom.colorToggle.textContent = expand ? 'Thu gọn' : 'Xem thêm màu';
+        }
+      };
+
+      const ensureColorVisibility = () => {
+        if (!dom.colorExtras?.length) return;
+        if (!state.color) {
+          toggleExtraColors(false);
+          return;
+        }
+        const match = dom.colorExtras.some((item) => {
+          const radio = item.querySelector('.js-color-radio');
+          return radio?.value === state.color;
+        });
+        toggleExtraColors(match);
+      };
+
+      const syncBrandChipState = () => {
+        (dom.brandCheckboxes || []).forEach((checkbox) => {
+          const chip = checkbox.closest('.brand-chip');
+          if (chip) chip.classList.toggle('brand-chip-active', checkbox.checked);
+        });
+        if (dom.brandClear) {
+          dom.brandClear.classList.toggle('brand-chip-active', state.brands.size === 0);
+        }
+      };
+
+      const updateBrandDisplay = () => {
+        if (!dom.brandDisplay) return;
+        if (!state.brands.size) {
+          dom.brandDisplay.textContent = 'Đang chọn: Tất cả';
+          return;
+        }
+        const labels = dom.brandCheckboxes
+          .filter((cb) => state.brands.has(cb.value))
+          .map((cb) => cb.dataset.label || cb.value);
+        dom.brandDisplay.textContent = `Đang chọn: ${labels.join(', ')}`;
+      };
+
+      applyStaticSwatchColors();
+      ensureColorVisibility();
+
+      const viewMode = document.body.dataset.categoryView || 'category';
+      const pageSize = Number(document.body.dataset.pageSize || 8);
+      let lastTotalPages = 1;
+
+      const normalize = (text = '') => text.toString().trim().toLowerCase();
+      const escapeHtml = (value = '') =>
+        value
+          .toString()
+          .replace(/[&<>"']/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char] || char));
+      const formatCurrency = (val) =>
+        new Intl.NumberFormat('vi-VN').format(Math.max(0, Number(val) || 0)) + ' đ';
+      const getBrandSlug = (product) => normalize(product?.brand?.slug || product?.brand?.name || product?.brand?._id || '');
+      const getCategoryName = (product) =>
+        product?.category?.name || product?.category_id?.name || product?.category_name || '';
+      const getPriceNumber = (product) =>
+        Number(product?.price ?? product?.price_min ?? product?.price_max ?? product?.base_price ?? 0);
+      const getColorKeys = (product) =>
+        (Array.isArray(product?.colors) ? product.colors : []).map((color) =>
+          String(color?.color_id?._id || color?.color || color?.color_code || color?.color_id?.color_name || '')
+        );
+      const encodeImages = (imgs = []) => encodeURIComponent(JSON.stringify(imgs));
+      const getImages = (product) => {
+        const color = Array.isArray(product?.colors) && product.colors.length ? product.colors[0] : null;
+        const fallback = (product?.images?.[0]?.url) || '/images/default.png';
+        const first = color?.imageUrls?.[0] || fallback;
+        const second = color?.imageUrls?.[1] || color?.imageUrls?.[0] || product?.images?.[1]?.url || first;
+        return { first, second };
+      };
+      const getStatusFrame = (statusName = '') => {
+        if (statusName === 'Bán chạy') return '/mixishop/images/frame_banchay.png';
+        if (statusName === 'Trending') return '/mixishop/images/frame_trending.png';
+        return '/mixishop/images/frame_new.png';
+      };
+      const buildRatingStars = (avg) => {
+        const rounded = Math.round(Number(avg) || 0);
+        let stars = '';
+        for (let i = 1; i <= 5; i += 1) {
+          stars += `<span class="${i <= rounded ? 'on' : 'off'}">★</span>`;
+        }
+        return stars;
+      };
+
+  const initialParams = new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '');
+  const initialPage = Math.max(1, Number(initialParams.get('pageNo') || '1'));
+
+  const state = {
+        page: initialPage,
+        search: dom.searchInput ? dom.searchInput.value.trim() : '',
+        sort: dom.sortSelect ? dom.sortSelect.value : '',
+        brands: new Set(dom.brandCheckboxes.filter((cb) => cb.checked).map((cb) => cb.value)),
+    color: dom.colorRadios.find((r) => r.checked)?.value || '',
+        rating: dom.ratingRadios.find((r) => r.checked)?.value || '',
+        minPrice: dom.minPrice?.value || '',
+        maxPrice: dom.maxPrice?.value || '',
+      };
+  const resolveColorHexClient = (code, name) => {
+    const normalized = (code || '').trim();
+    if (/^#([0-9a-f]{3}){1,2}$/i.test(normalized)) return normalized;
+    const fallback = namedColorMapClient[(name || '').toLowerCase()];
+    return fallback || namedColorMapClient.default || '#d9d9d9';
+  };
+  const buildColorOptionsFromProducts = (list) => {
+    const map = new Map();
+    list.forEach((product) => {
+      (Array.isArray(product?.colors) ? product.colors : []).forEach((color) => {
+        const key =
+          color?.color_id?._id ||
+          color?.color ||
+          color?.color_code ||
+          color?.color_id?.color_name;
+        if (!key) return;
+        const mapKey = String(key);
+        if (!map.has(mapKey)) {
+          map.set(mapKey, {
+            key: mapKey,
+            name: color?.color || color?.color_id?.color_name || 'Không rõ',
+            code: resolveColorHexClient(color?.color_code, color?.color || color?.color_id?.color_name),
+          });
+        }
+      });
+    });
+    return Array.from(map.values());
+  };
+  const buildColorGridHtml = (options) => {
+    const parts = [];
+    const selectedKey = state.color || '';
+    parts.push(`
+      <label class="color-swatch text-center">
+        <input
+          type="radio"
+          name="colorFilter"
+          class="visually-hidden js-color-radio"
+          value=""
+          data-label="Tất cả"
+          ${selectedKey ? '' : 'checked'}
+        >
+        <span class="swatch-color js-color-swatch ${selectedKey ? '' : 'swatch_active'}"
+          data-color-code="#ffffff"
+          title="Tất cả"></span>
+        <div class="color-name">Tất cả</div>
+      </label>
+    `);
+    options.forEach((opt, idx) => {
+      const key = String(opt.key);
+      const extraAttr = idx >= colorFoldLimitClient ? ' data-extra="true" style="display:none;"' : '';
+      const isSelected = selectedKey === key;
+      parts.push(`
+        <label class="color-swatch text-center"${extraAttr}>
+          <input
+            type="radio"
+            name="colorFilter"
+            class="visually-hidden js-color-radio"
+            value="${escapeHtml(key)}"
+            data-label="${escapeHtml(opt.name || '')}"
+            data-color-code="${escapeHtml(opt.code || '#d9d9d9')}"
+            ${isSelected ? 'checked' : ''}
+          >
+          <span
+            class="swatch-color js-color-swatch ${isSelected ? 'swatch_active' : ''}"
+            data-color-code="${escapeHtml(opt.code || '#d9d9d9')}"
+            title="${escapeHtml(opt.name || '')}"
+          ></span>
+          <div class="color-name">${escapeHtml(opt.name || '')}</div>
+        </label>
+      `);
+    });
+    return { html: parts.join(''), hasMore: options.length > colorFoldLimitClient };
+  };
+  const handleColorChange = (radio) => {
+    if (!radio?.checked) return;
+    state.color = radio.value;
+    syncColorSwatchState();
+    updateColorDisplay();
+    ensureColorVisibility();
+    state.page = 1;
+    renderProducts();
+  };
+  const bindColorRadioEvents = () => {
+    (dom.colorRadios || []).forEach((radio) => {
+      radio.addEventListener('change', () => handleColorChange(radio));
+    });
+  };
+  const refreshColorFilters = (productsForColor) => {
+    if (!dom.colorGrid) return;
+    const options = buildColorOptionsFromProducts(productsForColor);
+    if (!options.length) {
+      dom.colorGrid.innerHTML = '<span class="text-muted small">Không có màu phù hợp.</span>';
+      if (dom.colorToggleWrapper) dom.colorToggleWrapper.innerHTML = '';
+      state.color = '';
+      dom.colorRadios = [];
+      dom.colorSwatches = [];
+      dom.colorExtras = [];
+      dom.colorToggle = null;
+      updateColorDisplay();
+      return;
+    }
+    const keySet = new Set(options.map((opt) => String(opt.key)));
+    if (state.color && !keySet.has(state.color)) {
+      state.color = '';
+    }
+    const { html, hasMore } = buildColorGridHtml(options);
+    dom.colorGrid.innerHTML = html;
+    if (dom.colorToggleWrapper) {
+      dom.colorToggleWrapper.innerHTML = hasMore
+        ? '<button type="button" class="btn btn-link px-0 small js-toggle-color-grid" id="toggleColorGrid">Xem thêm màu</button>'
+        : '';
+    }
+    dom.colorRadios = Array.from(dom.colorGrid.querySelectorAll('.js-color-radio'));
+    dom.colorSwatches = Array.from(dom.colorGrid.querySelectorAll('.js-color-swatch'));
+    dom.colorExtras = Array.from(dom.colorGrid.querySelectorAll('.color-swatch[data-extra="true"]'));
+    dom.colorToggle = document.getElementById('toggleColorGrid');
+    applyStaticSwatchColors();
+    syncColorSwatchState();
+    updateColorDisplay();
+    bindColorRadioEvents();
+    if (dom.colorToggle && dom.colorExtras?.length) {
+      dom.colorToggle.addEventListener('click', () => {
+        const expanded = dom.colorToggle.dataset.expanded === 'true';
+        toggleExtraColors(!expanded);
+      });
+    }
+    ensureColorVisibility();
+  };
+
+  const getProductsForColorFilters = () => {
+    if (!state.brands.size) return products;
+    return products.filter((product) => state.brands.has(getBrandSlug(product)));
+  };
+
+  const refreshColorsForBrandSelection = () => {
+    refreshColorFilters(getProductsForColorFilters());
+  };
+
+  const buildSearchFromState = (overrides = {}) => {
+    const params = new URLSearchParams();
+    const entries = {
+      q: state.search,
+      sort: state.sort,
+      color: state.color,
+      rating: state.rating,
+      price_range:
+        (state.minPrice || state.maxPrice)
+          ? `${state.minPrice || ''},${state.maxPrice || ''}`
+          : '',
+      brand: state.brands.size ? Array.from(state.brands).join(',') : '',
+      ...overrides,
+    };
+    Object.entries(entries).forEach(([key, value]) => {
+      if (value === undefined || value === null) return;
+      const text = String(value).trim();
+      if (text) params.set(key, text);
+    });
+    return params.toString();
+  };
+
+  const navigateWithState = (basePath) => {
+    const query = buildSearchFromState({ pageNo: '1' });
+    window.location.href = query ? `${basePath}?${query}` : basePath;
+  };
+
+      const applyFilters = () =>
+        products.filter((product) => {
+          if (state.brands.size && !state.brands.has(getBrandSlug(product))) return false;
+      if (state.color) {
+        const keys = getColorKeys(product);
+        if (!keys.includes(state.color)) return false;
+      }
+          const price = getPriceNumber(product);
+          if (state.minPrice && price < Number(state.minPrice)) return false;
+          if (state.maxPrice && price > Number(state.maxPrice)) return false;
+          if (state.search) {
+            const haystack = [
+              product?.name,
+              product?.short_description,
+              product?.long_description,
+              product?.brand?.name,
+              getCategoryName(product),
+            ]
+              .filter(Boolean)
+              .join(' ')
+              .toLowerCase();
+            if (!haystack.includes(state.search.toLowerCase())) return false;
+          }
+          if (state.rating && Number(product?.avg_rating || 0) < Number(state.rating)) return false;
+          return true;
+        });
+
+      const sortProducts = (list) => {
+        const sorted = [...list];
+        switch (state.sort) {
+          case 'a_z':
+            sorted.sort((a, b) => a.name.localeCompare(b.name));
+            break;
+          case 'z_a':
+            sorted.sort((a, b) => b.name.localeCompare(a.name));
+            break;
+          case 'price_low_to_high':
+            sorted.sort((a, b) => getPriceNumber(a) - getPriceNumber(b));
+            break;
+          case 'price_high_to_low':
+            sorted.sort((a, b) => getPriceNumber(b) - getPriceNumber(a));
+            break;
+          default:
+            break;
+        }
+        return sorted;
+      };
+
+      const buildSwatches = (product) => {
+        const colors = (Array.isArray(product?.colors) ? product.colors : []).slice(0, 6);
+        if (!colors.length) return '';
+        return `
+          <div class="d-flex align-items-center mt-1 custom-swatch-container">
+            ${colors
+              .map((color, index) => {
+                const imgs = (Array.isArray(color?.imageUrls) ? color.imageUrls : []).filter(Boolean);
+                const preview = encodeURI(imgs[0] || '/images/default.png');
+                return `<a href="#"
+                  class="swatch-color custom-swatch-color ${index === 0 ? 'swatch_active' : ''}"
+                  data-action="swap-color"
+                  data-images="${encodeImages(imgs)}"
+                  style="background-image:url('${preview}');background-size:cover;"
+                  title="${escapeHtml(color?.color || color?.color_id?.color_name || 'Màu sắc')}"></a>`;
+              })
+              .join('')}
+          </div>
+        `;
+      };
+
+      const buildCard = (product) => {
+        const { first, second } = getImages(product);
+        const priceText = formatCurrency(getPriceNumber(product));
+        const categoryName = escapeHtml(getCategoryName(product));
+        const brandName = escapeHtml(product?.brand?.name || '');
+        const statusFrame = getStatusFrame(product?.productStatus?.statusName);
+        const description = escapeHtml(product?.short_description || '');
+        const ratingStars = buildRatingStars(product?.avg_rating);
+        const ratingCount = Number(product?.rating_count || 0);
+        const detailUrl = `/product_detail/${product?._id || product?.id || ''}`;
+        const wishlistBtn = `
+          <button class="pc__btn-wl position-absolute top-0 end-0 bg-transparent border-0 js-add-wishlist" title="Thêm vào danh sách yêu thích">
+            <svg width="16" height="16" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <use href="/images/sprite.svg#icon_heart"></use>
+            </svg>
+          </button>
+        `;
+
+        const baseInfo = `
+          <div class="pc__info position-relative">
+            <p class="pc__category">${categoryName}</p>
+            <h6 class="pc__title">
+              <a href="${detailUrl}">
+                ${escapeHtml(product?.name || 'Sản phẩm')}
+              </a>
+            </h6>
+            <div class="rating-stars d-flex align-items-center mb-2">
+              ${ratingStars}
+              <small class="ms-2 text-muted">(${ratingCount} đánh giá)</small>
+            </div>
+            <div class="product-card__price d-flex">
+              <span class="money price text-primary">${priceText}</span>
+            </div>
+            ${brandName ? `<div class="small text-muted">Thương hiệu: <strong>${brandName}</strong></div>` : ''}
+            ${wishlistBtn}
+          </div>
+        `;
+
+        if (viewMode === 'collections') {
+          return `
+            <div class="product-card-wrapper" data-brand="${getBrandSlug(product)}">
+              <div class="product-card mb-3 mb-md-4 mb-xxl-5">
+                <div class="pc__img-wrapper">
+                  <a href="${detailUrl}">
+                    <img loading="lazy" src="${first}" width="258" height="313" alt="${escapeHtml(product?.name || '')}" class="pc__img">
+                    <img loading="lazy" src="${second}" width="258" height="313" alt="${escapeHtml(product?.name || '')}" class="pc__img pc__img-second">
+                    <img class="category-banner__frame" src="${statusFrame}" alt="Trạng thái">
+                  </a>
+                </div>
+                ${buildSwatches(product)}
+                <div class="pc__info position-relative">
+                  <p class="pc__category">${categoryName}</p>
+                  <h6 class="pc__title">
+                    <a href="${detailUrl}">
+                      ${escapeHtml(product?.name || 'Sản phẩm')}
+                    </a>
+                  </h6>
+                  <p class="small text-muted mb-1 line-clamp-5">${description}</p>
+                  <div class="rating-stars d-flex align-items-center mb-2">
+                    ${ratingStars}
+                    <small class="ms-2 text-muted">(${ratingCount} đánh giá)</small>
+                  </div>
+                  <div class="product-card__price d-flex">
+                    <span class="money price text-primary">${priceText}</span>
+                  </div>
+                  ${brandName ? `<div class="small text-muted">Thương hiệu: <strong>${brandName}</strong></div>` : ''}
+                  ${wishlistBtn}
+                </div>
+              </div>
+            </div>
+          `;
+        }
+
+        return `
+          <div class="product-card-wrapper" data-brand="${getBrandSlug(product)}">
+            <div class="product-card mb-3 mb-md-4 mb-xxl-5">
+              <div class="pc__img-wrapper">
+                <div class="swiper-container background-img js-swiper-slider" data-settings='{"resizeObserver": true}'>
+                  <div class="swiper-wrapper">
+                    <div class="swiper-slide">
+                      <a href="${detailUrl}">
+                        <img loading="lazy" src="${first}" width="258" height="313" alt="${escapeHtml(product?.name || '')}" class="pc__img">
+                        <img loading="lazy" src="${second}" width="258" height="313" alt="${escapeHtml(product?.name || '')}" class="pc__img pc__img-second">
+                        <img class="category-banner__frame" src="${statusFrame}" alt="Trạng thái">
+                      </a>
+                    </div>
+                  </div>
+                </div>
+                <a href="${detailUrl}" class="pc__atc btn anim_appear-bottom position-absolute border-0 fw-medium" title="Xem chi tiết">
+                  Xem chi tiết
+                </a>
+              </div>
+              ${buildSwatches(product)}
+              ${baseInfo}
+            </div>
+          </div>
+        `;
+      };
+
+      const renderPagination = (totalPages) => {
+        if (!dom.pagination) return;
+        lastTotalPages = totalPages;
+        dom.pagination.dataset.totalPages = totalPages;
+        dom.pagination.dataset.totalItems = totalPages ? totalPages * pageSize : 0;
+        if (totalPages <= 1) {
+          dom.pagination.innerHTML = '';
+          return;
+        }
+        const maxButtons = 5;
+        let start = Math.max(1, state.page - Math.floor(maxButtons / 2));
+        let end = Math.min(totalPages, start + maxButtons - 1);
+        if (end - start < maxButtons - 1) {
+          start = Math.max(1, end - maxButtons + 1);
+        }
+        const pages = [];
+        for (let i = start; i <= end; i += 1) {
+          pages.push(`
+            <li class="page-item">
+              <button class="btn-link px-1 mx-1 ${i === state.page ? 'btn-link_active' : ''}" data-page="${i}">
+                ${i}
+              </button>
+            </li>
+          `);
+        }
+        dom.pagination.innerHTML = `
+          <button class="btn-link d-inline-flex align-items-center ${state.page === 1 ? 'is-disabled' : ''}"
+            data-page="${state.page - 1}" ${state.page === 1 ? 'disabled' : ''}>
+            <svg class="me-1" width="7" height="11" viewBox="0 0 7 11" xmlns="http://www.w3.org/2000/svg">
+              <use href="/images/sprite.svg#icon_prev_sm"></use>
+            </svg>
+            <span class="fw-medium">TRƯỚC</span>
+          </button>
+          <ul class="pagination mb-0 d-flex align-items-center">
+            ${pages.join('')}
+          </ul>
+          <button class="btn-link d-inline-flex align-items-center ${state.page === totalPages ? 'is-disabled' : ''}"
+            data-page="${state.page + 1}" ${state.page === totalPages ? 'disabled' : ''}>
+            <span class="fw-medium me-1">TIẾP</span>
+            <svg width="7" height="11" viewBox="0 0 7 11" xmlns="http://www.w3.org/2000/svg">
+              <use href="/images/sprite.svg#icon_next_sm"></use>
+            </svg>
+          </button>
+        `;
+      };
+
+      const renderProducts = () => {
+        if (!dom.grid) return;
+        const filtered = sortProducts(applyFilters());
+        const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+        state.page = Math.min(state.page, totalPages);
+        const start = (state.page - 1) * pageSize;
+        const slice = filtered.slice(start, start + pageSize);
+        if (!slice.length) {
+          dom.grid.innerHTML = `
+            <div class="col-12 text-center text-muted py-5">
+              Không tìm thấy sản phẩm phù hợp.
+            </div>
+          `;
+        } else {
+          dom.grid.innerHTML = slice.map((item) => buildCard(item)).join('');
+        }
+        renderPagination(totalPages);
+      };
+
+      dom.grid?.addEventListener('click', (event) => {
+        const swatch = event.target.closest('[data-action="swap-color"]');
+        if (!swatch) return;
+        event.preventDefault();
+        let images = [];
+        try {
+          images = JSON.parse(decodeURIComponent(swatch.dataset.images || '%5B%5D'));
+        } catch {
+          images = [];
+        }
+        const card = swatch.closest('.product-card');
+        if (!card) return;
+        const primary = card.querySelector('.pc__img');
+        const secondary = card.querySelector('.pc__img-second');
+        if (primary && images[0]) primary.src = images[0];
+        if (secondary) secondary.src = images[1] || images[0] || secondary.src;
+        swatch
+          .closest('.custom-swatch-container')
+          ?.querySelectorAll('[data-action="swap-color"]')
+          .forEach((node) => node.classList.remove('swatch_active'));
+        swatch.classList.add('swatch_active');
+      });
+
+      dom.pagination?.addEventListener('click', (event) => {
+        const btn = event.target.closest('[data-page]');
+        if (!btn) return;
+        const targetPage = Number(btn.dataset.page);
+        if (!Number.isFinite(targetPage) || targetPage < 1 || targetPage > lastTotalPages) return;
+        event.preventDefault();
+        state.page = targetPage;
+        renderProducts();
+      });
+
+      dom.searchForm?.addEventListener('submit', (event) => {
+        event.preventDefault();
+        state.search = dom.searchInput ? dom.searchInput.value.trim() : '';
+        state.page = 1;
+        renderProducts();
+      });
+      dom.clearKeyword?.addEventListener('click', () => {
+        if (dom.searchInput) dom.searchInput.value = '';
+        state.search = '';
+        state.page = 1;
+        renderProducts();
+      });
+      dom.searchInput?.addEventListener('input', () => {
+        const value = dom.searchInput.value.trim();
+        const nextSearch = value;
+        if (state.search === nextSearch) return;
+        state.search = nextSearch;
+        state.page = 1;
+        renderProducts();
+      });
+
+      dom.sortSelect?.addEventListener('change', () => {
+        state.sort = dom.sortSelect.value;
+        state.page = 1;
+        renderProducts();
+      });
+
+      dom.brandCheckboxes.forEach((checkbox) => {
+        checkbox.addEventListener('change', () => {
+          if (checkbox.checked) state.brands.add(checkbox.value);
+          else state.brands.delete(checkbox.value);
+          syncBrandChipState();
+          updateBrandDisplay();
+          refreshColorsForBrandSelection();
+          state.page = 1;
+          renderProducts();
+        });
+      });
+
+      dom.brandClear?.addEventListener('click', () => {
+        if (!state.brands.size) return;
+        dom.brandCheckboxes.forEach((checkbox) => {
+          checkbox.checked = false;
+        });
+        state.brands.clear();
+        syncBrandChipState();
+        updateBrandDisplay();
+        refreshColorsForBrandSelection();
+        state.page = 1;
+        renderProducts();
+      });
+
+      syncBrandChipState();
+      updateBrandDisplay();
+      refreshColorsForBrandSelection();
+
+      dom.categoryLinks.forEach((link) => {
+        link.addEventListener('click', (event) => {
+          event.preventDefault();
+          const basePath = link.dataset.categoryUrl || link.getAttribute('href');
+          if (!basePath) return;
+          navigateWithState(basePath);
+        });
+      });
+
+      syncColorSwatchState();
+      updateColorDisplay();
+
+      dom.ratingRadios.forEach((radio) => {
+        radio.addEventListener('change', () => {
+          state.rating = radio.checked ? radio.value : '';
+          state.page = 1;
+          renderProducts();
+        });
+      });
+      dom.clearRating?.addEventListener('click', (event) => {
+        event.preventDefault();
+        state.rating = '';
+        dom.ratingRadios.forEach((radio) => {
+          radio.checked = false;
+        });
+        state.page = 1;
+        renderProducts();
+      });
+
+      const syncQuickPrice = () => {
+        dom.quickPriceBoxes.forEach((box) => {
+          const min = box.dataset.min || '';
+          const max = box.dataset.max || '';
+          box.checked =
+            state.minPrice === min &&
+            state.maxPrice === max &&
+            (min !== '' || max !== '');
+          if (!state.minPrice && !state.maxPrice && min === '' && max === '') {
+            box.checked = true;
+          }
+        });
+      };
+
+      dom.quickPriceBoxes.forEach((box) => {
+        box.addEventListener('change', () => {
+          if (!box.checked) return;
+          dom.quickPriceBoxes.forEach((other) => {
+            if (other !== box) other.checked = false;
+          });
+          state.minPrice = box.dataset.min || '';
+          state.maxPrice = box.dataset.max || '';
+          if (dom.minPrice) dom.minPrice.value = state.minPrice;
+          if (dom.maxPrice) dom.maxPrice.value = state.maxPrice;
+          state.page = 1;
+          renderProducts();
+        });
+      });
+
+      dom.applyPrice?.addEventListener('click', () => {
+        state.minPrice = dom.minPrice?.value || '';
+        state.maxPrice = dom.maxPrice?.value || '';
+        dom.quickPriceBoxes.forEach((box) => (box.checked = false));
+        syncQuickPrice();
+        state.page = 1;
+        renderProducts();
+      });
+      dom.clearPrice?.addEventListener('click', () => {
+        if (dom.minPrice) dom.minPrice.value = '';
+        if (dom.maxPrice) dom.maxPrice.value = '';
+        state.minPrice = '';
+        state.maxPrice = '';
+        dom.quickPriceBoxes.forEach((box) => {
+          const isAll = !box.dataset.min && !box.dataset.max;
+          box.checked = isAll;
+        });
+        state.page = 1;
+        renderProducts();
+      });
+
+      syncQuickPrice();
+      renderProducts();
     })();
   </script>
 </body>

@@ -1,0 +1,424 @@
+<% layout('layouts/admin') %>
+<% const isEdit = typeof editMode !== 'undefined' && editMode; %>
+
+<section class="space-y-6">
+  <!-- Header + actions -->
+  <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+    <div>
+      <h2 class="text-xl font-semibold text-slate-900">Chi tiết người dùng</h2>
+      <p class="text-sm text-slate-600">
+        Thông tin tài khoản, địa chỉ giao hàng và các đơn hàng liên quan.
+      </p>
+    </div>
+
+    <div class="flex items-center gap-2">
+      <!-- Quay lại -->
+      <a href="/admin/users"
+        class="inline-flex items-center gap-1 rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-100">
+        <i data-lucide="arrow-left" class="w-4 h-4"></i>
+        Quay lại danh sách
+      </a>
+
+      <% if (!isEdit) { %>
+        <!-- Mode xem: nút chuyển sang edit -->
+        <a href="/admin/users/<%= user._id %>?edit=1"
+          class="inline-flex items-center gap-1 rounded-lg bg-blue-500 px-3 py-2 text-xs font-medium text-white shadow-sm hover:bg-blue-600">
+          <i data-lucide="pencil" class="w-4 h-4"></i>
+          Cập nhật thông tin
+        </a>
+      <% } else { %>
+        <!-- Mode edit: nút Lưu + Hủy -->
+        <button type="submit" form="user-edit-form"
+          class="inline-flex items-center gap-1 rounded-lg bg-emerald-500 px-3 py-2 text-xs font-medium text-white shadow-sm hover:bg-emerald-600">
+          <i data-lucide="save" class="w-4 h-4"></i>
+          Lưu thay đổi
+        </button>
+
+        <a href="/admin/users/<%= user._id %>"
+          class="inline-flex items-center gap-1 rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-100">
+          <i data-lucide="x" class="w-4 h-4"></i>
+          Hủy
+        </a>
+      <% } %>
+    </div>
+  </div>
+
+  <!-- Hàng trên: Thông tin cơ bản + stats -->
+  <div class="grid gap-4 lg:grid-cols-3">
+    <!-- Thông tin cơ bản -->
+    <div class="lg:col-span-2 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+      <form id="user-edit-form" method="POST" action="/admin/users/<%= user._id %>">
+        <div class="flex items-start gap-3">
+          <div
+            class="flex h-12 w-12 items-center justify-center rounded-full bg-blue-100 text-sm font-semibold text-blue-600 border border-blue-200">
+            <%= (user.full_name || user.email || '?')
+              .trim()
+              .split(' ')
+              .map(n => n[0])
+              .join('')
+              .slice(0, 2)
+              .toUpperCase()
+            %>
+          </div>
+
+          <div class="flex-1">
+            <h3 class="text-sm font-semibold text-slate-900 mb-1">
+              <% if (isEdit) { %>
+                <input
+                  type="text"
+                  name="full_name"
+                  value="<%= user.full_name || '' %>"
+                  class="w-full rounded-md bg-white text-black border border-slate-300 px-2 py-1 text-sm"
+                  placeholder="Họ tên"
+                />
+              <% } else { %>
+                <%= user.full_name || ' —' %>
+              <% } %>
+            </h3>
+
+            <p class="text-xs text-slate-500">
+              ID:
+              <span class="font-mono text-slate-700">
+                <%= user._id %>
+              </span>
+            </p>
+
+            <!-- PHẦN NÀY MÌNH SỬA LẠI CHO KHỎI LỆCH DÒNG -->
+            <div class="mt-4 grid gap-y-3 gap-x-10 sm:grid-cols-2">
+              <!-- Email -->
+              <div class="flex items-center gap-3">
+                <i data-lucide="mail" class="w-4 h-4 text-slate-400"></i>
+                <div>
+                  <div class="text-xs text-slate-500">Email</div>
+                  <% if (isEdit) { %>
+                    <input
+                      type="email"
+                      name="email"
+                      value="<%= user.email || '' %>"
+                      class="mt-0.5 w-full rounded-md bg-white text-black border border-slate-300 px-2 py-1 text-sm"
+                      placeholder="email@example.com"
+                    />
+                  <% } else { %>
+                    <div class="text-sm font-medium text-slate-800 break-all">
+                      <%= user.email %>
+                    </div>
+                  <% } %>
+                </div>
+              </div>
+
+              <!-- Role -->
+              <div class="flex items-center gap-3">
+                <i data-lucide="user-round" class="w-4 h-4 text-slate-400"></i>
+                <div>
+                  <div class="text-xs text-slate-500">Role</div>
+                  <div>
+                    <% if (isEdit) { %>
+                      <select
+                        name="role"
+                        class="mt-0.5 w-full bg-white text-blackrounded-md border border-slate-300 px-2 py-1 text-xs"
+                      >
+                        <option value="customer" <%= user.role === 'customer' ? 'selected' : '' %>>Customer</option>
+                        <option value="admin"    <%= user.role === 'admin'    ? 'selected' : '' %>>Admin</option>
+                      </select>
+                    <% } else { %>
+                      <span
+                        class="inline-flex items-center gap-1 rounded-full bg-blue-50 px-2.5 py-0.5 text-[11px] font-medium text-blue-700 border border-blue-200">
+                        <i data-lucide="shield" class="w-3 h-3"></i>
+                        <%= user.role %>
+                      </span>
+                    <% } %>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Trạng thái -->
+              <div class="flex items-center gap-3">
+                <i data-lucide="clock" class="w-4 h-4 text-slate-400"></i>
+                <div>
+                  <div class="text-xs text-slate-500">Trạng thái</div>
+                  <div>
+                    <% if (user.is_banned) { %>
+                      <span
+                        class="inline-flex items-center gap-1 rounded-full bg-rose-50 px-3 py-0.5 text-xs font-medium text-rose-600 border border-rose-200">
+                        <i data-lucide="slash" class="w-3 h-3"></i>
+                        Đã khóa
+                      </span>
+                    <% } else { %>
+                      <span
+                        class="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-3 py-0.5 text-xs font-medium text-emerald-600 border border-emerald-200">
+                        <i data-lucide="check" class="w-3 h-3"></i>
+                        Đang hoạt động
+                      </span>
+                    <% } %>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Ngày tạo -->
+              <div class="flex items-center gap-3">
+                <i data-lucide="calendar-clock" class="w-4 h-4 text-slate-400"></i>
+                <div>
+                  <div class="text-xs text-slate-500">Ngày tạo</div>
+                  <div class="text-sm font-medium text-slate-800">
+                    <%= new Date(user.createdAt).toLocaleString('vi-VN') %>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Điểm tích lũy -->
+              <div class="flex items-center gap-3">
+                <i data-lucide="trophy" class="w-4 h-4 text-slate-400"></i>
+                <div>
+                  <div class="text-xs text-slate-500">Điểm tích lũy</div>
+                  <div class="text-sm font-semibold text-slate-900">
+                    <%= user.loyalty_points || 0 %> điểm
+                  </div>
+                </div>
+              </div>
+
+              <!-- Giới tính -->
+              <div class="flex items-center gap-3">
+                <i data-lucide="user" class="w-4 h-4 text-slate-400"></i>
+                <div>
+                  <div class="text-xs text-slate-500">Giới tính</div>
+                  <div class="text-sm font-medium text-slate-800">
+                    <% if (isEdit) { %>
+                      <select
+                        name="gender"
+                        class="w-full rounded-md bg-white text-black border border-slate-300 px-2 py-1 text-sm"
+                      >
+                        <option value="">—</option>
+                        <option value="male"   <%= user.gender === 'male'   ? 'selected' : '' %>>Nam</option>
+                        <option value="female" <%= user.gender === 'female' ? 'selected' : '' %>>Nữ</option>
+                        <option value="other"  <%= user.gender === 'other'  ? 'selected' : '' %>>Khác</option>
+                      </select>
+                    <% } else { %>
+                      <%= user.gender === 'male'
+                            ? 'Nam'
+                            : (user.gender === 'female'
+                                  ? 'Nữ'
+                                  : (user.gender === 'other' ? 'Khác' : '—')) %>
+                    <% } %>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Ngày sinh -->
+              <div class="flex items-center gap-3">
+                <i data-lucide="calendar" class="w-4 h-4 text-slate-400"></i>
+                <div>
+                  <div class="text-xs text-slate-500">Ngày sinh</div>
+                  <div class="text-sm font-medium text-slate-800">
+                    <% if (isEdit) { 
+                         let birthdayVal = '';
+                         if (user.birthday) {
+                           try {
+                             birthdayVal = new Date(user.birthday).toISOString().slice(0,10);
+                           } catch (e) {}
+                         }
+                    %>
+                      <input
+                        type="date"
+                        name="birthday"
+                        value="<%= birthdayVal %>"
+                        class="w-full rounded-md bg-white text-black border border-slate-300 px-2 py-1 text-sm"
+                      />
+                    <% } else { %>
+                      <%= user.birthday ? new Date(user.birthday).toLocaleDateString('vi-VN') : '—' %>
+                    <% } %>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Số điện thoại -->
+              <% if (user.phone || isEdit) { %>
+                <div class="flex items-center gap-3">
+                  <i data-lucide="phone" class="w-4 h-4 text-slate-400"></i>
+                  <div>
+                    <div class="text-xs text-slate-500">Số điện thoại</div>
+                    <% if (isEdit) { %>
+                      <input
+                        type="text"
+                        name="phone"
+                        value="<%= user.phone || '' %>"
+                        class="w-full rounded-md bg-white text-black border border-slate-300 px-2 py-1 text-sm"
+                        placeholder="Số điện thoại"
+                      />
+                    <% } else { %>
+                      <div class="text-sm font-medium text-slate-800">
+                        <%= user.phone %>
+                      </div>
+                    <% } %>
+                  </div>
+                </div>
+              <% } %>
+            </div>
+          </div>
+        </div>
+      </form>
+    </div>
+
+    <!-- Quick stats / hành động nhanh -->
+    <div class="lg:col-span-1 space-y-3">
+      <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+        <h3 class="text-sm font-semibold text-slate-800 mb-3 flex items-center gap-2">
+          <i data-lucide="activity" class="w-4 h-4 text-blue-500"></i>
+          Tổng quan
+        </h3>
+        <div class="space-y-2 text-sm text-slate-700">
+          <div class="flex items-center justify-between">
+            <span class="text-slate-500">Địa chỉ</span>
+            <span class="font-semibold text-slate-900">
+              <%= (addresses && addresses.length) || 0 %>
+            </span>
+          </div>
+          <div class="flex items-center justify-between">
+            <span class="text-slate-500">Số đơn hàng</span>
+            <span class="font-semibold text-slate-900">
+              <%= (orders && orders.length) || 0 %>
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Hành động khóa / mở khóa -->
+      <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+        <h3 class="text-sm font-semibold text-slate-800 mb-3 flex items-center gap-2">
+          <i data-lucide="settings-2" class="w-4 h-4 text-slate-500"></i>
+          Quản lý trạng thái
+        </h3>
+        <div class="flex gap-2">
+          <% if (user.is_banned) { %>
+            <form action="/admin/users/<%= user._id %>/unban" method="post" class="flex-1"
+              onsubmit="return confirm('Mở khóa người dùng này?')">
+              <button type="submit"
+                class="inline-flex w-full items-center justify-center gap-1 rounded-lg bg-emerald-500 px-3 py-2 text-xs font-medium text-white shadow-sm hover:bg-emerald-600">
+                <i data-lucide="unlock" class="w-4 h-4"></i>
+                Mở khóa
+              </button>
+            </form>
+          <% } else { %>
+            <form action="/admin/users/<%= user._id %>/ban" method="post" class="flex-1"
+              onsubmit="return confirm('Khóa người dùng này?')">
+              <button type="submit"
+                class="inline-flex w-full items-center justify-center gap-1 rounded-lg bg-amber-500 px-3 py-2 text-xs font-medium text-slate-900 shadow-sm hover:bg-amber-600">
+                <i data-lucide="ban" class="w-4 h-4"></i>
+                Khóa tài khoản
+              </button>
+            </form>
+          <% } %>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Hàng dưới: Địa chỉ + Đơn hàng -->
+  <div class="grid gap-4 lg:grid-cols-3">
+    <!-- Địa chỉ -->
+    <div class="lg:col-span-2 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+      <div class="mb-3 flex items-center justify-between">
+        <h3 class="text-sm font-semibold text-slate-800 flex items-center gap-2">
+          <i data-lucide="map-pin" class="w-4 h-4 text-blue-500"></i>
+          Địa chỉ giao hàng
+        </h3>
+        <a href="/admin/addresses/new?user=<%= user._id %>"
+          class="inline-flex items-center gap-1 rounded-lg bg-blue-500 px-3 py-1.5 text-xs font-medium text-white shadow-sm hover:bg-blue-600">
+          <i data-lucide="map-pin-plus" class="w-4 h-4"></i>
+          Thêm địa chỉ
+        </a>
+      </div>
+
+      <% if (!addresses || addresses.length===0) { %>
+        <p class="text-sm text-slate-500">
+          Người dùng này chưa có địa chỉ nào.
+        </p>
+      <% } else { %>
+        <div class="grid gap-3 md:grid-cols-2">
+          <% addresses.forEach(a=> { %>
+            <div class="rounded-xl border border-slate-200 bg-slate-50 px-3 py-3 flex flex-col gap-2">
+              <div class="flex items-start justify-between gap-2">
+                <div>
+                  <div class="text-sm font-medium text-slate-900">
+                    <%= a.address_line %>
+                  </div>
+                  <% if (a.city || a.province) { %>
+                    <div class="text-xs text-slate-600 mt-0.5">
+                      <%= a.city || '' %> <%= a.province || '' %>
+                    </div>
+                  <% } %>
+                  <% if (a.is_default) { %>
+                    <span
+                      class="mt-1 inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-medium text-emerald-600 border border-emerald-200">
+                      <i data-lucide="star" class="w-3 h-3"></i>
+                      Mặc định
+                    </span>
+                  <% } %>
+                </div>
+
+                <!-- Nút cập nhật địa chỉ -->
+                <a href="/admin/addresses/<%= a._id %>"
+                  class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-300 bg-white text-slate-500 hover:bg-slate-100"
+                  title="Cập nhật địa chỉ">
+                  <i data-lucide="pencil" class="w-4 h-4"></i>
+                </a>
+              </div>
+
+              <div class="flex items-center justify-between text-[11px] text-slate-500">
+                <span>
+                  Tạo lúc: <%= new Date(a.createdAt).toLocaleString('vi-VN') %>
+                </span>
+              </div>
+            </div>
+          <% }) %>
+        </div>
+      <% } %>
+    </div>
+
+    <!-- Đơn hàng -->
+    <div class="lg:col-span-1 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+      <div class="mb-3 flex items-center justify-between">
+        <h3 class="text-sm font-semibold text-slate-800 flex items-center gap-2">
+          <i data-lucide="shopping-bag" class="w-4 h-4 text-blue-500"></i>
+          Đơn hàng gần đây
+        </h3>
+        <a href="/admin/orders?user=<%= user._id %>"
+          class="text-xs font-medium text-blue-600 hover:text-blue-700 hover:underline">
+          Xem tất cả
+        </a>
+      </div>
+
+      <% if (!orders || orders.length===0) { %>
+        <p class="text-sm text-slate-500">
+          Chưa có đơn hàng nào.
+        </p>
+      <% } else { %>
+        <div class="space-y-2">
+          <% orders.slice(0, 5).forEach(o=> { %>
+            <a href="/admin/orders/<%= o._id %>"
+              class="block rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 hover:bg-blue-50/70">
+              <div class="flex items-center justify-between">
+                <div class="text-sm font-semibold text-slate-900">
+                  #<%= o._id %>
+                </div>
+                <div class="text-xs text-slate-500">
+                  <%= new Date(o.createdAt).toLocaleString('vi-VN') %>
+                </div>
+              </div>
+              <div class="mt-1 flex items-center justify-between text-xs text-slate-600">
+                <span>
+                  Trạng thái:
+                  <span class="font-medium">
+                    <%= o.current_status %>
+                  </span>
+                </span>
+                <span class="font-semibold text-slate-900">
+                  <%= (o.final_amount || o.total_amount || 0).toLocaleString('vi-VN') %> đ
+                </span>
+              </div>
+            </a>
+          <% }) %>
+        </div>
+      <% } %>
+    </div>
+  </div>
+</section>

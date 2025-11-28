@@ -5,28 +5,34 @@
   <link rel="stylesheet" href="/mixishop/css/account.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 </head>
+
 <body>
   <%- include('partials/icons') %>
   <%- include('partials/header') %>
 
-  <% 
+  <%
     // ===== Guards: tránh ReferenceError khi biến không được truyền vào =====
     const _error   = (typeof error   !== 'undefined' && error)   ? error   : null;
     const _success = (typeof success !== 'undefined' && success) ? success : null;
-    const u        = (typeof user    !== 'undefined' && user)    ? user    : {}; 
+    const u        = (typeof user    !== 'undefined' && user)    ? user    : {};
   %>
 
-  <% if (_error) { %><div class="alert alert-danger container mt-3"><%= _error %></div><% } %>
-  <% if (_success) { %><div class="alert alert-success container mt-3"><%= _success %></div><% } %>
+  <% if (_error) { %>
+    <div class="alert alert-danger container mt-3"><%= _error %></div>
+  <% } %>
+
+  <% if (_success) { %>
+    <div class="alert alert-success container mt-3"><%= _success %></div>
+  <% } %>
 
   <main class="container my-4">
     <div class="row">
       <div class="col-lg-3 mb-4">
         <%- include('account/_sidebar') %>
       </div>
+
       <div class="col-lg-9">
         <div class="account-card p-3 p-md-4 bg-white rounded-3 shadow-sm">
-          
           <!-- ====== Nội dung riêng của account_profile ====== -->
           <h3 class="mb-4">Hồ Sơ Của Tôi</h3>
 
@@ -35,35 +41,65 @@
               <label class="form-label">Tên</label>
               <input name="full_name" class="form-control" value="<%= u.full_name || '' %>">
             </div>
+
             <div class="col-md-6">
               <label class="form-label">Email</label>
               <input name="email" type="email" class="form-control" value="<%= u.email || '' %>">
             </div>
+
             <div class="col-md-6">
               <label class="form-label">Số điện thoại</label>
               <input name="phone" class="form-control" value="<%= u.phone || '' %>">
             </div>
+
             <div class="col-md-6">
               <label class="form-label d-block">Giới tính</label>
               <div class="d-flex gap-3">
                 <label class="form-check">
-                  <input class="form-check-input" type="radio" name="gender" value="male"   <%= u.gender==='male'   ? 'checked' : '' %>>
+                  <input
+                    class="form-check-input"
+                    type="radio"
+                    name="gender"
+                    value="male"
+                    <%= u.gender === 'male' ? 'checked' : '' %>
+                  >
                   Nam
                 </label>
+
                 <label class="form-check">
-                  <input class="form-check-input" type="radio" name="gender" value="female" <%= u.gender==='female' ? 'checked' : '' %>>
+                  <input
+                    class="form-check-input"
+                    type="radio"
+                    name="gender"
+                    value="female"
+                    <%= u.gender === 'female' ? 'checked' : '' %>
+                  >
                   Nữ
                 </label>
+
                 <label class="form-check">
-                  <input class="form-check-input" type="radio" name="gender" value="other"  <%= u.gender==='other'  ? 'checked' : '' %>>
+                  <input
+                    class="form-check-input"
+                    type="radio"
+                    name="gender"
+                    value="other"
+                    <%= u.gender === 'other' ? 'checked' : '' %>
+                  >
                   Khác
                 </label>
               </div>
             </div>
+
             <div class="col-md-6">
               <label class="form-label">Ngày sinh</label>
-              <input name="birth_date" type="date" class="form-control" value="<%= u.birth_date ? new Date(u.birth_date).toISOString().slice(0,10) : '' %>">
+              <input
+                name="birthday"
+                type="date"
+                class="form-control"
+                value="<%= u.birthday ? new Date(u.birthday).toISOString().slice(0,10) : '' %>"
+              >
             </div>
+
             <div class="col-12 mt-3">
               <button class="btn btn-dark btn-pill px-4">Lưu</button>
             </div>
@@ -79,7 +115,8 @@
               data-bs-toggle="collapse"
               data-bs-target="#pwCollapse"
               aria-expanded="false"
-              aria-controls="pwCollapse">
+              aria-controls="pwCollapse"
+            >
               Đổi mật khẩu
             </button>
           </div>
@@ -130,8 +167,8 @@
             document.querySelectorAll('.password-card .btn-eye').forEach((btn) => {
               btn.addEventListener('click', () => {
                 const input = btn.parentElement.querySelector('input.form-control');
-                const isPw  = input.type === 'password';
-                input.type  = isPw ? 'text' : 'password';
+                const isPw = input.type === 'password';
+                input.type = isPw ? 'text' : 'password';
                 btn.innerHTML = isPw ? '<i class="bi bi-eye-slash"></i>' : '<i class="bi bi-eye"></i>';
               });
             });

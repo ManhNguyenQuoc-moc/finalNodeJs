@@ -93,6 +93,22 @@ module.exports = function createPagesRouter({ BACKEND, proxy }) {
       return JSON.parse(t || "[]");
     } catch {
       return [];
+    function getAccessTokenFromCookie(req) {
+        const cookie = req.headers.cookie || "";
+        const match = cookie.match(/accessToken=([^;]+)/);
+        return match ? decodeURIComponent(match[1]) : null;
+    }
+    async function fetchJSONRaw(url, init = {}) {
+        const resp = await fetch(url, { redirect: "manual", ...init });
+        const ct = resp.headers.get("content-type") || "";
+        const body = await resp.text().catch(() => "");
+        if (resp.status >= 300 && resp.status < 400) {
+            const loc = resp.headers.get("location") || "(no Location)";
+            throw new Error(`[${resp.status}] Redirected to ${loc}`);
+        }
+        if (!resp.ok) throw new Error(`[${resp.status}] ${body.slice(0, 1000)}`);
+        if (!ct.includes("application/json")) throw new Error(`[${resp.status}] Expected JSON but got ${ct}; body: ${body.slice(0, 200)}`);
+        return JSON.parse(body || "{}");
     }
   }
 
@@ -257,6 +273,20 @@ module.exports = function createPagesRouter({ BACKEND, proxy }) {
       });
     } catch {
       return res.redirect("/category/alls");
+    async function fetchJSONAuth(req, url, init = {}) {
+        const token = getAccessTokenFromCookie(req);
+
+        const headers = {
+            "Content-Type": "application/json",
+            cookie: req?.headers?.cookie || "",
+            ...(init.headers || {}),
+        };
+
+        if (token && !headers.Authorization) {
+            headers.Authorization = `Bearer ${token}`;  // 👈 thêm auth header
+        }
+
+        return fetchJSONRaw(url, { ...init, headers });
     }
   });
 
@@ -434,6 +464,23 @@ module.exports = function createPagesRouter({ BACKEND, proxy }) {
       success: null,
       activeTab: "register",
       ...data,
+
+    router.get("/about", (_req, res) => {
+        res.render("about", { title: "Giới thiệu" });
+    });
+
+    router.get("/blog", (_req, res) => {
+        res.render("blog", { title: "Blog" });
+    });
+
+    router.get("/contact", (_req, res) => {
+        res.render("contact", { title: "Liên hệ" });
+    });
+
+    router.get("/search", async (req, res) => {
+        const params = new URLSearchParams(req.query).toString();
+        const data = await fetchJSONPublic(`${BACKEND}/api/page/search?${params}`).catch(() => ({ ok: true, products: [], q: "" }));
+        res.render("product_search", { title: "Tìm kiếm", ...data });
     });
   });
   // ====== FORGOT PASSWORD & RESET PASSWORD ======
@@ -729,6 +776,397 @@ module.exports = function createPagesRouter({ BACKEND, proxy }) {
       activeAccountTab: "orders",
       status: req.query.status || "all",
       ...data,
+    // Xử lý submit reset password -> gọi BE /api/auth/reset-password
+    router.post("/reset-password", async (req, res) => {
+        const { token, password, confirm_password } = req.body;
+        const dataMini = await fetchJSONAuth(req, `${BACKEND}/api/page/minicart`).catch(() => ({}));
+
+        if (!token) {
+            return res.status(400).send("Token không hợp lệ.");
+        }
+
+        if (!password || !confirm_password) {
+            return res.render("auth_reset_password", {
+                title: "Đặt lại mật khẩu",
+                token,
+                error: null,
+                formError: "Vui lòng nhập đầy đủ mật khẩu.",
+                done: false,
+                message: "",
+                ...dataMini,
+            });
+        }
+
+        if (password !== confirm_password) {
+            return res.render("auth_reset_password", {
+                title: "Đặt lại mật khẩu",
+                token,
+                error: null,
+                formError: "Mật khẩu và xác nhận mật khẩu phải giống nhau.",
+                done: false,
+                message: "",
+                ...dataMini,
+            });
+        }
+
+        try {
+            const resp = await fetch(`${BACKEND}/api/auth/reset-password`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ token, newPassword: password }),
+            });
+
+            const data = await resp.json().catch(() => null);
+
+            if (!resp.ok) {
+                return res.render("auth_reset_password", {
+                    title: "Đặt lại mật khẩu",
+                    token,
+                    error: (data && data.message) || "Không thể đặt lại mật khẩu.",
+                    formError: null,
+                    done: false,
+                    message: "",
+                    ...dataMini,
+                });
+            }
+
+            return res.render("auth_reset_password", {
+                title: "Đặt lại mật khẩu",
+                token: null,
+                error: null,
+                formError: null,
+                done: true,
+                message: data && data.message ? data.message : "Mật khẩu đã được đặt lại thành công.",
+                ...dataMini,
+            });
+        } catch (err) {
+            console.error("Reset-password FE error:", err);
+            return res.render("auth_reset_password", {
+                title: "Đặt lại mật khẩu",
+                token,
+                error: "Có lỗi xảy ra. Vui lòng thử lại sau.",
+                formError: null,
+                done: false,
+                message: "",
+                ...dataMini,
+            });
+        }
+    });
+    router.get("/my-account", (_req, res) => res.redirect("/account/profile"));
+    router.get("/account/profile", async (req, res) => {
+        console.log("FE /account/profile COOKIE từ browser:", req.headers.cookie);
+        const data = await fetchJSONAuth(req, `${BACKEND}/api/user/account/profile`).catch(() => null);
+
+        if (!data || !data.success || !data.user) {
+            return res.redirect("/login");
+        }
+
+        res.render("account_profile", {
+            title: "Tài khoản",
+            activeAccountTab: "profile",
+            user: data.user,   // <<< QUAN TRỌNG!!!
+            error: null,
+            success: null
+        });
+    });
+    router.post("/account/profile/update", async (req, res) => {
+        const profile = await fetchJSONAuth(req, `${BACKEND}/api/user/account/profile`).catch(() => null);
+        const currentUser = profile?.user || null;
+
+        if (!profile || !profile.success) {
+            return res.redirect("/login");
+        }
+
+        try {
+            const payload = {
+                full_name: req.body.full_name,
+                phone: req.body.phone,
+                gender: req.body.gender,
+                birthday: req.body.birthday || null
+            };
+
+            const token = getAccessTokenFromCookie(req);
+
+            const headers = {
+                "Content-Type": "application/json",
+                cookie: req.headers.cookie || "",
+            };
+            if (token) {
+                headers.Authorization = `Bearer ${token}`;
+            }
+
+            const resp = await fetch(`${BACKEND}/api/user/account/profile`, {
+                method: "PUT",
+                headers,
+                body: JSON.stringify(payload)
+            });
+
+            const data = await resp.json().catch(() => null);
+
+            const newUser = data?.user || currentUser;
+
+            return res.render("account_profile", {
+                title: "Tài khoản",
+                activeAccountTab: "profile",
+                user: newUser,
+                error: resp.ok ? null : (data?.message || "Cập nhật thất bại."),
+                success: resp.ok ? (data?.message || "Cập nhật thành công.") : null
+            });
+
+        } catch (e) {
+            return res.render("account_profile", {
+                title: "Tài khoản",
+                activeAccountTab: "profile",
+                user: currentUser,
+                error: "Có lỗi xảy ra.",
+                success: null
+            });
+        }
+    });
+    router.post("/account/profile/change-password", async (req, res) => {
+        const { current_password, new_password, confirm_password } = req.body;
+
+        // lấy lại dữ liệu profile để render
+        const profile = await fetchJSONAuth(req, `${BACKEND}/api/page/account/profile`).catch(() => null);
+        if (!profile || profile.redirectToLogin) return res.redirect("/login");
+
+        // validate đơn giản ở FE server
+        if (!current_password || !new_password || !confirm_password) {
+            return res.render("account_profile", {
+                title: "Tài khoản",
+                activeAccountTab: "profile",
+                error: "Vui lòng nhập đầy đủ thông tin mật khẩu.",
+                success: null,
+                ...profile,
+            });
+        }
+
+        if (new_password !== confirm_password) {
+            return res.render("account_profile", {
+                title: "Tài khoản",
+                activeAccountTab: "profile",
+                error: "Mật khẩu mới và xác nhận mật khẩu không khớp.",
+                success: null,
+                ...profile,
+            });
+        }
+
+        try {
+            const resp = await fetch(`${BACKEND}/api/auth/change-password`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    cookie: req.headers.cookie || "",
+                },
+                body: JSON.stringify({
+                    oldPassword: current_password,
+                    newPassword: new_password,
+                }),
+            });
+
+            const data = await resp.json().catch(() => null);
+
+            if (!resp.ok) {
+                return res.render("account_profile", {
+                    title: "Tài khoản",
+                    activeAccountTab: "profile",
+                    error: (data && data.message) || "Đổi mật khẩu thất bại.",
+                    success: null,
+                    ...profile,
+                });
+            }
+
+            return res.render("account_profile", {
+                title: "Tài khoản",
+                activeAccountTab: "profile",
+                error: null,
+                success: data && data.message ? data.message : "Đổi mật khẩu thành công.",
+                ...profile,
+            });
+        } catch (e) {
+            console.error("Change-password FE error:", e);
+            return res.render("account_profile", {
+                title: "Tài khoản",
+                activeAccountTab: "profile",
+                error: "Có lỗi xảy ra, vui lòng thử lại.",
+                success: null,
+                ...profile,
+            });
+        }
+    });
+
+    router.get("/account/addresses", async (req, res) => {
+        const data = await fetchJSONAuth(req, `${BACKEND}/api/user/account/addresses`).catch(() => null);
+
+        if (!data || !data.success) return res.redirect("/login");
+
+        res.render("account_addresses", {
+            title: "Địa chỉ",
+            activeAccountTab: "addresses",
+            addresses: data.addresses || [],
+            error: null,
+            success: null
+        });
+    });
+    router.post("/account/addresses/add", async (req, res) => {
+        const { address_line, is_default } = req.body;
+        console.log("Client cookie:", req.headers.cookie);
+
+        try {
+            const token = getAccessTokenFromCookie(req);
+
+            const headers = {
+                "Content-Type": "application/json",
+                "Cookie": req.headers.cookie || "",
+            };
+            if (token) {
+                headers.Authorization = `Bearer ${token}`;
+            }
+
+            const resp = await fetch(`${BACKEND}/api/user/account/addresses`, {
+                method: "POST",
+                headers,
+                body: JSON.stringify({
+                    address_line,
+                    is_default: is_default === "on",
+                }),
+            });
+
+            const data = await resp.json().catch(() => null);
+
+            const list = await fetchJSONAuth(
+                req,
+                `${BACKEND}/api/user/account/addresses`
+            ).catch(() => null);
+
+            return res.render("account_addresses", {
+                title: "Địa chỉ",
+                activeAccountTab: "addresses",
+                addresses: list?.addresses || [],
+                error: resp.ok ? null : (data?.message || "Không thể thêm địa chỉ"),
+                success: resp.ok ? "Thêm địa chỉ thành công" : null,
+            });
+        } catch (err) {
+            const list = await fetchJSONAuth(
+                req,
+                `${BACKEND}/api/user/account/addresses`
+            ).catch(() => null);
+
+            return res.render("account_addresses", {
+                title: "Địa chỉ",
+                activeAccountTab: "addresses",
+                addresses: list?.addresses || [],
+                error: "Có lỗi xảy ra",
+                success: null,
+            });
+        }
+    });
+
+    router.post("/account/addresses/update/:id", async (req, res) => {
+        const addressId = req.params.id;
+        const { address_line, is_default } = req.body;
+
+        try {
+            const token = getAccessTokenFromCookie(req);
+
+            const headers = {
+                "Content-Type": "application/json",
+                "Cookie": req.headers.cookie || "",
+            };
+            if (token) {
+                headers.Authorization = `Bearer ${token}`;
+            }
+
+            const resp = await fetch(`${BACKEND}/api/user/account/addresses/${addressId}`, {
+                method: "PUT",
+                headers,
+                body: JSON.stringify({
+                    address_line,
+                    is_default: is_default === "on",
+                }),
+            });
+
+            const data = await resp.json().catch(() => null);
+            const list = await fetchJSONAuth(
+                req,
+                `${BACKEND}/api/user/account/addresses`
+            ).catch(() => null);
+
+            return res.render("account_addresses", {
+                title: "Địa chỉ",
+                activeAccountTab: "addresses",
+                addresses: list?.addresses || [],
+                error: resp.ok ? null : (data?.message || "Cập nhật thất bại"),
+                success: resp.ok ? "Cập nhật địa chỉ thành công" : null,
+            });
+        } catch (err) {
+            const list = await fetchJSONAuth(
+                req,
+                `${BACKEND}/api/user/account/addresses`
+            ).catch(() => null);
+
+            return res.render("account_addresses", {
+                title: "Địa chỉ",
+                activeAccountTab: "addresses",
+                addresses: list?.addresses || [],
+                error: "Lỗi server",
+                success: null,
+            });
+        }
+    });
+
+    router.post("/account/addresses/delete/:id", async (req, res) => {
+        const addressId = req.params.id;
+
+        try {
+            const token = getAccessTokenFromCookie(req);
+
+            const headers = {
+                "Content-Type": "application/json",
+                "Cookie": req.headers.cookie || "",
+            };
+            if (token) {
+                headers.Authorization = `Bearer ${token}`;
+            }
+
+            const resp = await fetch(`${BACKEND}/api/user/account/addresses/${addressId}`, {
+                method: "DELETE",
+                headers,
+            });
+
+            const data = await resp.json().catch(() => null);
+            const list = await fetchJSONAuth(
+                req,
+                `${BACKEND}/api/user/account/addresses`
+            ).catch(() => null);
+
+            return res.render("account_addresses", {
+                title: "Địa chỉ",
+                activeAccountTab: "addresses",
+                addresses: list?.addresses || [],
+                error: resp.ok ? null : (data?.message || "Xóa địa chỉ thất bại"),
+                success: resp.ok ? "Xóa địa chỉ thành công" : null,
+            });
+        } catch (err) {
+            const list = await fetchJSONAuth(
+                req,
+                `${BACKEND}/api/user/account/addresses`
+            ).catch(() => null);
+
+            return res.render("account_addresses", {
+                title: "Địa chỉ",
+                activeAccountTab: "addresses",
+                addresses: list?.addresses || [],
+                error: "Có lỗi server",
+                success: null,
+            });
+        }
+    });
+
+    router.get("/account-orders", async (req, res) => {
+        const data = await fetchJSONAuth(req, `${BACKEND}/api/page/account/orders`).catch(() => null);
+        if (!data || data.redirectToLogin) return res.redirect("/login");
+        res.render("account_orders", { title: "Đơn hàng", activeAccountTab: "orders", status: req.query.status || "all", ...data });
     });
   });
   router.get("/orders/:id/details", async (req, res) => {
@@ -780,218 +1218,109 @@ module.exports = function createPagesRouter({ BACKEND, proxy }) {
       activeAccountTab: "points",
       ...data,
     });
-  });
+    router.post("/login", async (req, res) => {
+        try {
+            const resp = await fetch(`${BACKEND}/api/auth/login`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    cookie: req.headers.cookie || "",
+                },
+                body: JSON.stringify({
+                    email: req.body.username || req.body.email,
+                    password: req.body.password,
+                }),
+                redirect: "manual",
+            });
 
-  router.post("/login", async (req, res) => {
-    try {
-      const resp = await fetch(`${BACKEND}/api/auth/login`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          cookie: req.headers.cookie || "",
-        },
-        body: JSON.stringify({
-          email: req.body.username || req.body.email,
-          password: req.body.password,
-        }),
-        redirect: "manual",
-      });
+            let data = null;
+            try { data = await resp.json(); } catch { }
 
-      const setCookie = getSetCookie(resp);
-      console.log("setCookie:", setCookie);
-      if (setCookie?.length) res.set("set-cookie", setCookie);
+            if (resp.ok && data) {
+                // 👇 LƯU TOKEN VÀO COOKIE
+                if (data.tokens?.accessToken) {
+                    res.cookie("accessToken", data.tokens.accessToken, {
+                        httpOnly: true,
+                        sameSite: "lax",
+                        path: "/",
+                    });
+                }
+                if (data.tokens?.refreshToken) {
+                    res.cookie("refreshToken", data.tokens.refreshToken, {
+                        httpOnly: true,
+                        sameSite: "lax",
+                        path: "/",
+                    });
+                }
 
-      let data = null;
-      try {
-        data = await resp.json();
-      } catch {}
+                return res.redirect("/my-account");
+            }
 
-      if (resp.ok && data) {
-        return res.redirect("/my-account");
-      }
+            const mini = await fetchJSONAuth(req, `${BACKEND}/api/page/minicart`).catch(() => ({}));
+            return res.status(resp.status || 401).render("login_register", {
+                title: "Đăng nhập & Đăng ký",
+                error: (data && data.message) || "Email hoặc mật khẩu không đúng!",
+                success: null,
+                activeTab: "login",
+                ...mini,
+            });
+        } catch {
+            const mini = await fetchJSONAuth(req, `${BACKEND}/api/page/minicart`).catch(() => ({}));
+            return res.status(500).render("login_register", {
+                title: "Đăng nhập & Đăng ký",
+                error: "Có lỗi khi đăng nhập. Vui lòng thử lại.",
+                success: null,
+                activeTab: "login",
+                ...mini,
+            });
+        }
+    });
 
-      const mini = await fetchJSONAuth(
-        req,
-        `${BACKEND}/api/page/minicart`
-      ).catch(() => ({}));
-      return res.status(resp.status || 401).render("login_register", {
-        title: "Đăng nhập & Đăng ký",
-        error: (data && data.message) || "Email hoặc mật khẩu không đúng!",
-        success: null,
-        activeTab: "login",
-        ...mini,
-      });
-    } catch {
-      const mini = await fetchJSONAuth(
-        req,
-        `${BACKEND}/api/page/minicart`
-      ).catch(() => ({}));
-      return res.status(500).render("login_register", {
-        title: "Đăng nhập & Đăng ký",
-        error: "Có lỗi khi đăng nhập. Vui lòng thử lại.",
-        success: null,
-        activeTab: "login",
-        ...mini,
-      });
-    }
-  });
+    router.post("/api/auth/login", async (req, res) => {
+        try {
+            const resp = await fetch(`${BACKEND}/api/auth/login`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    cookie: req.headers.cookie || "",
+                },
+                body: JSON.stringify({
+                    email: req.body.email || req.body.username,
+                    password: req.body.password,
+                }),
+                redirect: "manual",
+            });
 
-  router.post("/api/auth/login", async (req, res) => {
-    try {
-      const resp = await fetch(`${BACKEND}/api/auth/login`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          cookie: req.headers.cookie || "",
-        },
-        body: JSON.stringify({
-          email: req.body.email || req.body.username,
-          password: req.body.password,
-        }),
-        redirect: "manual",
-      });
+            let data = null;
+            try { data = await resp.json(); } catch { }
 
-      const setCookie = getSetCookie(resp);
-      if (setCookie?.length) res.set("set-cookie", setCookie);
+            if (resp.ok && data) {
+                // 👇 LƯU TOKEN VÀO COOKIE
+                if (data.tokens?.accessToken) {
+                    res.cookie("accessToken", data.tokens.accessToken, {
+                        httpOnly: true,
+                        sameSite: "lax",
+                        path: "/",
+                    });
+                }
+                if (data.tokens?.refreshToken) {
+                    res.cookie("refreshToken", data.tokens.refreshToken, {
+                        httpOnly: true,
+                        sameSite: "lax",
+                        path: "/",
+                    });
+                }
 
-      let data = null;
-      try {
-        data = await resp.json();
-      } catch {}
+                return res.status(200).json({ ok: true, redirect: "/my-account", ...data });
+            }
 
-      if (resp.ok && data) {
-        return res
-          .status(200)
-          .json({ ok: true, redirect: "/my-account", ...data });
-      }
-
-      return res.status(resp.status || 401).json({
-        ok: false,
-        error: (data && data.message) || "Email hoặc mật khẩu không đúng!",
-      });
-    } catch {
-      return res.status(500).json({ ok: false, error: "Login failed" });
-    }
-  });
-
-  router.post("/register", async (req, res) => {
-    try {
-      const resp = await fetch(`${BACKEND}/api/auth/register`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          cookie: req.headers.cookie || "",
-        },
-        body: JSON.stringify({
-          email: req.body.register_email, // map vào email
-          full_name: req.body.register_name, // map vào full_name
-          address_line: req.body.register_address, // map vào address_line
-        }),
-        redirect: "manual",
-      });
-
-      const data = await resp.json().catch(() => null);
-
-      // Backend register trả 201 khi thành công
-      if (resp.status === 201 && data) {
-        const mini = await fetchJSONAuth(
-          req,
-          `${BACKEND}/api/page/minicart`
-        ).catch(() => ({}));
-        return res.status(200).render("login_register", {
-          title: "Đăng nhập & Đăng ký",
-          error: null,
-          success:
-            data.message ||
-            "Đăng ký thành công. Vui lòng kiểm tra email để xác thực.",
-          activeTab: "login", // sau khi đăng ký xong cho user về tab login
-          ...mini,
-        });
-      }
-
-      const mini = await fetchJSONAuth(
-        req,
-        `${BACKEND}/api/page/minicart`
-      ).catch(() => ({}));
-      return res.status(400).render("login_register", {
-        title: "Đăng nhập & Đăng ký",
-        error: (data && data.message) || "Đăng ký thất bại",
-        success: null,
-        activeTab: "register",
-        ...mini,
-      });
-    } catch {
-      const mini = await fetchJSONAuth(
-        req,
-        `${BACKEND}/api/page/minicart`
-      ).catch(() => ({}));
-      return res.status(500).render("login_register", {
-        title: "Đăng nhập & Đăng ký",
-        error: "Có lỗi khi đăng ký. Vui lòng thử lại.",
-        success: null,
-        activeTab: "register",
-        ...mini,
-      });
-    }
-  });
-  router.get("/logout", async (req, res) => {
-    try {
-      const resp = await fetch(`${BACKEND}/api/auth/logout`, {
-        method: "POST", // nên dùng POST logout
-        headers: {
-          cookie: req.headers.cookie || "",
-        },
-      });
-      console.log(resp);
-      const setCookie = getSetCookie(resp);
-      if (setCookie?.length) {
-        res.setHeader("set-cookie", setCookie);
-      }
-    } catch (e) {
-      console.error("Logout FE error", e);
-    }
-
-    // FE tự redirect
-    return res.redirect("/login");
-  });
-  // ====== VERIFY ACCOUNT + SET PASSWORD PAGE ======
-  router.get("/verify-account", async (req, res) => {
-    const loginUrl = "/login";
-    const registerUrl = "/register";
-
-    const params = new URLSearchParams(req.query).toString();
-
-    let success = false;
-    let message = "Link xác thực không hợp lệ hoặc đã hết hạn.";
-    let full_name = "";
-    let userId = null;
-
-    try {
-      // gọi BE verify
-      const data = await fetchJSONPublic(
-        `${BACKEND}/api/auth/verify?${params}`
-      );
-
-      success = true;
-      message =
-        data.message || "Email đã được xác thực. Vui lòng tạo mật khẩu.";
-      full_name = data.full_name || "";
-      userId = data.userId; // BE verifyEmail đang trả userId như bạn chụp
-    } catch (err) {
-      console.error("Verify-account FE error:", err.message || err);
-      success = false;
-    }
-
-    return res.render("auth_set_password", {
-      title: "Xác thực tài khoản",
-      success,
-      message,
-      full_name,
-      userId,
-      loginUrl,
-      registerUrl,
-      formError: null,
-      done: false,
+            return res.status(resp.status || 401).json({
+                ok: false,
+                error: (data && data.message) || "Email hoặc mật khẩu không đúng!",
+            });
+        } catch {
+            return res.status(500).json({ ok: false, error: "Login failed" });
+        }
     });
   });
   router.post("/set-password", async (req, res) => {
