@@ -8,7 +8,7 @@ const verifyEmailTemplate = require("../utils/verifyEmailTemplate");
 const resetPasswordTemplate = require("../utils/resetPasswordTemplate");
 const crypto = require("crypto");
 class authService {
-  async register(email, full_name, address_line) {
+  async register(email, full_name, address_line, phone) {
     const existingUser = await userRepository.findByEmail(email);
     if (existingUser) {
       throw new Error("Email already registered");
@@ -19,6 +19,7 @@ class authService {
     const newUser = await userRepository.create({
       email,
       full_name,
+      phone,
       provider: "local",
       is_verified: false,
       verification_token: verificationToken,
@@ -29,11 +30,7 @@ class authService {
       address_line
     )}`;
     const htmlContent = verifyEmailTemplate({ full_name, verifyLink });
-    await sendEmail(
-      email,
-      "E-Shop - Verify Your Email",
-      htmlContent
-    );
+    await sendEmail(email, "E-Shop - Verify Your Email", htmlContent);
 
     return {
       message:
@@ -200,7 +197,10 @@ class authService {
     const user = await userRepository.findByIdWithPassword(userId);
     if (!user) throw new Error("User not found");
 
-    const isMatch = await comparePassword(oldPassword, user.password_hash || "");
+    const isMatch = await comparePassword(
+      oldPassword,
+      user.password_hash || ""
+    );
     if (!isMatch) throw new Error("Mật khẩu cũ không đúng");
 
     const newHash = await hashPassword(newPassword);
@@ -228,11 +228,7 @@ class authService {
       resetLink,
     });
 
-    await sendEmail(
-      user.email,
-      "E-Shop - Reset Your Password",
-      htmlContent
-    );
+    await sendEmail(user.email, "E-Shop - Reset Your Password", htmlContent);
     return {
       message: "Vui lòng kiểm tra email để đặt lại mật khẩu.",
       token,

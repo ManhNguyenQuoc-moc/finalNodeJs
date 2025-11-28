@@ -1,6 +1,7 @@
 const authService = require("../services/authService");
 const { mergeCartItems } = require("../services/cart.service");
 const { Cart } = require("../models");
+
 async function attachGuestCartToUser(req, userId) {
   const sid = req.cookies.sid;
   if (!sid) return; // không có sid thì không có cart guest
@@ -23,8 +24,13 @@ async function attachGuestCartToUser(req, userId) {
 class authController {
   async register(req, res) {
     try {
-      const { email, full_name, address_line } = req.body;
-      const result = await authService.register(email, full_name, address_line);
+      const { email, full_name, address_line, phone } = req.body;
+      const result = await authService.register(
+        email,
+        full_name,
+        address_line,
+        phone
+      );
       res.status(201).json(result);
     } catch (err) {
       res.status(400).json({ message: err.message });
@@ -57,7 +63,31 @@ class authController {
       const result = await authService.login(email, password);
       const userId = result.user.id || result.user._id;
       await attachGuestCartToUser(req, userId);
-      res.cookie("uid", userId, { httpOnly: true, sameSite: "lax" });
+      // console.log(
+      //   ">>> KẾT QUẢ LOGIN SERVICE:",
+      //   JSON.stringify(result, null, 2)
+      // );
+      const cookieOptions = {
+        httpOnly: true, // Bảo mật, JS không đọc được
+        sameSite: "lax",
+        maxAge: 24 * 60 * 60 * 1000, // 1 ngày (hoặc chỉnh theo thời gian hết hạn của token)
+      };
+      res.cookie("uid", userId, cookieOptions);
+      // Kiểm tra kỹ xem result.tokens có tồn tại không trước khi gán
+      if (result.tokens && result.tokens.accessToken) {
+        res.cookie("access_token", result.tokens.accessToken, cookieOptions);
+      } else {
+        console.error(
+          ">>> LỖI: Không tìm thấy accessToken trong kết quả trả về!"
+        );
+      }
+
+      if (result.tokens && result.tokens.refreshToken) {
+        res.cookie("refresh_token", result.tokens.refreshToken, {
+          ...cookieOptions,
+          maxAge: 7 * 24 * 60 * 60 * 1000,
+        });
+      }
       return res.json(result);
     } catch (err) {
       const code = /Invalid email or password/i.test(err.message) ? 401 : 400;
@@ -80,7 +110,7 @@ class authController {
       const userId = req.currentUser?._id || req.cookies?.uid;
 
       if (userId) {
-        await authService.logout(userId);  // xoá refresh_token trong DB
+        await authService.logout(userId); // xoá refresh_token trong DB
       }
 
       // Xoá hết cookie dùng để auth
@@ -156,10 +186,16 @@ class authController {
       const { oldPassword, newPassword } = req.body;
 
       if (!oldPassword || !newPassword) {
-        return res.status(400).json({ message: "Vui lòng nhập đầy đủ mật khẩu" });
+        return res
+          .status(400)
+          .json({ message: "Vui lòng nhập đầy đủ mật khẩu" });
       }
 
-      const result = await authService.changePassword(userId, oldPassword, newPassword);
+      const result = await authService.changePassword(
+        userId,
+        oldPassword,
+        newPassword
+      );
 
       return res.json(result);
     } catch (err) {
