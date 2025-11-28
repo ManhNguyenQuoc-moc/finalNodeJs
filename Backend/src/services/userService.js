@@ -173,8 +173,6 @@ class userService {
 
     return await addressRepository.deleteById(addressId);
   }
-
-  // 🔥 NEW: lấy thông tin admin xem chi tiết user (user + address + orders)
   async getUserDetailsForAdmin(userId) {
     const [user, addresses, orders] = await Promise.all([
       userRepository.findById(userId),
@@ -184,8 +182,6 @@ class userService {
 
     return { user, addresses, orders };
   }
-
-  // 🔥 NEW: admin update address (không cần userId trong JWT)
   async adminUpdateAddress(addressId, data) {
     const address = await addressRepository.findById(addressId);
     if (!address) {

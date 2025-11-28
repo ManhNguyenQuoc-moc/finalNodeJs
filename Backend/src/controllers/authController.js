@@ -3,22 +3,27 @@ const { mergeCartItems } = require("../services/cart.service");
 const { Cart } = require("../models");
 
 async function attachGuestCartToUser(req, userId) {
-  const sid = req.cookies.sid;
-  if (!sid) return; // không có sid thì không có cart guest
+  const sid = req.cookies?.sid;        // an toàn hơn: có thể undefined
+  if (!sid) return;                    // không có sid thì coi như không có guest cart
 
-  const guestCart = await Cart.findOne({ session_id: sid });
-  if (!guestCart) return;
+  // Lấy cả hai cart cùng lúc
+  const [guestCart, userCart] = await Promise.all([
+    Cart.findOne({ session_id: sid }),
+    Cart.findOne({ user_id: userId }),
+  ]);
 
-  let userCart = await Cart.findOne({ user_id: userId });
+  if (!guestCart) return;              // không có cart guest thì thôi
 
   if (!userCart) {
+    // CASE 1: user chưa có cart -> chuyển luôn guestCart thành cart của user
     guestCart.user_id = userId;
-    guestCart.session_id = null;
+    guestCart.session_id = undefined;  // KHÔNG set null, để mongoose unset field
     await guestCart.save();
   } else {
-    mergeCartItems(userCart, guestCart);
-    await userCart.save();
-    await guestCart.deleteOne(); // xoá cart guest
+    // CASE 2: user đã có cart -> merge items từ guest vào userCart
+    mergeCartItems(userCart, guestCart); // chỉ thao tác trên object
+    await userCart.save();               // lưu cart của user
+    await guestCart.deleteOne();         // xoá cart guest sau khi merge
   }
 }
 class authController {
@@ -61,7 +66,12 @@ class authController {
     try {
       const { email, password } = req.body;
       const result = await authService.login(email, password);
+
       const userId = result.user.id || result.user._id;
+      const accessToken = result.accessToken;      // tuỳ bạn trả về từ authService
+      const refreshToken = result.refreshToken;    // nếu có
+
+      // 1) merge cart guest -> user
       await attachGuestCartToUser(req, userId);
       // console.log(
       //   ">>> KẾT QUẢ LOGIN SERVICE:",
@@ -88,6 +98,28 @@ class authController {
           maxAge: 7 * 24 * 60 * 60 * 1000,
         });
       }
+
+      // 2) set cookie UID (phục vụ currentUser, cart...)
+      res.cookie("uid", userId, {
+        httpOnly: true,
+        sameSite: "lax",
+        // secure: process.env.NODE_ENV === "production",
+      });
+
+      // 3) set accessToken (auth chính)
+      res.cookie("accessToken", accessToken, {
+        httpOnly: true,
+        sameSite: "lax",
+        // secure: process.env.NODE_ENV === "production",
+      });
+      // 4) nếu dùng refreshToken:
+      if (refreshToken) {
+        res.cookie("refreshToken", refreshToken, {
+          httpOnly: true,
+          sameSite: "lax",
+        });
+      }
+
       return res.json(result);
     } catch (err) {
       const code = /Invalid email or password/i.test(err.message) ? 401 : 400;
@@ -112,12 +144,9 @@ class authController {
       if (userId) {
         await authService.logout(userId); // xoá refresh_token trong DB
       }
-
-      // Xoá hết cookie dùng để auth
       res.clearCookie("uid", {
         httpOnly: true,
         sameSite: "lax",
-        // secure: process.env.NODE_ENV === "production",
       });
       res.clearCookie("access_token");
       res.clearCookie("refresh_token");

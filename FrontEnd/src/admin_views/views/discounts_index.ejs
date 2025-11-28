@@ -54,49 +54,47 @@
               <th class="p-3 text-left">Mã</th>
               <th class="p-3 text-right">Giá trị</th>
               <th class="p-3 text-right">Đã dùng</th>
-              <th class="p-3">Trạng thái</th>
-              <th class="p-3">Ngày tạo</th>
-              <th class="p-3 text-right w-32"></th>
+              <th class="p-3 text-left">Trạng thái</th>
+              <th class="p-3 text-left">Ngày tạo</th>
+              <th class="p-3 text-right w-32">Thao tác</th>
             </tr>
           </thead>
 
           <tbody>
             <% (items || []).forEach(d=> { %>
               <tr class="border-t bg-white hover:bg-indigo-50/40 transition">
-
                 <!-- Code -->
-                <td class="p-3 font-mono text-xs">
-                  <span class="rounded bg-slate-100 px-2 py-1 border border-slate-200">
+                <td class="p-3 font-mono text-xs text-left">
+                  <span class="rounded bg-slate-100 text-black px-2 py-1 border border-slate-200">
                     <%= d.code %>
                   </span>
                 </td>
 
                 <!-- Value -->
-                <td class="p-3 text-right font-semibold tracking-tight">
+                <td class="p-3 text-right text-black font-semibold tracking-tight">
                   <%= d.discount_value %>%
                 </td>
 
                 <!-- Usage -->
-                <td class="p-3 text-right">
+                <td class="p-3 text-right text-black">
                   <%= d.usage_count %> / <%= d.usage_limit %>
                 </td>
 
                 <!-- Active -->
-                <td class="p-3">
+                <td class="p-3 text-left">
                   <span class="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-medium border
-                  <%= d.is_active
-                    ? 'bg-emerald-100 text-emerald-700 border-emerald-200'
-                    : 'bg-slate-200 text-slate-600 border-slate-300' %>">
+          <%= d.is_active
+            ? 'bg-emerald-100 text-emerald-700 border-emerald-200'
+            : 'bg-slate-200 text-slate-600 border-slate-300' %>">
                     <i class="lucide <%= d.is_active ? 'lucide-check' : 'lucide-minus' %> text-[12px]"></i>
                     <%= d.is_active ? 'Active' : 'Inactive' %>
                   </span>
                 </td>
 
                 <!-- Date -->
-                <td class="p-3 whitespace-nowrap text-slate-700">
+                <td class="p-3 whitespace-nowrap text-slate-700 text-left">
                   <%= new Date(d.createdAt).toLocaleString('vi-VN') %>
                 </td>
-
                 <!-- Actions -->
                 <td class="p-3 text-right space-x-2">
 
