@@ -58,6 +58,55 @@ module.exports = function createAdminRouter({ BACKEND, proxy } = {}) {
       return fallback();
     }
   }
+  async function fetchUpdateUser(req, id) {
+    console.log("[ADMIN FE] Update user body:", req.body);
+    try {
+      if (!BACKEND) {
+        // mock local
+        const i = USERS.findIndex(u => String(u._id) === String(id));
+        if (i === -1) return { ok: false, message: "Không tìm thấy user (mock)" };
+
+        USERS[i] = {
+          ...USERS[i],
+          full_name: req.body.full_name ?? USERS[i].full_name,
+          email: req.body.email ?? USERS[i].email,
+          role: req.body.role ?? USERS[i].role,
+          gender: req.body.gender ?? USERS[i].gender,
+          birthday: req.body.birthday ?? USERS[i].birthday,
+          phone: req.body.phone ?? USERS[i].phone,
+        };
+        return { ok: true, message: "Cập nhật user (mock) thành công!" };
+      }
+
+      const url = `${BACKEND}/api/user/${id}`;
+      const payload = {
+        full_name: req.body.full_name,
+        email: req.body.email,
+        role: req.body.role,
+        gender: req.body.gender,
+        birthday: req.body.birthday,  // BE tự parse
+        phone: req.body.phone,
+      };
+
+      // xoá field undefined để tránh ghi đè lung tung
+      Object.keys(payload).forEach(k => payload[k] === undefined && delete payload[k]);
+
+      const data = await fetchJSONAuth(req, url, {
+        method: "PUT",
+        body: JSON.stringify(payload),
+      });
+
+      if (!data?.success) {
+        throw new Error(data?.message || "Cập nhật user thất bại");
+      }
+
+      return { ok: true, message: "Cập nhật user thành công!", data: data.data };
+    } catch (err) {
+      console.error("Update USER failed:", err.message);
+      return { ok: false, message: err.message || "Không thể cập nhật user" };
+    }
+  }
+
   async function fetchCreateColor(req) {
     try {
       if (!BACKEND) {
@@ -94,7 +143,6 @@ module.exports = function createAdminRouter({ BACKEND, proxy } = {}) {
       return { ok: false, message: err.message || "Không thể tạo màu" };
     }
   }
-
   async function fetchUpdateColor(req, id) {
     try {
       if (!BACKEND) {
@@ -1043,6 +1091,53 @@ module.exports = function createAdminRouter({ BACKEND, proxy } = {}) {
       return { ok: false, message: err.message || "Không thể cập nhật tồn kho" };
     }
   }
+  async function fetchAdminAddAddress(req, userId) {
+    try {
+      if (!BACKEND) {
+        // mock local
+        if (req.body.is_default) {
+          ADDRESSES.forEach(a => {
+            if (String(a.user) === String(userId)) a.is_default = false;
+          });
+        }
+
+        ADDRESSES.unshift({
+          _id: "ad" + Date.now(),
+          user: userId,
+          address_line: req.body.address_line,
+          city: req.body.city || "",
+          province: req.body.province || "",
+          is_default: !!req.body.is_default,
+          createdAt: new Date(),
+        });
+
+        return { ok: true, message: "Thêm địa chỉ (mock) thành công!" };
+      }
+
+      const url = `${BACKEND}/api/user/${userId}/addresses`;
+      const payload = {
+        address_line: req.body.address_line,
+        city: req.body.city,
+        province: req.body.province,
+        is_default: !!req.body.is_default,
+      };
+      Object.keys(payload).forEach((k) => payload[k] === undefined && delete payload[k]);
+
+      const data = await fetchJSONAuth(req, url, {
+        method: "POST",
+        body: JSON.stringify(payload),
+      });
+
+      if (!data?.success) {
+        throw new Error(data?.message || "Không thể thêm địa chỉ");
+      }
+
+      return { ok: true, message: "Thêm địa chỉ thành công!", data: data.address || data.data };
+    } catch (err) {
+      console.error("Admin add address failed:", err.message);
+      return { ok: false, message: err.message || "Không thể thêm địa chỉ" };
+    }
+  }
 
   // ===== Lấy 1 variant theo id cho trang Admin =====
   async function fetchVariantByIdAdmin(req, id) {
@@ -1706,7 +1801,6 @@ module.exports = function createAdminRouter({ BACKEND, proxy } = {}) {
       res.status(404).send("Không tìm thấy mã giảm giá");
     }
   });
-
   // Update từ form /admin/discounts/:id
   router.post("/discounts/:id", async (req, res) => {
     const r = await fetchUpdateDiscountCode(req, req.params.id);
@@ -1771,17 +1865,78 @@ module.exports = function createAdminRouter({ BACKEND, proxy } = {}) {
         return res.status(404).send("Không tìm thấy người dùng");
       }
 
+      const editMode = req.query.edit === "1" || req.query.edit === "true";
+
       return res.render("user_detail", {
         title: `Người dùng: ${user.full_name || user.email}`,
         pageHeading: "Chi tiết người dùng",
         user,
         addresses,
         orders,
+        editMode,
       });
     } catch (err) {
       console.error("Load user detail failed:", err.message);
       return res.status(500).send("Không thể tải thông tin người dùng");
     }
+  });
+  router.get("/users/:id/edit", async (req, res) => {
+    try {
+      const id = req.params.id;
+
+      if (!BACKEND) {
+        // MOCK: lấy user từ mảng USERS
+        const user = USERS.find(u => String(u._id) === String(id));
+        if (!user) return res.status(404).send("Không tìm thấy người dùng (mock)");
+
+        // mock addresses & orders theo user
+        const addresses = ADDRESSES.filter(a => String(a.user) === String(user._id));
+        const orders = ORDERS.filter(o => {
+          // tuỳ bạn đang lưu user trong order thế nào
+          const orderUserId = o.user && (o.user._id || o.user);
+          return String(orderUserId) === String(user._id);
+        });
+
+        return res.render("user_detail", {
+          title: `Sửa người dùng: ${user.full_name || user.email}`,
+          pageHeading: "Sửa người dùng",
+          user,
+          addresses,
+          orders,
+          editMode: true, // 🔥 quan trọng
+        });
+      }
+
+      // === BACKEND MODE ===
+      // dùng luôn API details để có đủ user + addresses + orders
+      const data = await fetchJSONAuth(req, `${BACKEND}/api/user/${id}/details`);
+
+      const user = data.user;
+      const addresses = data.addresses || [];
+      const orders = data.orders || [];
+
+      if (!user) {
+        return res.status(404).send("Không tìm thấy người dùng");
+      }
+
+      return res.render("user_detail", {
+        title: `Sửa người dùng: ${user.full_name || user.email}`,
+        pageHeading: "Sửa người dùng",
+        user,
+        addresses,
+        orders,
+        editMode: true, // 🔥 bật chế độ edit
+      });
+    } catch (err) {
+      console.error("Load user edit failed:", err.message);
+      return res.status(500).send("Không thể tải thông tin người dùng");
+    }
+  });
+  router.post("/users/:id", async (req, res) => {
+    const r = await fetchUpdateUser(req, req.params.id);
+    const q = new URLSearchParams(r.ok ? { s: r.message } : { e: r.message });
+    // quay lại trang detail (không còn edit)
+    res.redirect(`/admin/users/${req.params.id}?${q.toString()}`);
   });
   // Ban user
   router.post("/users/:id/ban", async (req, res) => {
@@ -1840,7 +1995,12 @@ module.exports = function createAdminRouter({ BACKEND, proxy } = {}) {
       res.redirect(`/admin/users?e=${encodeURIComponent(err.message || "Không thể xóa người dùng")}`);
     }
   });
-
+  router.post("/users/:id/addresses", async (req, res) => {
+    const userId = req.params.id;
+    const r = await fetchAdminAddAddress(req, userId);
+    const q = new URLSearchParams(r.ok ? { s: r.message } : { e: r.message });
+    res.redirect(`/admin/users/${userId}?${q.toString()}`);
+  });
 
   // ========== Generic helpers: Addresses / Reviews / Wishlists ==========
   function renderEntityIndex(res, title, items, fields) {
