@@ -30,5 +30,7 @@ router.use("/order", orderRouter);
 module.exports = router; //export
 const userRouter = require("./users");//import
 router.use("/user", userRouter);
+const importRoutes = require("./importRoutes");
+router.use("/import", importRoutes);
 module.exports = router;//export
 

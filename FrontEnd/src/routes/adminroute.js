@@ -300,16 +300,41 @@ module.exports = function createAdminRouter({ BACKEND, proxy } = {}) {
   // ========== Helpers (locals) ==========
   let ADMIN_ACCOUNT = { id: "admin1", full_name: "Admin", password: "admin123" }; // demo
 
-  router.use((req, res, next) => {
+  router.use(async (req, res, next) => {
+    // helper format tiền
     res.locals.money = (v) => {
-      try { return (v || 0).toLocaleString("vi-VN", { style: "currency", currency: "VND" }); }
-      catch { return v; }
+      try {
+        return (v || 0).toLocaleString("vi-VN", {
+          style: "currency",
+          currency: "VND",
+        });
+      } catch {
+        return v;
+      }
     };
-    res.locals.admin = { full_name: ADMIN_ACCOUNT.full_name };
+
+    // activePath cho menu/tabs
     res.locals.activePath = "/admin" + req.path;
+
+    // flash message
     res.locals.flash = {};
     if (req.query?.s) res.locals.flash.success = req.query.s;
     if (req.query?.e) res.locals.flash.error = req.query.e;
+
+    // 🔥 LẤY ADMIN TỪ BACKEND
+    let adminUser = null;
+    if (BACKEND) {
+      adminUser = await fetchAdminProfile(req);
+    }
+
+    // Nếu backend fail / chưa config -> fallback mock
+    if (adminUser) {
+      // data.user từ BE: { id, email, full_name, ... }
+      res.locals.admin = adminUser;
+    } else {
+      res.locals.admin = { full_name: ADMIN_ACCOUNT.full_name };
+    }
+
     next();
   });
 
@@ -1040,7 +1065,7 @@ module.exports = function createAdminRouter({ BACKEND, proxy } = {}) {
         pageSize,
       };
 
-      // ⬅️ Quan trọng: list dùng RAW items để EJS đọc product/color/size/images
+      //Quan trọng: list dùng RAW items để EJS đọc product/color/size/images
       return { items: rawItems, pagination: VARIANTS_PAGINATION };
     } catch (e) {
       console.error("Load VARIANTS failed:", e.message);
@@ -1058,70 +1083,44 @@ module.exports = function createAdminRouter({ BACKEND, proxy } = {}) {
 
   async function fetchUpdateVariantStockAdmin(req, id) {
     try {
+      // MOCK MODE
       if (!BACKEND) {
         const i = PRODUCT_VARIANTS.findIndex((x) => String(x._id || x.sku) === String(id));
         if (i === -1) return { ok: false, message: "Variant not found (mock)" };
-        PRODUCT_VARIANTS[i] = {
-          ...PRODUCT_VARIANTS[i],
-          price: Number(req.body.price || PRODUCT_VARIANTS[i].price || 0),
-          stock_quantity: Number(req.body.stock_quantity || PRODUCT_VARIANTS[i].stock_quantity || 0),
-        };
-        return { ok: true, message: "Cập nhật tồn kho (mock) thành công!" };
-      }
 
-      const url = `${BACKEND}/api/product/variants/${id}/stock`;
-      const payload = {
-        price: req.body.price !== undefined ? Number(req.body.price) : undefined,
-        stock_quantity: req.body.stock_quantity !== undefined ? Number(req.body.stock_quantity) : undefined,
-      };
-      Object.keys(payload).forEach((k) => payload[k] === undefined && delete payload[k]);
+        const qty = Number(req.body.quantity || 0);
+        const importPrice = Number(req.body.import_price || 0);
 
-      const data = await fetchJSONAuth(req, url, {
-        method: "PUT",
-        body: JSON.stringify(payload),
-      });
-
-      if (!data?.success) {
-        throw new Error(data?.message || "Cập nhật tồn kho thất bại");
-      }
-
-      return { ok: true, message: "Cập nhật tồn kho thành công!" };
-    } catch (err) {
-      console.error("Update VARIANT STOCK failed:", err.message);
-      return { ok: false, message: err.message || "Không thể cập nhật tồn kho" };
-    }
-  }
-  async function fetchAdminAddAddress(req, userId) {
-    try {
-      if (!BACKEND) {
-        // mock local
-        if (req.body.is_default) {
-          ADDRESSES.forEach(a => {
-            if (String(a.user) === String(userId)) a.is_default = false;
-          });
+        if (!qty || !importPrice) {
+          return { ok: false, message: "quantity và import_price là bắt buộc (mock)" };
         }
 
-        ADDRESSES.unshift({
-          _id: "ad" + Date.now(),
-          user: userId,
-          address_line: req.body.address_line,
-          city: req.body.city || "",
-          province: req.body.province || "",
-          is_default: !!req.body.is_default,
-          createdAt: new Date(),
-        });
+        // Tăng tồn kho mock
+        PRODUCT_VARIANTS[i] = {
+          ...PRODUCT_VARIANTS[i],
+          stock_quantity: Number(PRODUCT_VARIANTS[i].stock_quantity || 0) + qty,
+          last_import_price: importPrice,
+        };
 
-        return { ok: true, message: "Thêm địa chỉ (mock) thành công!" };
+        return { ok: true, message: "Nhập hàng (mock) thành công!" };
       }
 
-      const url = `${BACKEND}/api/user/${userId}/addresses`;
+      // REAL BACKEND
+      const url = `${BACKEND}/api/import`;
+
       const payload = {
-        address_line: req.body.address_line,
-        city: req.body.city,
-        province: req.body.province,
-        is_default: !!req.body.is_default,
+        productVariantId: id, // lấy từ params
+        quantity: req.body.quantity !== undefined ? Number(req.body.quantity) : undefined,
+        import_price: req.body.import_price !== undefined ? Number(req.body.import_price) : undefined,
+        note: req.body.note || "",
       };
+
+      // xóa field undefined
       Object.keys(payload).forEach((k) => payload[k] === undefined && delete payload[k]);
+
+      if (!payload.productVariantId || !payload.quantity || !payload.import_price) {
+        throw new Error("productVariantId, quantity, import_price là bắt buộc");
+      }
 
       const data = await fetchJSONAuth(req, url, {
         method: "POST",
@@ -1129,13 +1128,13 @@ module.exports = function createAdminRouter({ BACKEND, proxy } = {}) {
       });
 
       if (!data?.success) {
-        throw new Error(data?.message || "Không thể thêm địa chỉ");
+        throw new Error(data?.message || "Nhập hàng thất bại");
       }
 
-      return { ok: true, message: "Thêm địa chỉ thành công!", data: data.address || data.data };
+      return { ok: true, message: "Nhập hàng thành công!" };
     } catch (err) {
-      console.error("Admin add address failed:", err.message);
-      return { ok: false, message: err.message || "Không thể thêm địa chỉ" };
+      console.error("Import VARIANT STOCK failed:", err.message);
+      return { ok: false, message: err.message || "Không thể nhập hàng" };
     }
   }
 
@@ -1261,32 +1260,481 @@ module.exports = function createAdminRouter({ BACKEND, proxy } = {}) {
 
     return url + (q.toString() ? `?${q.toString()}&page=` : "?page=");
   }
+  // ========== DASHBOARD HELPERS ==========
 
-  // ========== Dashboard ==========
-  router.get("/", (req, res) => {
-    const charts = {
-      revenue: { labels: ["T1", "T2", "T3", "T4", "T5", "T6"], revenue: [12, 18, 10, 22, 19, 25], profit: [3, 5, 2, 6, 5, 8] },
-      orders: { labels: ["T1", "T2", "T3", "T4", "T5", "T6"], orders: [120, 180, 150, 220, 190, 240] },
-      compare: { labels: ["Q1", "Q2", "Q3", "Q4"], revenue: [40, 55, 48, 70], profit: [10, 14, 12, 18], orders: [120, 180, 160, 240] }
+  // Build query cho BE dashboard từ req.query
+  function buildDashboardQuery(req) {
+    const q = new URLSearchParams();
+
+    const granularity = req.query.granularity || "month";
+    const start = req.query.start;
+    const end = req.query.end;
+
+    // Nếu chọn khoảng ngày cụ thể -> dùng custom
+    if (start && end) {
+      q.set("granularity", "custom");
+      q.set("startDate", start);
+      q.set("endDate", end);
+    } else {
+      // forward thẳng granularity + year/month/quarter/week nếu có
+      q.set("granularity", granularity);
+      if (req.query.year) q.set("year", req.query.year);
+      if (req.query.month) q.set("month", req.query.month);
+      if (req.query.quarter) q.set("quarter", req.query.quarter);
+      if (req.query.week) q.set("week", req.query.week);
+    }
+
+    return q.toString(); // "granularity=month&year=2025&month=11"
+  }
+
+  async function fetchSimpleDashboardFromBackend(req, res) {
+    if (!BACKEND) {
+      throw new Error("BACKEND not configured");
+    }
+
+    const qs = buildDashboardQuery(req);
+
+    // Gọi song song 4 API
+    const [kpisResp, rpResp, ocResp, tpResp] = await Promise.all([
+      fetchJSONAuth(req, `${BACKEND}/api/admin-dashboard/dashboard/simple/kpis?${qs}`),
+      fetchJSONAuth(req, `${BACKEND}/api/admin-dashboard/dashboard/simple/revenue-profit?${qs}`),
+      fetchJSONAuth(req, `${BACKEND}/api/admin-dashboard/dashboard/simple/orders-count?${qs}`),
+      fetchJSONAuth(req, `${BACKEND}/api/admin-dashboard/dashboard/simple/top-products?limit=10&${qs}`),
+    ]);
+
+    // ====== KPIs ======
+    // Chấp cả 2 dạng: { success, data:{...} } hoặc { kpis, compareToPrevious }
+    const kPayload =
+      (kpisResp && (kpisResp.data || kpisResp)) || {};
+
+    const k = kPayload.kpis || {};
+    const cmp = kPayload.compareToPrevious || {};
+
+    const toPercent = (v) => {
+      if (v === null || v === undefined) return 0;
+      return Math.round(v * 100); // 0.123 -> 12%
     };
 
-    const metrics = { totalUsers: USERS.length, ordersCount: ORDERS.length, revenue: 75299000, profit: 12600000 };
+    const formatMoney = (v) => {
+      try {
+        if (res?.locals?.money) return res.locals.money(v || 0);
+        return (v || 0).toLocaleString("vi-VN", {
+          style: "currency",
+          currency: "VND",
+        });
+      } catch {
+        return v || 0;
+      }
+    };
 
-    const kpis = [
-      { label: "Tổng người dùng", value: metrics.totalUsers, delta: 5, icon: "users" },
-      { label: "Đơn hàng", value: metrics.ordersCount, delta: 12, icon: "receipt" },
-      { label: "Doanh thu", value: metrics.revenue, valueDisplay: metrics.revenue.toLocaleString("vi-VN", { style: "currency", currency: "VND" }), delta: 8, icon: "credit-card" },
-      { label: "Lợi nhuận", value: metrics.profit, valueDisplay: metrics.profit.toLocaleString("vi-VN", { style: "currency", currency: "VND" }), delta: -3, icon: "badge-dollar-sign" },
+    const kpiCards = [
+      {
+        label: "Tổng người dùng",
+        value: k.totalUsers || 0,
+        delta: toPercent(cmp.users),
+        icon: "users",
+      },
+      {
+        label: "Người dùng mới",
+        value: k.newUsers || 0,
+        delta: toPercent(cmp.users),
+        icon: "user-plus",
+      },
+      {
+        label: "Tổng đơn hàng",
+        value: k.totalOrders || 0,
+        delta: toPercent(cmp.orders),
+        icon: "receipt",
+      },
+      {
+        label: "Doanh thu",
+        value: k.totalRevenue || 0,
+        valueDisplay: formatMoney(k.totalRevenue || 0),
+        delta: toPercent(cmp.revenue),
+        icon: "credit-card",
+      },
+      {
+        label: "Lợi nhuận",
+        value: k.totalProfit || 0,
+        valueDisplay: formatMoney(k.totalProfit || 0),
+        delta: toPercent(cmp.profit),
+        icon: "badge-dollar-sign",
+      },
     ];
 
-    const topProducts = PRODUCTS.slice(0, 10).map((p, i) => ({ name: p.name, total_sold: 100 - i * 3 }));
+    // ====== Doanh thu & lợi nhuận theo thời gian ======
+    const rpData = Array.isArray(rpResp?.data) ? rpResp.data : [];
+    const chartsRevenue = {
+      labels: rpData.map((d) => d.label || d.timeKey || ""),
+      revenue: rpData.map((d) => d.revenue || 0),
+      profit: rpData.map((d) => d.profit || 0),
+    };
 
-    res.render("dashboard", {
-      title: "Dashboard",
-      pageHeading: "Dashboard",
-      charts, kpis, topProducts,
-      filters: { granularity: "month", mode: req.query.mode || "simple" }
-    });
+    // ====== Số đơn theo thời gian ======
+    const ocData = Array.isArray(ocResp?.data) ? ocResp.data : [];
+    const chartsOrders = {
+      labels: ocData.map((d) => d.label || d.timeKey || ""),
+      orders: ocData.map((d) => d.ordersCount || 0),
+    };
+
+    // ====== Top sản phẩm ======
+    const tpItems = Array.isArray(tpResp?.items) ? tpResp.items : [];
+    const topProducts = tpItems.map((p) => ({
+      name: p.name || p.productName || p.product_name || p.sku || "Sản phẩm",
+      total_sold:
+        p.totalSold ||
+        p.total_sold ||
+        p.quantitySold ||
+        p.quantity ||
+        p.totalQuantity ||
+        0,
+    }));
+
+    const charts = {
+      revenue: chartsRevenue,
+      orders: chartsOrders,
+      compare: null, // Tab nâng cao vẫn dùng SAMPLE ở FE
+    };
+
+    return {
+      charts,
+      kpis: kpiCards,
+      topProducts,
+      filters: {
+        mode: req.query.mode || "simple",
+        granularity: req.query.granularity || "month",
+        start: req.query.start || "",
+        end: req.query.end || "",
+      },
+    };
+  }
+  // ========== Dashboard ==========
+  router.get("/", async (req, res) => {
+    try {
+      if (!BACKEND) {
+        // Fallback cũ nếu chưa cấu hình BACKEND
+        const charts = {
+          revenue: {
+            labels: ["T1", "T2", "T3", "T4", "T5", "T6"],
+            revenue: [12, 18, 10, 22, 19, 25],
+            profit: [3, 5, 2, 6, 5, 8],
+          },
+          orders: {
+            labels: ["T1", "T2", "T3", "T4", "T5", "T6"],
+            orders: [120, 180, 150, 220, 190, 240],
+          },
+          compare: null,
+        };
+
+        const metrics = {
+          totalUsers: USERS.length,
+          ordersCount: ORDERS.length,
+          revenue: 75299000,
+          profit: 12600000,
+        };
+
+        const kpis = [
+          {
+            label: "Tổng người dùng",
+            value: metrics.totalUsers,
+            delta: 5,
+            icon: "users",
+          },
+          {
+            label: "Đơn hàng",
+            value: metrics.ordersCount,
+            delta: 12,
+            icon: "receipt",
+          },
+          {
+            label: "Doanh thu",
+            value: metrics.revenue,
+            valueDisplay: metrics.revenue.toLocaleString("vi-VN", {
+              style: "currency",
+              currency: "VND",
+            }),
+            delta: 8,
+            icon: "credit-card",
+          },
+          {
+            label: "Lợi nhuận",
+            value: metrics.profit,
+            valueDisplay: metrics.profit.toLocaleString("vi-VN", {
+              style: "currency",
+              currency: "VND",
+            }),
+            delta: -3,
+            icon: "badge-dollar-sign",
+          },
+        ];
+
+        const topProducts = PRODUCTS.slice(0, 10).map((p, i) => ({
+          name: p.name,
+          total_sold: 100 - i * 3,
+        }));
+
+        return res.render("dashboard", {
+          title: "Dashboard",
+          pageHeading: "Dashboard",
+          charts,
+          kpis,
+          topProducts,
+          filters: {
+            granularity: req.query.granularity || "month",
+            start: req.query.start || "",
+            end: req.query.end || "",
+            mode: req.query.mode || "simple",
+          },
+          advanced: null,   // mock chưa có
+        });
+      }
+
+      // ======== DÙNG BACKEND THẬT ========
+      const [simple, advanced] = await Promise.all([
+        fetchSimpleDashboardFromBackend(req, res),
+        fetchAdvancedDashboardFromBackend(req).catch((err) => {
+          console.error("Fetch advanced dashboard failed:", err.message);
+          return null;
+        }),
+      ]);
+
+      return res.render("dashboard", {
+        title: "Dashboard",
+        pageHeading: "Dashboard",
+        charts: simple.charts,
+        kpis: simple.kpis,
+        topProducts: simple.topProducts,
+        filters: simple.filters,
+        advanced, // <-- quan trọng
+      });
+    } catch (err) {
+      console.error("Render /admin dashboard failed:", err.message);
+      const charts = {
+        revenue: { labels: [], revenue: [], profit: [] },
+        orders: { labels: [], orders: [] },
+        compare: null,
+      };
+      return res.render("dashboard", {
+        title: "Dashboard",
+        pageHeading: "Dashboard",
+        charts,
+        kpis: [],
+        topProducts: [],
+        filters: {
+          granularity: req.query.granularity || "month",
+          start: req.query.start || "",
+          end: req.query.end || "",
+          mode: req.query.mode || "simple",
+        },
+        advanced: null,
+      });
+    }
+  });
+
+  async function fetchAdvancedDashboardFromBackend(req) {
+    if (!BACKEND) {
+      throw new Error("BACKEND not configured");
+    }
+
+    const qs = buildDashboardQuery(req);
+
+    // Gọi song song 4 API
+    const [summaryResp, customersResp, ordersResp, productCompareResp] =
+      await Promise.all([
+        fetchJSONAuth(req, `${BACKEND}/api/admin-dashboard/dashboard/advanced/summary?${qs}`),
+        fetchJSONAuth(req, `${BACKEND}/api/admin-dashboard/dashboard/advanced/customers?${qs}`),
+        fetchJSONAuth(req, `${BACKEND}/api/admin-dashboard/dashboard/advanced/orders?${qs}`),
+        fetchJSONAuth(req, `${BACKEND}/api/admin-dashboard/dashboard/advanced/product-comparison?${qs}`)
+      ]);
+
+    const summary = summaryResp?.data || {};
+    const customers = customersResp?.data || {};
+    const orders = ordersResp?.data || {};
+    const productCompare = productCompareResp?.data || {};
+
+    const summaryData = summary.data || [];
+
+    // ==========================================
+    // 1) BIỂU ĐỒ CHÍNH: SO SÁNH ĐƠN – DOANH THU – LỢI NHUẬN
+    // ==========================================
+    const compare = {
+      labels: summaryData.map(d => d.label || d.timeKey),
+      orders: summaryData.map(d => d.ordersCount || 0),
+      revenue: summaryData.map(d => d.totalRevenue || 0),
+      profit: summaryData.map(d => d.totalProfit || 0),
+    };
+
+    // ==========================================
+    // 2) BIỂU ĐỒ SỐ LƯỢNG SẢN PHẨM THEO NĂM
+    // ==========================================
+    const yearly = productCompare.yearly || [];
+    const productsCount = {
+      labels: yearly.map(d => d.label),
+      productsSold: yearly.map(d => d.totalProductsSold || 0),
+    };
+
+    // ==========================================
+    // 3) PIE CHART PHÂN BỔ SẢN PHẨM
+    // ==========================================
+    const distribution = productCompare.distribution || [];
+    const productDistribution = {
+      labels: distribution.map(d => d.label),
+      quantities: distribution.map(d => d.quantity),
+    };
+    const customerSegments = customers.segments || {};
+    const customerNewReturning = customers.newVsReturning || {};
+
+    return {
+      chartsAdvanced: {
+        compare,
+        productsCount,
+        productDistribution,
+        customerSegments,        // <--- thêm vào
+        customerNewReturning     // <--- thêm vào
+      },
+      customers,
+      raw: {
+        summary,
+        customers,
+        orders,
+        productCompare
+      }
+    };
+  }
+
+  router.get("/", async (req, res) => {
+    try {
+      // ==============================
+      // 1. FALLBACK KHI KHÔNG CẤU HÌNH BACKEND
+      // ==============================
+      if (!BACKEND) {
+        const charts = {
+          revenue: {
+            labels: ["T1", "T2", "T3", "T4", "T5", "T6"],
+            revenue: [12, 18, 10, 22, 19, 25],
+            profit: [3, 5, 2, 6, 5, 8],
+          },
+          orders: {
+            labels: ["T1", "T2", "T3", "T4", "T5", "T6"],
+            orders: [120, 180, 150, 220, 190, 240],
+          },
+          compare: null,
+        };
+
+        const metrics = {
+          totalUsers: USERS.length,
+          ordersCount: ORDERS.length,
+          revenue: 75299000,
+          profit: 12600000,
+        };
+
+        const kpis = [
+          {
+            label: "Tổng người dùng",
+            value: metrics.totalUsers,
+            delta: 5,
+            icon: "users",
+          },
+          {
+            label: "Đơn hàng",
+            value: metrics.ordersCount,
+            delta: 12,
+            icon: "receipt",
+          },
+          {
+            label: "Doanh thu",
+            value: metrics.revenue,
+            valueDisplay: metrics.revenue.toLocaleString("vi-VN", {
+              style: "currency",
+              currency: "VND",
+            }),
+            delta: 8,
+            icon: "credit-card",
+          },
+          {
+            label: "Lợi nhuận",
+            value: metrics.profit,
+            valueDisplay: metrics.profit.toLocaleString("vi-VN", {
+              style: "currency",
+              currency: "VND",
+            }),
+            delta: -3,
+            icon: "badge-dollar-sign",
+          },
+        ];
+
+        const topProducts = PRODUCTS.slice(0, 10).map((p, i) => ({
+          name: p.name,
+          total_sold: 100 - i * 3,
+        }));
+
+        return res.render("dashboard", {
+          title: "Dashboard",
+          pageHeading: "Dashboard",
+          charts,
+          kpis,
+          topProducts,
+          filters: {
+            granularity: req.query.granularity || "month",
+            start: req.query.start || "",
+            end: req.query.end || "",
+            mode: req.query.mode || "simple",
+          },
+          advanced: null,
+        });
+      }
+
+      // ==============================
+      // 2. DÙNG BACKEND THẬT
+      // ==============================
+
+      const [simple, advanced] = await Promise.all([
+        fetchSimpleDashboardFromBackend(req, res),
+
+        // Nếu advanced fail thì không crash dashboard, chỉ log lỗi
+        fetchAdvancedDashboardFromBackend(req).catch((err) => {
+          console.error("Fetch advanced dashboard failed:", err.message);
+          return null;
+        }),
+      ]);
+
+      // ==============================
+      // 3. TRẢ VỀ VIEW
+      // ==============================
+      return res.render("dashboard", {
+        title: "Dashboard",
+        pageHeading: "Dashboard",
+        charts: simple.charts,
+        kpis: simple.kpis,
+        topProducts: simple.topProducts,
+        filters: simple.filters,
+        advanced: advanced || null, // <--- QUAN TRỌNG
+      });
+
+    } catch (err) {
+      console.error("Render /admin dashboard failed:", err.message);
+
+      const charts = {
+        revenue: { labels: [], revenue: [], profit: [] },
+        orders: { labels: [], orders: [] },
+        compare: null,
+      };
+
+      return res.render("dashboard", {
+        title: "Dashboard",
+        pageHeading: "Dashboard",
+        charts,
+        kpis: [],
+        topProducts: [],
+        filters: {
+          granularity: req.query.granularity || "month",
+          start: req.query.start || "",
+          end: req.query.end || "",
+          mode: req.query.mode || "simple",
+        },
+        advanced: null,
+      });
+    }
   });
 
   // ========== Products ==========
@@ -2060,10 +2508,67 @@ module.exports = function createAdminRouter({ BACKEND, proxy } = {}) {
     ADMIN_ACCOUNT.password = new_password;
     return res.render("account_password", { ...viewBase, errorMsg: null, successMsg: "Đổi mật khẩu thành công." });
   });
+  // Lấy accessToken từ cookie của request
+  function getAccessTokenFromCookie(req) {
+    const raw = req?.headers?.cookie || "";
+    if (!raw) return null;
 
-  router.post("/logout", (_req, res) => {
-    res.redirect("/admin?s=Đã đăng xuất");
+    const parts = raw.split(";").map((s) => s.trim());
+    for (const part of parts) {
+      const [k, v] = part.split("=");
+      if (k === "accessToken") {
+        return decodeURIComponent(v || "");
+      }
+    }
+    return null;
+  }
+
+  async function fetchAdminProfile(req) {
+    if (!BACKEND) return null;
+
+    // Nếu không có accessToken trong cookie => coi như chưa đăng nhập
+    const accessToken = getAccessTokenFromCookie(req);
+    if (!accessToken) {
+      return null;
+    }
+
+    try {
+      // Dùng cả cookie + Authorization cho chắc
+      const url = `${BACKEND}/api/user/account/profile`;
+      const data = await fetchJSONRaw(url, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          cookie: req.headers.cookie || "",
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+
+      // BE chuẩn: { success: true, user: {...} }
+      if (data && data.success && data.user) {
+        return data.user;
+      }
+
+      return null;
+    } catch (err) {
+      // 401 / 403 / các lỗi khác -> fallback về admin mock
+      console.error("Fetch admin profile failed:", err.message);
+      return null;
+    }
+  }
+  router.get("/me", async (req, res) => {
+    const adminUser = await fetchAdminProfile(req);
+    if (!adminUser) return res.status(401).json({ success: false, message: "Unauthenticated" });
+    res.json({ success: true, user: adminUser });
   });
+  router.post("/logout", (req, res) => {
+    // Xoá token + role
+    res.clearCookie("accessToken", { path: "/" });
+    res.clearCookie("refreshToken", { path: "/" });
+    res.clearCookie("role", { path: "/" });
 
+    // Redirect về trang login
+    return res.redirect("/login?s=Đăng xuất thành công");
+  });
   return router;
 };

@@ -4,6 +4,7 @@ const BrandService = require("./BrandService");
 const CategoryService = require("./CategoryService");
 const ColorService = require("./ColorService");
 const SizeService = require("./SizeService");
+const productImportRepo = require("../repositories/productImportRepository");
 
 const { uploadFiles, deleteFiles } = require("../utils/fileHandler");
 const { handleTransaction } = require("../utils/transaction");
@@ -373,12 +374,41 @@ async function getAllVariants(page = 1, limit = 50) {
       .skip(skip)
       .limit(limit)
       .lean(),
-    ProductVariant.countDocuments({})
+    ProductVariant.countDocuments({}),
   ]);
+
+  const variantIds = items.map((v) => v._id).filter(Boolean);
+
+  // lấy tất cả phiếu nhập cho các variant này
+  const imports = await productImportRepo.findAll({
+    productVariant: { $in: variantIds },
+  });
+
+  const importMap = new Map();
+
+  for (const imp of imports) {
+    // productVariant sau populate là object -> lấy _id, nếu chưa populate thì dùng trực tiếp
+    const variantId =
+      imp.productVariant && imp.productVariant._id
+        ? imp.productVariant._id
+        : imp.productVariant;
+
+    const key = String(variantId);
+    if (!importMap.has(key)) importMap.set(key, []);
+    importMap.get(key).push(imp);
+  }
+
+  const itemsWithHistory = items.map((v) => {
+    const key = String(v._id);
+    return {
+      ...v,
+      importHistory: importMap.get(key) || [],
+    };
+  });
 
   const totalPages = Math.max(1, Math.ceil(total / limit));
   return {
-    items,
+    items: itemsWithHistory,
     total,
     page,
     limit,
@@ -393,7 +423,15 @@ async function getVariantById(id) {
     .lean();
 
   if (!variant) throw new Error("Variant not found");
-  return variant;
+
+  const importHistory = await productImportRepo.findAll({
+    productVariant: id,
+  });
+
+  return {
+    ...variant,
+    importHistory,
+  };
 }
 
 async function updateVariantStock(variantId, dto) {

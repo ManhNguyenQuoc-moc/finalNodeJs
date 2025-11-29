@@ -847,6 +847,18 @@ module.exports = function createPagesRouter({ BACKEND, proxy }) {
     if (!data || data.redirectToLogin) return res.redirect("/login");
     res.render("account_points", { title: "Điểm thưởng", activeAccountTab: "points", ...data });
   });
+  function decodeJwtPayload(token) {
+    if (!token) return null;
+    const parts = token.split(".");
+    if (parts.length < 2) return null;
+    try {
+      const payloadBase64 = parts[1].replace(/-/g, "+").replace(/_/g, "/");
+      const decoded = Buffer.from(payloadBase64, "base64").toString("utf8");
+      return JSON.parse(decoded);
+    } catch {
+      return null;
+    }
+  }
   router.post("/login", async (req, res) => {
     try {
       const resp = await fetch(`${BACKEND}/api/auth/login`, {
@@ -881,10 +893,25 @@ module.exports = function createPagesRouter({ BACKEND, proxy }) {
             path: "/",
           });
         }
+        let role = data.user?.role || null;
+        if (!role && data.tokens?.accessToken) {
+          const payload = decodeJwtPayload(data.tokens.accessToken);
+          role = payload?.role || null;
+        }
 
-        return res.redirect("/my-account");
+        if (role) {
+          // có thể để httpOnly luôn nếu chỉ dùng trên server
+          res.cookie("role", role, {
+            httpOnly: true,
+            sameSite: "lax",
+            path: "/",
+          });
+        }
+        if (role === "admin") {
+          return res.redirect("/admin");
+        }
+        return res.redirect("/home");
       }
-
       const mini = await fetchJSONAuth(req, `${BACKEND}/api/page/minicart`).catch(() => ({}));
       return res.status(resp.status || 401).render("login_register", {
         title: "Đăng nhập & Đăng ký",
