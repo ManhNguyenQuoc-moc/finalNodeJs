@@ -14,30 +14,661 @@
   <%- include('partials/header', { headerType: 'header' }) %>
 
   <main>
-    <div class="mb-4 pb-lg-3"></div>
+    <style>
+      /* Search Hero Section - Modern Design */
+      .search-hero {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+        padding: 4rem 0 3rem;
+        margin-bottom: 0;
+        position: relative;
+        overflow: hidden;
+      }
 
-    <section class="shop-main container">
-      <div class="d-flex justify-content-between mb-4 pb-md-2">
-        <p style="font-size: 1.2rem;">Có <%= quantity %> kết quả phù hợp với: <%= keyword %></p>
+      .search-hero::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -20%;
+        width: 600px;
+        height: 600px;
+        background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+        border-radius: 50%;
+        animation: float 6s ease-in-out infinite;
+      }
+
+      .search-hero::after {
+        content: '';
+        position: absolute;
+        bottom: -30%;
+        left: -10%;
+        width: 500px;
+        height: 500px;
+        background: radial-gradient(circle, rgba(255, 255, 255, 0.08) 0%, transparent 70%);
+        border-radius: 50%;
+        animation: float 8s ease-in-out infinite reverse;
+      }
+
+      @keyframes float {
+        0%, 100% { transform: translateY(0) rotate(0deg); }
+        50% { transform: translateY(-20px) rotate(5deg); }
+      }
+
+      .search-hero-content {
+        max-width: 900px;
+        margin: 0 auto;
+        text-align: center;
+        color: #fff;
+        position: relative;
+        z-index: 1;
+      }
+
+      .search-hero h1 {
+        font-size: 3rem;
+        font-weight: 800;
+        margin-bottom: 1.5rem;
+        text-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        letter-spacing: -0.02em;
+        animation: fadeInUp 0.6s ease-out;
+      }
+
+      .search-hero .search-keyword {
+        background: rgba(255, 255, 255, 0.25);
+        padding: 0.75rem 2rem;
+        border-radius: 50px;
+        display: inline-block;
+        font-weight: 600;
+        font-size: 1.1rem;
+        backdrop-filter: blur(20px);
+        border: 2px solid rgba(255, 255, 255, 0.4);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        animation: fadeInUp 0.8s ease-out;
+        transition: all 0.3s ease;
+      }
+
+      .search-hero .search-keyword:hover {
+        background: rgba(255, 255, 255, 0.35);
+        transform: scale(1.05);
+        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+      }
+
+      @keyframes fadeInUp {
+        from {
+          opacity: 0;
+          transform: translateY(20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      /* Search Input Section */
+      .search-input-section {
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.95) 0%, #ffffff 100%);
+        padding: 3rem 0 2.5rem;
+        margin-top: -2rem;
+        position: relative;
+        z-index: 2;
+        box-shadow: 0 -8px 30px rgba(0, 0, 0, 0.08);
+      }
+
+      .search-input-section::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 1px;
+        background: linear-gradient(90deg, transparent 0%, rgba(102, 126, 234, 0.3) 50%, transparent 100%);
+      }
+
+      .search-input-wrapper {
+        max-width: 900px;
+        margin: 0 auto;
+        position: relative;
+        padding: 0 1rem;
+      }
+
+      .search-input-label {
+        display: block;
+        text-align: center;
+        font-size: 0.95rem;
+        font-weight: 600;
+        color: #475569;
+        margin-bottom: 1.25rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        position: relative;
+        padding-bottom: 0.75rem;
+      }
+
+      .search-input-label::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 50px;
+        height: 2px;
+        background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+        border-radius: 2px;
+      }
+
+      .search-input-container {
+        position: relative;
+        display: flex;
+        align-items: center;
+        background: #ffffff;
+        border: 2px solid #e2e8f0;
+        border-radius: 50px;
+        padding: 0.6rem 1.25rem;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+        background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+      }
+
+      .search-input-container:focus-within {
+        border-color: #667eea;
+        box-shadow: 0 6px 20px rgba(102, 126, 234, 0.2), 0 0 0 3px rgba(102, 126, 234, 0.08);
+        transform: translateY(-2px);
+        background: #ffffff;
+      }
+
+      .search-input-container input {
+        flex: 1;
+        border: none;
+        outline: none;
+        font-size: 0.95rem;
+        padding: 0.5rem 1rem;
+        background: transparent;
+        color: #1e293b;
+        font-weight: 500;
+      }
+
+      .search-input-container input::placeholder {
+        color: #94a3b8;
+        font-weight: 400;
+      }
+
+      .search-input-container button {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border: none;
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        color: #fff;
+        box-shadow: 0 2px 8px rgba(102, 126, 234, 0.25);
+        position: relative;
+        overflow: hidden;
+      }
+
+      .search-input-container button::before {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 0;
+        height: 0;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.3);
+        transform: translate(-50%, -50%);
+        transition: width 0.3s, height 0.3s;
+      }
+
+      .search-input-container button:hover::before {
+        width: 100%;
+        height: 100%;
+      }
+
+      .search-input-container button:hover {
+        transform: scale(1.1) rotate(8deg);
+        box-shadow: 0 4px 16px rgba(102, 126, 234, 0.4);
+      }
+
+      .search-input-container button:active {
+        transform: scale(1.05) rotate(5deg);
+      }
+
+      .search-input-container button svg {
+        position: relative;
+        z-index: 1;
+        width: 18px;
+        height: 18px;
+        stroke-width: 2.5;
+      }
+
+      /* Gradient Bar */
+      .gradient-bar {
+        height: 4px;
+        background: linear-gradient(90deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+        margin: 2rem auto 0;
+        max-width: 1200px;
+        border-radius: 2px;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .gradient-bar::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+        animation: shimmer 3s infinite;
+      }
+
+      @keyframes shimmer {
+        0% { left: -100%; }
+        100% { left: 100%; }
+      }
+
+      /* Results Header */
+      .search-results-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2.5rem;
+        padding: 2rem 2.5rem;
+        background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+        border-radius: 20px;
+        border: 1px solid #e2e8f0;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+        position: relative;
+        overflow: hidden;
+      }
+
+      .search-results-header::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 4px;
+        height: 100%;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      }
+
+      .search-results-count {
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: #1e293b;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+
+      .search-results-count::before {
+        content: '📦';
+        font-size: 1.5rem;
+      }
+
+      .search-results-count .count-number {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        font-size: 1.8rem;
+        font-weight: 800;
+      }
+
+      /* Empty State */
+      .search-empty-state {
+        text-align: center;
+        padding: 5rem 2rem;
+        background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+        border-radius: 24px;
+        border: 2px dashed #cbd5e1;
+        margin: 3rem 0;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .search-empty-state::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -20%;
+        width: 300px;
+        height: 300px;
+        background: radial-gradient(circle, rgba(102, 126, 234, 0.05) 0%, transparent 70%);
+        border-radius: 50%;
+      }
+
+      .search-empty-icon {
+        font-size: 6rem;
+        margin-bottom: 2rem;
+        opacity: 0.6;
+        animation: bounce 2s ease-in-out infinite;
+      }
+
+      @keyframes bounce {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-10px); }
+      }
+
+      .search-empty-state h3 {
+        font-size: 2rem;
+        font-weight: 800;
+        color: #1e293b;
+        margin-bottom: 1rem;
+      }
+
+      .search-empty-state p {
+        font-size: 1.15rem;
+        color: #64748b;
+        margin-bottom: 2.5rem;
+        line-height: 1.6;
+      }
+
+      .search-suggestions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+        justify-content: center;
+        margin-top: 2rem;
+      }
+
+      .search-suggestion-tag {
+        padding: 0.75rem 1.75rem;
+        background: #fff;
+        border: 2px solid #e2e8f0;
+        border-radius: 50px;
+        color: #475569;
+        text-decoration: none;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+      }
+
+      .search-suggestion-tag:hover {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: #fff;
+        border-color: transparent;
+        transform: translateY(-3px) scale(1.05);
+        box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+      }
+
+      /* Product Cards */
+      .product-card {
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        border-radius: 16px;
+        overflow: hidden;
+      }
+
+      .product-card:hover {
+        transform: translateY(-12px) scale(1.02);
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+      }
+
+      .rating-stars {
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+        margin: 0.75rem 0;
+      }
+
+      .rating-stars .star {
+        color: #fbbf24;
+        font-size: 1.1rem;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+      }
+
+      .rating-stars .star.empty {
+        color: #e5e7eb;
+      }
+
+      .rating-text {
+        font-size: 0.875rem;
+        color: #6b7280;
+        margin-left: 0.5rem;
+        font-weight: 500;
+      }
+
+      .product-brand {
+        font-size: 0.875rem;
+        color: #64748b;
+        margin-top: 0.5rem;
+      }
+
+      .product-brand strong {
+        color: #475569;
+        font-weight: 700;
+      }
+
+      /* Products Grid */
+      .products-grid {
+        animation: fadeIn 0.6s ease-out;
+      }
+
+      @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+      }
+
+      /* Pagination Styles */
+      .search-pagination-wrapper {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 2rem 0;
+      }
+
+      .pagination-modern {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        list-style: none;
+        padding: 0;
+        margin: 0;
+      }
+
+      .pagination-item {
+        display: flex;
+        align-items: center;
+      }
+
+      .pagination-link {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        padding: 0.75rem 1.25rem;
+        min-width: 44px;
+        height: 44px;
+        background: #ffffff;
+        border: 2px solid #e2e8f0;
+        border-radius: 12px;
+        color: #475569;
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 0.95rem;
+        transition: all 0.3s ease;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+      }
+
+      .pagination-link:hover:not(.pagination-disabled) {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: #ffffff;
+        border-color: transparent;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 16px rgba(102, 126, 234, 0.3);
+      }
+
+      .pagination-link.pagination-active {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: #ffffff;
+        border-color: transparent;
+        box-shadow: 0 4px 16px rgba(102, 126, 234, 0.3);
+        cursor: default;
+      }
+
+      .pagination-link.pagination-disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        background: #f1f5f9;
+        color: #94a3b8;
+      }
+
+      .pagination-prev,
+      .pagination-next {
+        padding: 0.75rem 1.5rem;
+      }
+
+      .pagination-ellipsis {
+        padding: 0.75rem 0.5rem;
+        color: #94a3b8;
+        font-weight: 600;
+      }
+
+      .pagination-link svg {
+        width: 16px;
+        height: 16px;
+        stroke-width: 2.5;
+      }
+
+      /* Responsive */
+      @media (max-width: 768px) {
+        .search-hero h1 {
+          font-size: 2rem;
+        }
+        .search-hero .search-keyword {
+          font-size: 0.95rem;
+          padding: 0.6rem 1.5rem;
+        }
+        .search-results-header {
+          padding: 1.5rem;
+        }
+        .pagination-link {
+          padding: 0.6rem 1rem;
+          min-width: 40px;
+          height: 40px;
+          font-size: 0.875rem;
+        }
+        .pagination-prev,
+        .pagination-next {
+          padding: 0.6rem 1rem;
+        }
+        .pagination-prev span,
+        .pagination-next span {
+          display: none;
+        }
+      }
+    </style>
+
+    <!-- Search Hero Section -->
+    <section class="search-hero">
+      <div class="container">
+        <div class="search-hero-content">
+          <h1>🔍 Kết quả tìm kiếm</h1>
+          <div>
+            <span class="search-keyword">
+              "<%= (q || keyword || '').trim() || 'Tất cả sản phẩm' %>"
+            </span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Search Input Section -->
+    <section class="search-input-section">
+      <div class="container">
+        <div class="search-input-wrapper">
+          <label class="search-input-label">Bạn đang cần tìm kiếm gì?</label>
+          <form method="GET" action="/search" class="search-input-container">
+            <input 
+              type="text" 
+              name="q" 
+              placeholder="Tìm kiếm sản phẩm..." 
+              value="<%= (q || keyword || '').trim() %>"
+              autocomplete="off">
+            <button type="submit" aria-label="Tìm kiếm">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="11" cy="11" r="8"></circle>
+                <path d="m21 21-4.35-4.35"></path>
+              </svg>
+            </button>
+          </form>
+        </div>
+        <div class="gradient-bar"></div>
+      </div>
+    </section>
+
+    <section class="shop-main container" style="margin-top: 2rem;">
+      <% 
+        const productsList = Array.isArray(products) ? products : [];
+      %>
+      <!-- Results Header -->
+      <div class="search-results-header">
+        <div class="search-results-count">
+          Tìm thấy <span class="count-number"><%= quantity || total || (productsList ? productsList.length : 0) %></span> sản phẩm
+          <% if (totalPages > 1) { %>
+            <span class="text-muted" style="font-size: 0.9rem; font-weight: 400; margin-left: 0.5rem;">
+              (Trang <%= currentPage || 1 %>/<%= totalPages %>)
+            </span>
+          <% } %>
+        </div>
       </div>
 
+      <!-- Products Grid -->
+      <% if (!productsList || productsList.length === 0) { %>
+        <div class="search-empty-state">
+          <div class="search-empty-icon">🔍</div>
+          <h3>Không tìm thấy sản phẩm nào</h3>
+          <p>Rất tiếc, chúng tôi không tìm thấy sản phẩm nào phù hợp với từ khóa "<strong><%= (q || keyword || '').trim() %></strong>"</p>
+          <div class="search-suggestions">
+            <span style="color: #64748b; font-weight: 600; margin-right: 1rem;">Gợi ý:</span>
+            <a href="/search?q=áo" class="search-suggestion-tag">Áo</a>
+            <a href="/search?q=quần" class="search-suggestion-tag">Quần</a>
+            <a href="/search?q=giày" class="search-suggestion-tag">Giày</a>
+            <a href="/search?q=phụ kiện" class="search-suggestion-tag">Phụ kiện</a>
+          </div>
+        </div>
+      <% } else { %>
       <div class="products-grid row row-cols-2 row-cols-md-3 row-cols-lg-4" id="products-grid">
-        <% products.forEach(function(product) { %>
+        <% productsList.forEach(function(product) { 
+          const avgRating = Number(product.avg_rating || 0);
+          const ratingCount = Number(product.rating_count || 0);
+          const commentCount = Number(product.comment_count || 0);
+          const roundedRating = Math.round(avgRating);
+          const productId = product._id || product.id;
+          const productName = product.name || 'Sản phẩm';
+          const brandName = product.brand?.name || '';
+          const categoryName = product.category?.name || '';
+          
+          // Build rating stars HTML
+          let starsHtml = '';
+          for (let i = 1; i <= 5; i++) {
+            if (i <= roundedRating) {
+              starsHtml += '<span class="star">★</span>';
+            } else {
+              starsHtml += '<span class="star empty">★</span>';
+            }
+          }
+        %>
           <div class="col-6 col-md-4 col-lg-3">
             <div class="product-card product-card_style3 mb-3 mb-md-4 mb-xxl-5">
               <div class="pc__img-wrapper">
-                <a href="/product_detail/<%= product.id %>">
+                <a href="/product_detail/<%= productId %>">
                   <img loading="lazy"
                        src="<%= product.colors.length > 0 ? product.colors[0].imageUrls[0] : '/mixishop/images/default.png' %>"
                        width="258" height="313"
-                       alt="<%= product.name %>" class="pc__img">
+                       alt="<%= productName %>" class="pc__img">
                   <img loading="lazy"
                        src="<%= product.colors.length > 0 && product.colors[0].imageUrls.length > 1 ? product.colors[0].imageUrls[1] : (product.colors.length > 0 && product.colors[0].imageUrls.length > 0 ? product.colors[0].imageUrls[0] : '/mixishop/images/default.png') %>"
                        width="258" height="313"
-                       alt="<%= product.name %>" class="pc__img pc__img-second">
-                  <img class="category-banner__frame"
-                       src="<%= product.productStatus.statusName === 'Bán chạy' ? '/mixishop/images/frame_banchay.png' : (product.productStatus.statusName === 'Trending' ? '/mixishop/images/frame_trending.png' : '/mixishop/images/frame_new.png') %>"
-                       alt="Status Frame">
+                       alt="<%= productName %>" class="pc__img pc__img-second">
+                  <% if (product.productStatus && product.productStatus.statusName) { %>
+                    <img class="category-banner__frame"
+                         src="<%= product.productStatus.statusName === 'Bán chạy' ? '/mixishop/images/frame_banchay.png' : (product.productStatus.statusName === 'Trending' ? '/mixishop/images/frame_trending.png' : '/mixishop/images/frame_new.png') %>"
+                         alt="Status Frame">
+                  <% } %>
                 </a>
               </div>
 
@@ -53,13 +684,42 @@
               </div>
 
               <div class="pc__info position-relative">
-                <h3 class="pc__title"><a href="/product_detail/<%= product.id %>" ><%= product.name %></a></h3>
+                <% if (categoryName) { %>
+                  <p class="pc__category mb-1" style="font-size: 0.75rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px;">
+                    <%= categoryName %>
+                  </p>
+                <% } %>
+                <h3 class="pc__title">
+                  <a href="/product_detail/<%= productId %>"><%= productName %></a>
+                </h3>
+                
+                <% if (ratingCount > 0) { %>
+                  <div class="rating-stars">
+                    <%- starsHtml %>
+                    <span class="rating-text">
+                      (<%= ratingCount %> đánh giá<% if (commentCount > 0) { %>, <%= commentCount %> bình luận<% } %>)
+                    </span>
+                  </div>
+                <% } else if (commentCount > 0) { %>
+                  <div class="rating-text" style="margin-top: 0.5rem;">
+                    <%= commentCount %> bình luận
+                  </div>
+                <% } %>
+
                 <div class="product-card__price d-flex align-items-center">
-                  <span class="money price text-secondary" style="color: blue;"><%= product.getFormattedPrice(product.price) %></span>
+                  <span class="money price text-primary" style="font-weight: 700; font-size: 1.1rem;">
+                    <%= product.getFormattedPrice ? product.getFormattedPrice(product.price) : new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(product.price || 0) %>
+                  </span>
                 </div>
 
+                <% if (brandName) { %>
+                  <div class="product-brand">
+                    Thương hiệu: <strong><%= brandName %></strong>
+                  </div>
+                <% } %>
+
                 <div class="anim_appear-bottom position-absolute bottom-0 start-0 d-none d-sm-flex align-items-center bg-body">
-                  <a href="/product_detail/<%= product.id %>"
+                  <a href="/product_detail/<%= productId %>"
                      class="btn-icon btn-link btn-link_lg me-4 fw-medium"
                      title="Thêm vào giỏ hàng">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
@@ -82,6 +742,105 @@
           </div>
         <% }) %>
       </div>
+
+      <!-- Pagination -->
+      <% if (totalPages && totalPages > 1) { %>
+        <div class="search-pagination-wrapper mt-5 mb-4">
+          <nav aria-label="Search pagination">
+            <ul class="pagination-modern">
+              <!-- Previous Button -->
+              <li class="pagination-item">
+                <% if (currentPage > 1) { %>
+                  <a href="/search?q=<%= encodeURIComponent(q || keyword || '') %>&page=<%= currentPage - 1 %>" 
+                     class="pagination-link pagination-prev">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M15 18l-6-6 6-6"/>
+                    </svg>
+                    <span>Trước</span>
+                  </a>
+                <% } else { %>
+                  <span class="pagination-link pagination-prev pagination-disabled">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M15 18l-6-6 6-6"/>
+                    </svg>
+                    <span>Trước</span>
+                  </span>
+                <% } %>
+              </li>
+
+              <!-- Page Numbers -->
+              <% 
+                const currentPageNum = currentPage || 1;
+                const totalPagesNum = totalPages || 1;
+                let startPage = Math.max(1, currentPageNum - 2);
+                let endPage = Math.min(totalPagesNum, currentPageNum + 2);
+                
+                // Adjust if near start
+                if (currentPageNum <= 3) {
+                  endPage = Math.min(5, totalPagesNum);
+                }
+                // Adjust if near end
+                if (currentPageNum >= totalPagesNum - 2) {
+                  startPage = Math.max(1, totalPagesNum - 4);
+                }
+              %>
+
+              <% if (startPage > 1) { %>
+                <li class="pagination-item">
+                  <a href="/search?q=<%= encodeURIComponent(q || keyword || '') %>&page=1" class="pagination-link">1</a>
+                </li>
+                <% if (startPage > 2) { %>
+                  <li class="pagination-item">
+                    <span class="pagination-ellipsis">...</span>
+                  </li>
+                <% } %>
+              <% } %>
+
+              <% for (let i = startPage; i <= endPage; i++) { %>
+                <li class="pagination-item">
+                  <% if (i === currentPageNum) { %>
+                    <span class="pagination-link pagination-active"><%= i %></span>
+                  <% } else { %>
+                    <a href="/search?q=<%= encodeURIComponent(q || keyword || '') %>&page=<%= i %>" class="pagination-link"><%= i %></a>
+                  <% } %>
+                </li>
+              <% } %>
+
+              <% if (endPage < totalPagesNum) { %>
+                <% if (endPage < totalPagesNum - 1) { %>
+                  <li class="pagination-item">
+                    <span class="pagination-ellipsis">...</span>
+                  </li>
+                <% } %>
+                <li class="pagination-item">
+                  <a href="/search?q=<%= encodeURIComponent(q || keyword || '') %>&page=<%= totalPagesNum %>" class="pagination-link"><%= totalPagesNum %></a>
+                </li>
+              <% } %>
+
+              <!-- Next Button -->
+              <li class="pagination-item">
+                <% if (currentPageNum < totalPagesNum) { %>
+                  <a href="/search?q=<%= encodeURIComponent(q || keyword || '') %>&page=<%= currentPageNum + 1 %>" 
+                     class="pagination-link pagination-next">
+                    <span>Tiếp</span>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M9 18l6-6-6-6"/>
+                    </svg>
+                  </a>
+                <% } else { %>
+                  <span class="pagination-link pagination-next pagination-disabled">
+                    <span>Tiếp</span>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M9 18l6-6-6-6"/>
+                    </svg>
+                  </span>
+                <% } %>
+              </li>
+            </ul>
+          </nav>
+        </div>
+      <% } %>
+      <% } %>
     </section>
   </main>
 

@@ -85,17 +85,131 @@
                     </div>
 
                     <div class="search-popup js-hidden-content">
+                        <style>
+                            .search-popup {
+                                background: linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, #ffffff 100%);
+                                backdrop-filter: blur(10px);
+                            }
+                            .search-popup .search-field {
+                                max-width: 900px;
+                                margin: 0 auto;
+                            }
+                            .search-popup .search-popup-label {
+                                display: block;
+                                text-align: center;
+                                font-size: 0.95rem;
+                                font-weight: 600;
+                                color: #475569;
+                                margin-bottom: 1.25rem;
+                                text-transform: uppercase;
+                                letter-spacing: 0.5px;
+                                position: relative;
+                                padding-bottom: 0.75rem;
+                            }
+                            .search-popup .search-popup-label::after {
+                                content: '';
+                                position: absolute;
+                                bottom: 0;
+                                left: 50%;
+                                transform: translateX(-50%);
+                                width: 50px;
+                                height: 2px;
+                                background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+                                border-radius: 2px;
+                            }
+                            .search-popup .search-input-wrapper-modern {
+                                position: relative;
+                                display: flex;
+                                align-items: center;
+                                background: #ffffff;
+                                border: 2px solid #e2e8f0;
+                                border-radius: 50px;
+                                padding: 0.6rem 1.25rem;
+                                transition: all 0.3s ease;
+                                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+                                background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+                            }
+                            .search-popup .search-input-wrapper-modern:focus-within {
+                                border-color: #667eea;
+                                box-shadow: 0 6px 20px rgba(102, 126, 234, 0.2), 0 0 0 3px rgba(102, 126, 234, 0.08);
+                                transform: translateY(-2px);
+                                background: #ffffff;
+                            }
+                            .search-popup .search-input-wrapper-modern input {
+                                flex: 1;
+                                border: none;
+                                outline: none;
+                                font-size: 0.95rem;
+                                padding: 0.5rem 1rem;
+                                background: transparent;
+                                color: #1e293b;
+                                font-weight: 500;
+                            }
+                            .search-popup .search-input-wrapper-modern input::placeholder {
+                                color: #94a3b8;
+                                font-weight: 400;
+                            }
+                            .search-popup .search-btn-modern {
+                                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                                border: none;
+                                border-radius: 50%;
+                                width: 40px;
+                                height: 40px;
+                                display: flex;
+                                align-items: center;
+                                justify-content: center;
+                                cursor: pointer;
+                                transition: all 0.3s ease;
+                                color: #fff;
+                                box-shadow: 0 2px 8px rgba(102, 126, 234, 0.25);
+                                position: relative;
+                                overflow: hidden;
+                                margin-left: 0.5rem;
+                            }
+                            .search-popup .search-btn-modern::before {
+                                content: '';
+                                position: absolute;
+                                top: 50%;
+                                left: 50%;
+                                width: 0;
+                                height: 0;
+                                border-radius: 50%;
+                                background: rgba(255, 255, 255, 0.3);
+                                transform: translate(-50%, -50%);
+                                transition: width 0.3s, height 0.3s;
+                            }
+                            .search-popup .search-btn-modern:hover::before {
+                                width: 100%;
+                                height: 100%;
+                            }
+                            .search-popup .search-btn-modern:hover {
+                                transform: scale(1.1) rotate(8deg);
+                                box-shadow: 0 4px 16px rgba(102, 126, 234, 0.4);
+                            }
+                            .search-popup .search-btn-modern svg {
+                                position: relative;
+                                z-index: 1;
+                                width: 18px;
+                                height: 18px;
+                                stroke-width: 2.5;
+                            }
+                        </style>
                         <form method="GET" action="/search" class="search-field container">
-                            <p class="text-uppercase text-secondary fw-medium mb-4">Bạn đang cần tìm kiếm gì?</p>
-                            <div class="position-relative">
-                                <input class="search-field__input search-popup__input w-100 fw-medium"
-                                       type="text" name="keyword" placeholder="Tìm kiếm sản phẩm" required>
-                                <button class="btn-icon search-popup__submit" type="submit">
-                                    <svg class="d-block" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                        <use href="#icon_search" />
+                            <p class="search-popup-label">Bạn đang cần tìm kiếm gì?</p>
+                            <div class="search-input-wrapper-modern">
+                                <input 
+                                    class="search-field__input w-100"
+                                    type="text" 
+                                    name="q" 
+                                    placeholder="Tìm kiếm sản phẩm..." 
+                                    autocomplete="off"
+                                    required>
+                                <button class="search-btn-modern" type="submit" aria-label="Tìm kiếm">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                        <circle cx="11" cy="11" r="8"></circle>
+                                        <path d="m21 21-4.35-4.35"></path>
                                     </svg>
                                 </button>
-                                <button class="btn-icon btn-close-lg search-popup__reset" type="reset"></button>
                             </div>
                         </form>
                     </div><!-- /.search-popup -->
@@ -192,11 +306,26 @@
         <div class="container">
             <form action="/search" method="GET" class="search-field position-relative mt-4 mb-3">
                 <div class="position-relative">
-                    <input class="search-field__input w-100 border rounded-1" type="text" name="search-keyword" placeholder="Search products">
-                    <button class="btn-icon search-popup__submit pb-0 me-2" type="submit">
-                        <svg class="d-block" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><use href="#icon_search" /></svg>
-                    </button>
-                    <button class="btn-icon btn-close-lg search-popup__reset pb-0 me-2" type="reset"></button>
+                    <div style="display: flex; align-items: center; background: #ffffff; border: 2px solid #e2e8f0; border-radius: 50px; padding: 0.6rem 1rem; transition: all 0.3s ease; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);">
+                        <input 
+                            class="search-field__input w-100 border-0" 
+                            type="text" 
+                            name="q" 
+                            placeholder="Tìm kiếm sản phẩm..." 
+                            style="outline: none; font-size: 0.9rem; padding: 0.4rem 0.75rem; background: transparent; flex: 1;"
+                            autocomplete="off">
+                        <button 
+                            class="btn-icon search-popup__submit" 
+                            type="submit"
+                            style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none; border-radius: 50%; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; color: #fff; box-shadow: 0 2px 8px rgba(102, 126, 234, 0.25); transition: all 0.3s ease; margin-left: 0.5rem;"
+                            onmouseover="this.style.transform='scale(1.1)'; this.style.boxShadow='0 4px 12px rgba(102, 126, 234, 0.4)'"
+                            onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='0 2px 8px rgba(102, 126, 234, 0.25)'">
+                            <svg class="d-block" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="11" cy="11" r="8"></circle>
+                                <path d="m21 21-4.35-4.35"></path>
+                            </svg>
+                        </button>
+                    </div>
                 </div>
 
                 <div class="position-absolute start-0 top-100 m-0 w-100">

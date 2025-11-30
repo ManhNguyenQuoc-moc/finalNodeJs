@@ -178,9 +178,61 @@ module.exports = function createPagesRouter({ BACKEND, proxy }) {
     });
 
     router.get("/search", async (req, res) => {
-        const params = new URLSearchParams(req.query).toString();
-        const data = await fetchJSONPublic(`${BACKEND}/api/page/search?${params}`).catch(() => ({ ok: true, products: [], q: "" }));
-        res.render("product_search", { title: "Tìm kiếm", ...data });
+        // Map các query params: key, keyword, search-keyword -> q (backend chỉ nhận q)
+        const searchKeyword = req.query.key || req.query.q || req.query.keyword || req.query['search-keyword'] || "";
+        const page = Math.max(parseInt(req.query.page || "1", 10), 1);
+        
+        // Nếu không có keyword thì trả về empty
+        if (!searchKeyword || !searchKeyword.trim()) {
+            return res.render("product_search", { 
+                title: "Tìm kiếm", 
+                products: [],
+                q: "",
+                keyword: "",
+                quantity: 0,
+                total: 0,
+                currentPage: 1,
+                totalPages: 0
+            });
+        }
+        
+        const params = new URLSearchParams();
+        params.set('q', searchKeyword.trim());
+        params.set('page', page.toString());
+        params.set('limit', '12');
+        // Giữ các params khác nếu có
+        Object.keys(req.query).forEach(key => {
+            if (key !== 'key' && key !== 'search-keyword' && key !== 'keyword' && key !== 'q' && key !== 'page') {
+                params.set(key, req.query[key]);
+            }
+        });
+        
+        const queryString = params.toString();
+        console.log('[SEARCH] Calling backend with:', queryString);
+        const data = await fetchJSONPublic(`${BACKEND}/api/page/search?${queryString}`).catch((err) => {
+            console.error('[SEARCH] Backend error:', err);
+            return { ok: true, products: [], q: searchKeyword, total: 0, page: 1, totalPages: 0 };
+        });
+        
+        console.log('[SEARCH] Backend response:', {
+            ok: data.ok,
+            productsCount: data.products?.length || 0,
+            q: data.q,
+            total: data.total,
+            page: data.page,
+            totalPages: data.totalPages
+        });
+        
+        const keyword = searchKeyword || data.q || "";
+        res.render("product_search", { 
+            title: "Tìm kiếm", 
+            ...data, 
+            keyword: keyword,
+            q: keyword,
+            quantity: data.total || (data.products && Array.isArray(data.products) ? data.products.length : 0),
+            currentPage: data.page || page,
+            totalPages: data.totalPages || 0
+        });
     });
 
     // PRODUCT DETAIL (giữ nguyên logic build allImages/productSizes/variantMatrix)

@@ -81,7 +81,11 @@ exports.categoryById = async (req, res) => {
 
 exports.search = async (req, res) => {
   const q = (req.query.q || "").trim();
-  if (!q) return res.json({ ok: true, products: [], q: "" });
+  if (!q) return res.json({ ok: true, products: [], q: "", total: 0, page: 1, totalPages: 0 });
+
+  const page = Math.max(parseInt(req.query.page || "1", 10), 1);
+  const limit = parseInt(req.query.limit || "12", 10);
+  const skip = (page - 1) * limit;
 
   const productsRaw = await Product.find({
     $or: [
@@ -91,8 +95,12 @@ exports.search = async (req, res) => {
     ],
   }).populate("brand category").lean();
 
-  const products = await normalizeProductsColors(productsRaw);
-  res.json({ ok: true, products, q });
+  const total = productsRaw.length;
+  const totalPages = Math.ceil(total / limit);
+  const paginatedProducts = productsRaw.slice(skip, skip + limit);
+  
+  const products = await normalizeProductsColors(paginatedProducts);
+  res.json({ ok: true, products, q, total, page, totalPages, limit });
 };
 
 exports.productDetail = async (req, res) => {
