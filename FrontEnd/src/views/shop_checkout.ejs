@@ -1,206 +1,446 @@
 <!DOCTYPE html>
-<html dir="ltr" lang="zxx">
-<style>
-  .checkout-page {
-    margin-top: 30px;
-    margin-bottom: 50px;
-  }
+<html dir="ltr" lang="vi">
+  <head>
+    <%- include('partials/head') %>
+    <style>
+      .checkout-page {
+        margin-top: 30px;
+        margin-bottom: 50px;
+      }
+      .order-summary {
+        background: #fafafa;
+      }
+      .shipping-box img {
+        opacity: 0.6;
+      }
+      .checkout-heading {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 16px;
+      }
+      @media (max-width: 576px) {
+        .checkout-heading {
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 6px;
+        }
+      }
+      /* Fix lỗi giao diện Select2 */
+      .select2-container .select2-selection--single {
+        height: 38px !important;
+        border: 1px solid #ced4da !important;
+        display: flex;
+        align-items: center;
+      }
+      .select2-container--bootstrap-5 .select2-selection {
+        border-radius: 0.375rem;
+      }
+    </style>
 
-  .order-summary {
-    background: #fafafa;
-  }
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css"
+    />
 
-  .shipping-box img {
-    opacity: 0.6;
-  }
-
-  .checkout-heading {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    /* khoảng cách nhỏ giữa 2 bên */
-    margin-bottom: 16px;
-    /* khoảng dưới giống mb-3 */
-  }
-
-  .checkout-heading h3 {
-    margin: 0;
-  }
-
-  .checkout-heading p {
-    margin: 0;
-    color: #6b7280;
-  }
-
-  /* Mobile: cho xuống hàng, canh trái nhìn gọn */
-  @media (max-width:576px) {
-    .checkout-heading {
-      flex-direction: column;
-      align-items: flex-start;
-      gap: 6px;
-    }
-  }
-</style>
-
-<%- include('partials/head') %>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.6.0/axios.min.js"></script>
+  </head>
 
   <body>
-    <%- include('partials/icons') %>
+    <%- include('partials/icons') %> <%- include('partials/header', {
+    headerType: 'header' }) %>
 
-      <!-- Mobile Header -->
-
-      <!-- Header Type 1 -->
-      <%- include('partials/header', { headerType: 'header' }) %>
-
-        <main>
-          <section class="container checkout-page">
-            <div class="row">
-
-              <!-- Bên trái: Form giao hàng -->
-              <div class="col-lg-7">
-                <!-- THAY 2 dòng h3 + p hiện tại bằng block này -->
-                <div class="checkout-heading">
-                  <h3 class="mb-0">Thông tin giao hàng</h3>
-                  <p class="mb-0">
-                    Bạn đã có tài khoản? <a href="/login-register">Đăng nhập</a>
-                  </p>
-                </div>
-
-                <form action="/checkout/submit" method="POST">
-                  <div class="mb-3">
-                    <input type="text" class="form-control" name="name" placeholder="Họ và tên" required>
-                  </div>
-                  <div class="row">
-                    <div class="col-md-6 mb-3">
-                      <input type="email" class="form-control" name="email" placeholder="Email" required>
-                    </div>
-                    <div class="col-md-6 mb-3">
-                      <input type="text" class="form-control" name="phone" placeholder="Số điện thoại" required>
-                    </div>
-                  </div>
-                  <div class="mb-3">
-                    <input type="text" class="form-control" name="address" placeholder="Địa chỉ" required>
-                  </div>
-                  <div class="row">
-                    <div class="col-md-4 mb-3">
-                      <select class="form-select" name="province" required>
-                        <option value="">Chọn tỉnh / thành</option>
-                      </select>
-                    </div>
-                    <div class="col-md-4 mb-3">
-                      <select class="form-select" name="district" required>
-                        <option value="">Chọn quận / huyện</option>
-                      </select>
-                    </div>
-                    <div class="col-md-4 mb-3">
-                      <select class="form-select" name="ward" required>
-                        <option value="">Chọn phường / xã</option>
-                      </select>
-                    </div>
-                  </div>
-
-                  <h5 class="mt-4">Phương thức vận chuyển</h5>
-                  <div class="shipping-box border rounded p-4 text-center">
-                    <img src="/mixishop/images/box.png" width="60" class="mb-2">
-                    <p class="text-muted mb-0">Vui lòng chọn tỉnh/thành để có danh sách phương thức vận chuyển.</p>
-                  </div>
-                </form>
-              </div>
-
-              <!-- Bên phải: Tóm tắt đơn hàng -->
-              <div class="col-lg-5">
-                <div class="order-summary border rounded p-4">
-                  <% carts.forEach(cart=> { %>
-                    <div class="d-flex align-items-center mb-3">
-                      <img src="<%= cart.img_snapshot %>" width="64" class="me-3">
-
-                      <div class="flex-grow-1">
-                        <div>
-                          <%= cart.name_snapshot %>
-                        </div>
-                        <small>
-                          <%= cart.color_name_snapshot %> / <%= cart.size_name_snapshot %>
-                        </small>
-                      </div>
-
-                      <div>
-                        <%= formatPrice(cart.price_at_time * cart.quantity) %>
-                          <%= (cart.price_at_time * cart.quantity).toLocaleString('vi-VN') %>
-                      </div>
-                    </div>
-                    <% }) %>
-
-                      <div class="mb-3">
-                        <input type="text" class="form-control" placeholder="Mã giảm giá">
-                      </div>
-                      <button class="btn btn-secondary w-100 mb-3">Sử dụng</button>
-
-                      <div class="d-flex justify-content-between mb-2">
-                        <span>Tạm tính</span>
-                        <span>
-                          <%= formattedTotal %>
-                        </span>
-                      </div>
-                      <div class="d-flex justify-content-between mb-2">
-                        <span>Phí vận chuyển</span>
-                        <span>-</span>
-                      </div>
-                      <div class="d-flex justify-content-between fw-bold fs-5 border-top pt-2">
-                        <span>Tổng cộng</span>
-                        <span>
-                          <%= formattedTotal %>
-                        </span>
-                      </div>
-
-                      <button type="submit" class="btn btn-danger w-100 mt-4">ĐẶT HÀNG</button>
-                </div>
-              </div>
-
+    <main>
+      <section class="container checkout-page">
+        <div class="row">
+          <div class="col-lg-7">
+            <div class="checkout-heading">
+              <h3 class="mb-0">Thông tin giao hàng</h3>
+              <% if (!user) { %>
+              <p class="mb-0">
+                Bạn đã có tài khoản? <a href="/login-register">Đăng nhập</a>
+              </p>
+              <% } %>
             </div>
-          </section>
-        </main>
 
+            <form id="checkoutForm">
+              <div class="mb-3">
+                <input
+                  type="text"
+                  class="form-control"
+                  id="name"
+                  placeholder="Họ và tên"
+                  value="<%= user ? user.full_name : '' %>"
+                  required
+                />
+              </div>
 
-        <div class="mb-5 pb-xl-5"></div>
+              <div class="row">
+                <div class="col-md-6 mb-3">
+                  <input
+                    type="email"
+                    class="form-control"
+                    id="email"
+                    placeholder="Email"
+                    value="<%= user ? user.email : '' %>"
+                    required
+                  />
+                </div>
+                <div class="col-md-6 mb-3">
+                  <input
+                    type="text"
+                    class="form-control"
+                    id="phone"
+                    placeholder="Số điện thoại"
+                    value="<%= user ? (user.phone || '') : '' %>"
+                    required
+                  />
+                </div>
+              </div>
 
-        <%- include('partials/footer') %>
+              <div class="mb-3">
+                <input
+                  type="text"
+                  class="form-control"
+                  id="address"
+                  placeholder="Địa chỉ (Số nhà, Tên đường...)"
+                  required
+                />
+              </div>
 
-          <!-- Mobile Fixed Footer -->
-          <!-- Customer Login Form -->
-          <%- include('partials/login_form') %>
+              <div class="row">
+                <div class="col-md-4 mb-3">
+                  <label class="form-label small text-muted"
+                    >Tỉnh / Thành phố</label
+                  >
+                  <select
+                    class="form-select select2-box"
+                    id="province"
+                    required
+                  >
+                    <option value="">Chọn Tỉnh / Thành</option>
+                  </select>
+                  <input type="hidden" id="province_name" />
+                </div>
 
-            <!-- Cart Drawer -->
-            <%- include('partials/cart_drawer') %>
+                <div class="col-md-4 mb-3">
+                  <label class="form-label small text-muted"
+                    >Quận / Huyện</label
+                  >
+                  <select
+                    class="form-select select2-box"
+                    id="district"
+                    required
+                    disabled
+                  >
+                    <option value="">Chọn Quận / Huyện</option>
+                  </select>
+                  <input type="hidden" id="district_name" />
+                </div>
 
-              <!-- Sitemap -->
-              <%- include('partials/sitemap') %>
+                <div class="col-md-4 mb-3">
+                  <label class="form-label small text-muted">Phường / Xã</label>
+                  <select
+                    class="form-select select2-box"
+                    id="ward"
+                    required
+                    disabled
+                  >
+                    <option value="">Chọn Phường / Xã</option>
+                  </select>
+                  <input type="hidden" id="ward_name" />
+                </div>
+              </div>
 
-                <!-- Quick View -->
-                <%- include('partials/quick_view') %>
-                  <div id="scrollTop" class="visually-hidden end-0"></div>
+              <h5 class="mt-4">Phương thức vận chuyển</h5>
+              <div class="shipping-box border rounded p-4 text-center">
+                <img src="/mixishop/images/box.png" width="60" class="mb-2" />
+                <p class="text-muted mb-0">
+                  Phí vận chuyển: Miễn phí (Tiêu chuẩn)
+                </p>
+              </div>
+            </form>
+          </div>
 
-                  <!-- Page Overlay -->
-                  <div class="page-overlay"></div><!-- /.page-overlay -->
+          <div class="col-lg-5">
+            <div class="order-summary border rounded p-4">
+              <% if(carts && carts.length > 0) { %> <% carts.forEach(cart=> { %>
+              <div class="d-flex align-items-center mb-3">
+                <img
+                  src="<%= cart.img_snapshot %>"
+                  width="64"
+                  class="me-3"
+                  style="object-fit: cover"
+                />
+                <div class="flex-grow-1">
+                  <div><%= cart.name_snapshot %></div>
+                  <small class="text-muted">
+                    <%= cart.color_name_snapshot %> / <%=
+                    cart.size_name_snapshot %>
+                  </small>
+                </div>
+                <div>
+                  <%= (cart.price_at_time *
+                  cart.quantity).toLocaleString('vi-VN') %>₫
+                </div>
+              </div>
+              <% }) %> <% } else { %>
+              <p>Giỏ hàng trống</p>
+              <% } %>
 
-                  <!-- External JavaScripts -->
-                  <script src="/mixishop/js/plugins/jquery.min.js"></script>
-                  <script src="/mixishop/js/plugins/bootstrap.bundle.min.js"></script>
-                  <script src="/mixishop/js/plugins/bootstrap-slider.min.js"></script>
+              <div class="mb-3">
+                <input
+                  type="text"
+                  id="discountCodeInput"
+                  class="form-control"
+                  placeholder="Mã giảm giá"
+                />
+              </div>
 
-                  <script src="/mixishop/js/plugins/swiper.min.js"></script>
-                  <script src="/mixishop/js/plugins/countdown.js"></script>
-                  <script src="/mixishop/js/plugins/jquery.fancybox.js"></script>
+              <div class="d-flex justify-content-between mb-2">
+                <span>Tạm tính</span>
+                <span><%= formattedTotal %></span>
+              </div>
+              <div class="d-flex justify-content-between mb-2">
+                <span>Phí vận chuyển</span>
+                <span>0₫</span>
+              </div>
+              <div
+                class="d-flex justify-content-between fw-bold fs-5 border-top pt-2"
+              >
+                <span>Tổng cộng</span>
+                <span><%= formattedTotal %></span>
+              </div>
 
+              <button
+                type="button"
+                id="btnPlaceOrder"
+                class="btn btn-danger w-100 mt-4"
+              >
+                ĐẶT HÀNG
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
 
-                  <!-- Footer Scripts -->
-                  <script src="/mixishop/js/theme.js"></script>
+    <%- include('partials/footer') %> <%- include('partials/login_form') %> <%-
+    include('partials/cart_drawer') %> <%- include('partials/sitemap') %> <%-
+    include('partials/quick_view') %>
+    <div class="page-overlay"></div>
 
+    <script src="/mixishop/js/plugins/jquery.min.js"></script>
+    <script src="/mixishop/js/plugins/bootstrap.bundle.min.js"></script>
+    <script src="/mixishop/js/theme.js"></script>
 
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
+    <script>
+      // Nhận biến latestAddress từ pages.js truyền xuống
+      // Sử dụng '|| null' để phòng trường hợp biến này bị undefined
+      const rawAddress = "<%- JSON.stringify(latestAddress || null) %>";
+      const userAddress = JSON.parse(rawAddress);
+      console.log("👉 Dữ liệu Địa chỉ nhận được từ Server:", userAddress);
+    </script>
+    <script>
+      const host = "https://provinces.open-api.vn/api/";
 
+      $(document).ready(function () {
+        // Init Select2
+        $(".select2-box").select2({
+          theme: "bootstrap-5",
+          width: "100%",
+          placeholder: "Vui lòng chọn...",
+        });
+
+        // Gọi Auto-fill nếu có địa chỉ
+        if (userAddress) {
+          autoFillAddress();
+        }
+      });
+
+      // --- LOGIC AUTO FILL ---
+      async function autoFillAddress() {
+        if (userAddress.detail) $("#address").val(userAddress.detail);
+
+        const targetCity = userAddress.city || "";
+        const targetDistrict = userAddress.district || "";
+        const targetWard = userAddress.ward || "";
+
+        if (targetCity) {
+          // Chờ API Tỉnh load xong rồi mới chọn
+          await waitForElement(
+            "#province option[data-name='" + targetCity + "']"
+          );
+
+          // Tìm option trùng tên
+          let cityOption = $("#province option").filter(function () {
+            return $(this).data("name") === targetCity;
+          });
+
+          if (cityOption.length > 0) {
+            // Chọn Tỉnh -> Kích hoạt load Huyện
+            $("#province").val(cityOption.val()).trigger("change");
+
+            if (targetDistrict) {
+              await waitForElement(
+                "#district option[data-name='" + targetDistrict + "']"
+              );
+              let distOption = $("#district option").filter(function () {
+                return $(this).data("name") === targetDistrict;
+              });
+
+              if (distOption.length > 0) {
+                // Chọn Huyện -> Kích hoạt load Xã
+                $("#district").val(distOption.val()).trigger("change");
+
+                if (targetWard) {
+                  await waitForElement(
+                    "#ward option[data-name='" + targetWard + "']"
+                  );
+                  let wardOption = $("#ward option").filter(function () {
+                    return $(this).data("name") === targetWard;
+                  });
+                  if (wardOption.length > 0) {
+                    $("#ward").val(wardOption.val()).trigger("change");
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+
+      // Hàm chờ element xuất hiện (cho API)
+      function waitForElement(selector) {
+        return new Promise((resolve) => {
+          if (document.querySelector(selector))
+            return resolve(document.querySelector(selector));
+          const observer = new MutationObserver(() => {
+            if (document.querySelector(selector)) {
+              resolve(document.querySelector(selector));
+              observer.disconnect();
+            }
+          });
+          observer.observe(document.body, { childList: true, subtree: true });
+        });
+      }
+
+      // --- LOGIC API API TỈNH THÀNH ---
+      var callAPI = (api) => {
+        return axios.get(api).then((response) => {
+          renderData(response.data, "province");
+        });
+      };
+      callAPI(host + "?depth=1");
+
+      var callApiDistrict = (api) => {
+        return axios.get(api).then((response) => {
+          renderData(response.data.districts, "district");
+        });
+      };
+      var callApiWard = (api) => {
+        return axios.get(api).then((response) => {
+          renderData(response.data.wards, "ward");
+        });
+      };
+
+      var renderData = (array, select) => {
+        let row = '<option value=""></option>';
+        array.forEach((element) => {
+          row += `<option value="${element.code}" data-name="${element.name}">${element.name}</option>`;
+        });
+        $("#" + select)
+          .html(row)
+          .trigger("change");
+      };
+
+      // Sự kiện Change
+      $("#province").on("select2:select", function (e) {
+        let selectedCode = $(this).val();
+        let selectedName = $(this).find(":selected").data("name");
+        $("#province_name").val(selectedName);
+
+        $("#district")
+          .html('<option value=""></option>')
+          .val(null)
+          .trigger("change")
+          .prop("disabled", false);
+        $("#ward")
+          .html('<option value=""></option>')
+          .val(null)
+          .trigger("change")
+          .prop("disabled", true);
+
+        if (selectedCode)
+          callApiDistrict(host + "p/" + selectedCode + "?depth=2");
+      });
+
+      $("#district").on("select2:select", function (e) {
+        let selectedCode = $(this).val();
+        let selectedName = $(this).find(":selected").data("name");
+        $("#district_name").val(selectedName);
+
+        $("#ward")
+          .html('<option value=""></option>')
+          .val(null)
+          .trigger("change")
+          .prop("disabled", false);
+
+        if (selectedCode) callApiWard(host + "d/" + selectedCode + "?depth=2");
+      });
+
+      $("#ward").on("select2:select", function (e) {
+        let selectedName = $(this).find(":selected").data("name");
+        $("#ward_name").val(selectedName);
+      });
+
+      // --- SUBMIT ---
+      $("#btnPlaceOrder").click(async function () {
+        if (
+          !$("#name").val() ||
+          !$("#email").val() ||
+          !$("#phone").val() ||
+          !$("#address").val() ||
+          !$("#province").val()
+        ) {
+          alert("Vui lòng điền đầy đủ thông tin giao hàng!");
+          return;
+        }
+
+        const btn = $(this);
+        btn.prop("disabled", true).text("Đang xử lý...");
+
+        const payload = {
+          name: $("#name").val(),
+          email: $("#email").val(),
+          phone: $("#phone").val(),
+          address: $("#address").val(),
+          province: $("#province_name").val(),
+          district: $("#district_name").val(),
+          ward: $("#ward_name").val(),
+          discountCode: $("#discountCodeInput").val(),
+        };
+
+        try {
+          const res = await axios.post("/checkout/submit", payload);
+          if (res.data.ok) {
+            alert("Đặt hàng thành công!");
+            window.location.href = "/";
+          }
+        } catch (error) {
+          alert(
+            error.response?.data?.message || "Có lỗi xảy ra, vui lòng thử lại!"
+          );
+          btn.prop("disabled", false).text("ĐẶT HÀNG");
+        }
+      });
+    </script>
   </body>
-
-  <!-- Mirrored from uomo-html.flexkitux.com/Demo3/shop_checkout.html by HTTrack Website Copier/3.x [XR&CO'2014], Sat, 19 Oct 2024 06:54:12 GMT -->
-
 </html>

@@ -1,175 +1,169 @@
 <% layout('layouts/admin') %>
-<%
-  const it = (typeof item !== 'undefined' && item) ? item : null;
-  const isVariantPage = activePath && activePath.startsWith('/admin/product-variants');
-%>
+  <% const it=(typeof item !=='undefined' && item) ? item : null; const isVariantPage=activePath &&
+    activePath.startsWith('/admin/product-variants'); %>
 
-<section class="space-y-6">
-  <!-- Header -->
-  <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-    <h2 class="text-2xl font-semibold tracking-tight text-slate-900">
-      <%= pageHeading %> - <%= it ? 'Chỉnh sửa' : 'Thêm mới' %>
-    </h2>
+    <section class="space-y-6">
+      <!-- Header -->
+      <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <h2 class="text-2xl font-semibold tracking-tight text-slate-900">
+          <%= pageHeading %> - <%= it ? 'Chỉnh sửa' : 'Thêm mới' %>
+        </h2>
 
-    <a
-      href="<%= activePath.replace(/\/(new|[^/]+)$/, '') %>"
-      class="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-200"
-    >
-      <span>Quay lại</span>
-    </a>
-  </div>
+        <a href="<%= activePath.replace(/\/(new|[^/]+)$/, '') %>"
+          class="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-200">
+          <span>Quay lại</span>
+        </a>
+      </div>
 
-  <!-- Form card -->
-  <form
-    class="rounded-2xl border border-slate-200 bg-white/90 shadow-lg shadow-slate-200/70 p-5 md:p-6 grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6"
-    method="post"
-    action="<%= it ? (actionBase + '/' + (it._id || it.code || it.sku)) : actionBase %>"
-  >
+      <!-- Form card -->
+      <form
+        class="rounded-2xl border border-slate-200 bg-white/90 shadow-lg shadow-slate-200/70 p-5 md:p-6 grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6"
+        method="post" action="<%= it ? (actionBase + '/' + (it._id || it.code || it.sku)) : actionBase %>">
 
-    <% if (isVariantPage && it) { 
-         const productObj = it.product || {};
-         const colorObj   = it.color   || {};
-         const sizeObj    = it.size    || {};
+        <% if (isVariantPage && it) { const productObj=it.product || {}; const colorObj=it.color || {}; const
+          sizeObj=it.size || {}; const productName=productObj.name || it.product_name || '' ; const
+          productId=productObj._id || it.product || '' ; const colorName=colorObj.color_name || it.color_name || '' ;
+          const colorId=colorObj._id || it.color || '' ; const sizeName=sizeObj.size_name || it.size_name || '' ; const
+          sizeId=sizeObj._id || it.size || '' ; const sku=it.sku || '' ; const thumb=(Array.isArray(it.images) &&
+          it.images[0] && (it.images[0].url || it.images[0])) || (Array.isArray(productObj.images) &&
+          productObj.images[0] && (productObj.images[0].url || productObj.images[0])) || '' ; %>
 
-         const productName = productObj.name || it.product_name || '';
-         const productId   = productObj._id  || it.product      || '';
-         const colorName   = colorObj.color_name || it.color_name || '';
-         const colorId     = colorObj._id       || it.color       || '';
-         const sizeName    = sizeObj.size_name  || it.size_name   || '';
-         const sizeId      = sizeObj._id        || it.size        || '';
-         const sku         = it.sku || '';
+          <!-- Info sản phẩm / biến thể (GIỮ NGUYÊN) -->
+          <div class="md:col-span-2 flex gap-4">
+            <% if (thumb) { %>
+              <div class="shrink-0">
+                <img src="<%= thumb %>" alt="<%= productName || sku %>"
+                  class="h-20 w-20 rounded-xl object-cover border border-slate-200 shadow-sm" />
+              </div>
+              <% } %>
 
-         const thumb =
-           (Array.isArray(it.images) && it.images[0] && (it.images[0].url || it.images[0])) ||
-           (Array.isArray(productObj.images) && productObj.images[0] && (productObj.images[0].url || productObj.images[0])) ||
-           '';
-    %>
+                <div class="space-y-1 text-sm text-slate-800">
+                  <div class="font-semibold text-base">
+                    <%= productName || '—' %>
+                  </div>
+                  <div class="text-xs text-slate-500">SKU: <span class="font-mono">
+                      <%= sku %>
+                    </span></div>
 
-      <!-- Info sản phẩm / biến thể -->
-      <div class="md:col-span-2 flex gap-4">
-        <% if (thumb) { %>
-          <div class="shrink-0">
-            <img
-              src="<%= thumb %>"
-              alt="<%= productName || sku %>"
-              class="h-20 w-20 rounded-xl object-cover border border-slate-200 shadow-sm"
-            />
+                  <div class="flex flex-wrap gap-2 pt-1">
+                    <% if (colorName) { %>
+                      <span
+                        class="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2.5 py-1 text-xs text-slate-700">
+                        <span class="h-3 w-3 rounded-full border border-slate-300"
+                          style="background-color:<%= colorObj.color_code || '#000000' %>;"></span>
+                        <span>
+                          <%= colorName %>
+                        </span>
+                      </span>
+                      <% } %>
+
+                        <% if (sizeName) { %>
+                          <span
+                            class="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-1 text-xs text-slate-700">
+                            Size: <span class="ml-1 font-semibold">
+                              <%= sizeName %>
+                            </span>
+                          </span>
+                          <% } %>
+                  </div>
+
+                  <!-- Thông tin tham khảo -->
+                  <div class="mt-2 text-xs text-slate-500 space-y-0.5">
+                    <div>Giá bán hiện tại: <span class="font-semibold text-slate-800">
+                        <%= it.price || 0 %> VND
+                      </span></div>
+                    <div>Tồn kho hiện tại: <span class="font-semibold text-slate-800">
+                        <%= it.stock_quantity || 0 %> sp
+                      </span></div>
+                  </div>
+                </div>
           </div>
-        <% } %>
 
-        <div class="space-y-1 text-sm text-slate-800">
-          <div class="font-semibold text-base"><%= productName || '—' %></div>
-          <div class="text-xs text-slate-500">SKU: <span class="font-mono"><%= sku %></span></div>
-
-          <div class="flex flex-wrap gap-2 pt-1">
-            <% if (colorName) { %>
-              <span class="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2.5 py-1 text-xs text-slate-700">
-                <span class="h-3 w-3 rounded-full border border-slate-300"
-                      style="background-color:<%= colorObj.color_code || '#000000' %>;"></span>
-                <span><%= colorName %></span>
-              </span>
-            <% } %>
-
-            <% if (sizeName) { %>
-              <span class="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-1 text-xs text-slate-700">
-                Size: <span class="ml-1 font-semibold"><%= sizeName %></span>
-              </span>
-            <% } %>
-          </div>
-        </div>
-      </div>
-
-      <!-- Giá -->
-      <div class="space-y-1.5">
-        <label class="text-xs font-semibold uppercase tracking-wide text-slate-500">
-          Giá bán (VND)
-        </label>
-        <input
-          class="block w-full rounded-xl border border-slate-200 bg-slate-50/60 px-3 py-2.5 text-sm text-slate-800 shadow-sm focus:border-emerald-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-100"
-          type="number"
-          step="1"
-          min="0"
-          name="price"
-          value="<%= it.price || 0 %>"
-        />
-      </div>
-
-      <!-- Tồn kho -->
-      <div class="space-y-1.5">
-        <label class="text-xs font-semibold uppercase tracking-wide text-slate-500">
-          Tồn kho
-        </label>
-        <input
-          class="block w-full rounded-xl border border-slate-200 bg-slate-50/60 px-3 py-2.5 text-sm text-slate-800 shadow-sm focus:border-emerald-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-100"
-          type="number"
-          step="1"
-          min="0"
-          name="stock_quantity"
-          value="<%= it.stock_quantity || 0 %>"
-        />
-      </div>
-
-      <!-- Ẩn id để backend dùng nếu cần -->
-      <input type="hidden" name="sku" value="<%= sku %>">
-      <input type="hidden" name="product" value="<%= productId %>">
-      <input type="hidden" name="color" value="<%= colorId %>">
-      <input type="hidden" name="size" value="<%= sizeId %>">
-
-    <% } else { %>
-      <!-- FORM MẶC ĐỊNH CHO CÁC ENTITY KHÁC -->
-      <% (fields || []).forEach(f => { 
-           const value = (it && it[f] !== undefined && it[f] !== null) ? it[f] : '';
-           const isTextarea = ['description', 'long_description', 'note', 'notes'].includes(f);
-           const isBoolean  = ['is_active', 'is_default'].includes(f);
-           const isNumber   = ['price', 'discount_value', 'usage_limit', 'usage_count', 'size_order', 'stock_quantity'].includes(f);
-      %>
-        <div class="space-y-1.5">
-          <label class="text-xs font-semibold uppercase tracking-wide text-slate-500">
-            <%= f %>
-          </label>
-
-          <% if (isBoolean) { %>
-            <label class="inline-flex items-center gap-2 text-sm text-slate-700">
+          <!-- FORM NHẬP HÀNG -->
+          <div class="md:col-span-2 grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 mt-2">
+            <!-- Giá nhập -->
+            <div class="space-y-1.5">
+              <label class="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                Giá nhập (VND)
+              </label>
               <input
-                type="checkbox"
-                name="<%= f %>"
-                class="h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
-                <%= value ? 'checked' : '' %>
-              />
-              <span>Bật</span>
-            </label>
-          <% } else if (isTextarea) { %>
-            <textarea
-              name="<%= f %>"
-              rows="3"
-              class="block w-full rounded-xl border border-slate-200 bg-slate-50/60 px-3 py-2.5 text-sm text-slate-800 shadow-sm focus:border-emerald-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-100"
-            ><%= value %></textarea>
-          <% } else { %>
-            <input
-              class="block w-full rounded-xl border border-slate-200 bg-slate-50/60 px-3 py-2.5 text-sm text-slate-800 shadow-sm focus:border-emerald-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-100"
-              name="<%= f %>"
-              value="<%= value %>"
-              <%= isNumber ? 'type="number" step="any"' : 'type="text"' %>
-            />
-          <% } %>
-        </div>
-      <% }) %>
-    <% } %>
+                class="block w-full rounded-xl border border-slate-200 bg-slate-50/60 px-3 py-2.5 text-sm text-slate-800 shadow-sm focus:border-emerald-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-100"
+                type="number" step="1" min="0" name="import_price" required value="" placeholder="VD: 100000" />
+            </div>
 
-    <!-- Actions -->
-    <div class="md:col-span-2 flex justify-end gap-2 pt-2">
-      <a
-        class="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-200"
-        href="<%= activePath.replace(/\/(new|[^/]+)$/, '') %>"
-      >
-        <span>Hủy</span>
-      </a>
-      <button
-        class="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white shadow-md hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 focus:ring-offset-slate-50"
-        type="submit"
-      >
-        <span>Lưu</span>
-      </button>
-    </div>
-  </form>
-</section>
+            <!-- Số lượng nhập -->
+            <div class="space-y-1.5">
+              <label class="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                Số lượng nhập
+              </label>
+              <input
+                class="block w-full rounded-xl border border-slate-200 bg-slate-50/60 px-3 py-2.5 text-sm text-slate-800 shadow-sm focus:border-emerald-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-100"
+                type="number" step="1" min="1" name="quantity" required value="1" placeholder="VD: 5" />
+            </div>
+
+            <!-- Ghi chú -->
+            <div class="space-y-1.5 md:col-span-1">
+              <label class="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                Ghi chú
+              </label>
+              <input
+                class="block w-full rounded-xl border border-slate-200 bg-slate-50/60 px-3 py-2.5 text-sm text-slate-800 shadow-sm focus:border-emerald-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-100"
+                type="text" name="note" placeholder="VD: Nhập lô đầu tháng 12" />
+            </div>
+          </div>
+
+          <!-- Ẩn id để backend dùng nếu cần -->
+          <input type="hidden" name="sku" value="<%= sku %>">
+          <input type="hidden" name="product" value="<%= productId %>">
+          <input type="hidden" name="color" value="<%= colorId %>">
+          <input type="hidden" name="size" value="<%= sizeId %>">
+
+          <% } else { %>
+            <!-- FORM MẶC ĐỊNH CHO CÁC ENTITY KHÁC -->
+            <% (fields || []).forEach(f=> {
+              const value = (it && it[f] !== undefined && it[f] !== null) ? it[f] : '';
+              const isTextarea = ['description', 'long_description', 'note', 'notes'].includes(f);
+              const isBoolean = ['is_active', 'is_default'].includes(f);
+              const isNumber = ['price', 'discount_value', 'usage_limit', 'usage_count', 'size_order',
+              'stock_quantity'].includes(f);
+              %>
+              <div class="space-y-1.5">
+                <label class="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  <%= f %>
+                </label>
+
+                <% if (isBoolean) { %>
+                  <label class="inline-flex items-center gap-2 text-sm text-slate-700">
+                    <input type="checkbox" name="<%= f %>"
+                      class="h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500" <%=value
+                      ? 'checked' : '' %>
+                    />
+                    <span>Bật</span>
+                  </label>
+                  <% } else if (isTextarea) { %>
+                    <textarea name="<%= f %>" rows="3"
+                      class="block w-full rounded-xl border border-slate-200 bg-slate-50/60 px-3 py-2.5 text-sm text-slate-800 shadow-sm focus:border-emerald-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-100"><%= value %></textarea>
+                    <% } else { %>
+                      <input
+                        class="block w-full rounded-xl border border-slate-200 bg-slate-50/60 px-3 py-2.5 text-sm text-slate-800 shadow-sm focus:border-emerald-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-100"
+                        name="<%= f %>" value="<%= value %>" <%=isNumber ? 'type="number" step="any"' : 'type="text"' %>
+                      />
+                      <% } %>
+              </div>
+              <% }) %>
+                <% } %>
+
+                  <!-- Actions -->
+                  <div class="md:col-span-2 flex justify-end gap-2 pt-2">
+                    <a class="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-200"
+                      href="<%= activePath.replace(/\/(new|[^/]+)$/, '') %>">
+                      <span>Hủy</span>
+                    </a>
+                    <button
+                      class="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white shadow-md hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 focus:ring-offset-slate-50"
+                      type="submit">
+                      <span>Lưu</span>
+                    </button>
+                  </div>
+      </form>
+    </section>

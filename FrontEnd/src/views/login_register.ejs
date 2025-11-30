@@ -1,213 +1,302 @@
 <!DOCTYPE html>
 <html dir="ltr" lang="zxx">
+
 <head>
   <%- include('partials/head') %>
 
-  <style>
-    /* ====== Auth UI polish ====== */
-    .auth-card { max-width: 880px; margin: 0 auto; }
-    .auth-tabs .nav-link { font-weight: 700; }
-    .auth-field .form-control_gray { background:#f8f9fb; border-color:#edf0f5; }
-    .auth-divider { display:flex; align-items:center; gap:12px; margin:18px 0; color:#6b7280; }
-    .auth-divider::before, .auth-divider::after { content:""; flex:1; height:1px; background:#e5e7eb; }
-    .btn-cta {
-      background: #000; color:#fff; border:0; border-radius:12px; padding:14px 18px;
-      font-weight:800; letter-spacing:.4px; text-transform:uppercase; width:100%;
-      transition: transform .08s ease, filter .1s ease;
-    }
-    .btn-cta:hover { filter:brightness(0.94); transform: translateY(-1px); }
-    .btn-google {
-      width:100%; border:1px solid #e5e7eb; border-radius:12px; background:#fff;
-      display:flex; align-items:center; justify-content:center; gap:10px; padding:12px 14px;
-      font-weight:600; color:#111827;
-    }
-    .btn-google img { width:18px; height:18px; }
-    .eye-toggle {
-      position:absolute; right:12px; top:50%; transform:translateY(-50%);
-      cursor:pointer; color:#6b7280;
-    }
-    .form-floating .eye-toggle svg { width:18px; height:18px; }
-    .mini { font-size:12px; color:#6b7280; }
-    .addr-help { font-size: 12px; color:#6b7280; margin-top:6px }
-  </style>
+    <style>
+      /* ====== Auth UI polish ====== */
+      .auth-card {
+        max-width: 880px;
+        margin: 0 auto;
+      }
+
+      .auth-tabs .nav-link {
+        font-weight: 700;
+      }
+
+      .auth-field .form-control_gray {
+        background: #f8f9fb;
+        border-color: #edf0f5;
+      }
+
+      .auth-divider {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin: 18px 0;
+        color: #6b7280;
+      }
+
+      .auth-divider::before,
+      .auth-divider::after {
+        content: "";
+        flex: 1;
+        height: 1px;
+        background: #e5e7eb;
+      }
+
+      .btn-cta {
+        background: #000;
+        color: #fff;
+        border: 0;
+        border-radius: 12px;
+        padding: 14px 18px;
+        font-weight: 800;
+        letter-spacing: .4px;
+        text-transform: uppercase;
+        width: 100%;
+        transition: transform .08s ease, filter .1s ease;
+      }
+
+      .btn-cta:hover {
+        filter: brightness(0.94);
+        transform: translateY(-1px);
+      }
+
+      .btn-google {
+        width: 100%;
+        border: 1px solid #e5e7eb;
+        border-radius: 12px;
+        background: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        padding: 12px 14px;
+        font-weight: 600;
+        color: #111827;
+      }
+
+      .btn-google img {
+        width: 18px;
+        height: 18px;
+      }
+
+      .eye-toggle {
+        position: absolute;
+        right: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        cursor: pointer;
+        color: #6b7280;
+      }
+
+      .form-floating .eye-toggle svg {
+        width: 18px;
+        height: 18px;
+      }
+
+      .mini {
+        font-size: 12px;
+        color: #6b7280;
+      }
+
+      .addr-help {
+        font-size: 12px;
+        color: #6b7280;
+        margin-top: 6px
+      }
+    </style>
 </head>
 
 <body>
   <% if (error) { %>
-    <div class="alert alert-danger fixed-top alert-dismissible fade show mx-auto" role="alert" style="width:auto;max-width:500px;z-index:1050;">
-      <span><%= error %></span>
+    <div class="alert alert-danger fixed-top alert-dismissible fade show mx-auto" role="alert"
+      style="width:auto;max-width:500px;z-index:1050;">
+      <span>
+        <%= error %>
+      </span>
       <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
-  <% } %>
-  <% if (success) { %>
-    <div class="alert alert-success fixed-top alert-dismissible fade show mx-auto" role="alert" style="width:auto;max-width:500px;z-index:1050;">
-      <span><%= success %></span>
-      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
-  <% } %>
+    <% } %>
+      <% if (success) { %>
+        <div class="alert alert-success fixed-top alert-dismissible fade show mx-auto" role="alert"
+          style="width:auto;max-width:500px;z-index:1050;">
+          <span>
+            <%= success %>
+          </span>
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        <% } %>
 
-  <%- include('partials/icons') %>
-  <%- include('partials/header') %>
+          <%- include('partials/icons') %>
+            <%- include('partials/header') %>
 
-  <main>
-    <div class="mb-4 pb-4"></div>
-    <section class="container auth-card">
-      <% const _tab = (typeof activeTab === 'string' ? activeTab : 'login'); %>
+              <main>
+                <div class="mb-4 pb-4"></div>
+                <section class="container auth-card">
+                  <% const _tab=(typeof activeTab==='string' ? activeTab : 'login' ); %>
 
-      <div class="auth-tabs d-flex justify-content-center">
-        <ul class="nav nav-tabs mb-4" id="login_register" role="tablist">
-          <li class="nav-item" role="presentation">
-            <a class="nav-link nav-link_underscore <%= _tab==='login' ? 'active' : '' %>"
-               id="login-tab" data-bs-toggle="tab" href="#tab-item-login" role="tab"
-               aria-controls="tab-item-login" aria-selected="<%= _tab==='login' %>">Đăng nhập</a>
-          </li>
-          <li class="nav-item" role="presentation">
-            <a class="nav-link nav-link_underscore <%= _tab==='register' ? 'active' : '' %>"
-               id="register-tab" data-bs-toggle="tab" href="#tab-item-register" role="tab"
-               aria-controls="tab-item-register" aria-selected="<%= _tab==='register' %>">Đăng ký</a>
-          </li>
-        </ul>
-      </div>
-
-      <div class="tab-content pt-2" id="login_register_tab_content">
-        <!-- ===== LOGIN ===== -->
-        <div class="tab-pane fade <%= _tab==='login' ? 'show active' : '' %>" id="tab-item-login" role="tabpanel" aria-labelledby="login-tab">
-          <div class="row g-4">
-            <div class="col-md-6 mx-auto">
-              <div class="login-form auth-field">
-                <form name="login-form" id="login-form" action="/login" method="POST" autocomplete="on">
-                  <div class="form-floating mb-3 position-relative">
-                    <input name="username" type="email" class="form-control form-control_gray" id="loginEmail" placeholder="Email *" required autocomplete="email">
-                    <label for="loginEmail">Email *</label>
-                  </div>
-
-                  <div class="form-floating mb-3 position-relative">
-                    <input name="password" type="password" class="form-control form-control_gray" id="loginPassword" placeholder="Mật khẩu *" required autocomplete="current-password">
-                    <label for="loginPassword">Mật khẩu *</label>
-                    <span class="eye-toggle" data-target="#loginPassword" title="Hiện/ẩn mật khẩu">
-                      <!-- eye icon -->
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12Z"/><circle cx="12" cy="12" r="3"/></svg>
-                    </span>
-                  </div>
-
-                  <div class="d-flex align-items-center mb-3 pb-2">
-                    <div class="form-check mb-0">
-                      <input class="form-check-input" type="checkbox" id="rememberMe">
-                      <label class="form-check-label mini" for="rememberMe">Ghi nhớ đăng nhập</label>
+                    <div class="auth-tabs d-flex justify-content-center">
+                      <ul class="nav nav-tabs mb-4" id="login_register" role="tablist">
+                        <li class="nav-item" role="presentation">
+                          <a class="nav-link nav-link_underscore <%= _tab==='login' ? 'active' : '' %>" id="login-tab"
+                            data-bs-toggle="tab" href="#tab-item-login" role="tab" aria-controls="tab-item-login"
+                            aria-selected="<%= _tab==='login' %>">Đăng nhập</a>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                          <a class="nav-link nav-link_underscore <%= _tab==='register' ? 'active' : '' %>"
+                            id="register-tab" data-bs-toggle="tab" href="#tab-item-register" role="tab"
+                            aria-controls="tab-item-register" aria-selected="<%= _tab==='register' %>">Đăng ký</a>
+                        </li>
+                      </ul>
                     </div>
-                    <a href="/forgot-password" class="btn-text ms-auto">Quên mật khẩu?</a>
-                  </div>
 
-                  <button class="btn-cta" type="submit">Đăng nhập</button>
-                  <!-- (nút CTA giữ style giống ảnh, text bạn có thể đổi sang "Đăng nhập") -->
+                    <div class="tab-content pt-2" id="login_register_tab_content">
+                      <!-- ===== LOGIN ===== -->
+                      <div class="tab-pane fade <%= _tab==='login' ? 'show active' : '' %>" id="tab-item-login"
+                        role="tabpanel" aria-labelledby="login-tab">
+                        <div class="row g-4">
+                          <div class="col-md-6 mx-auto">
+                            <div class="login-form auth-field">
+                              <form name="login-form" id="login-form" action="/login" method="POST" autocomplete="on">
+                                <div class="form-floating mb-3 position-relative">
+                                  <input name="username" type="email" class="form-control form-control_gray"
+                                    id="loginEmail" placeholder="Email *" required autocomplete="email">
+                                  <label for="loginEmail">Email *</label>
+                                </div>
 
-                  <div class="auth-divider">hoặc</div>
+                                <div class="form-floating mb-3 position-relative">
+                                  <input name="password" type="password" class="form-control form-control_gray"
+                                    id="loginPassword" placeholder="Mật khẩu *" required
+                                    autocomplete="current-password">
+                                  <label for="loginPassword">Mật khẩu *</label>
+                                  <span class="eye-toggle" data-target="#loginPassword" title="Hiện/ẩn mật khẩu">
+                                    <!-- eye icon -->
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                      <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12Z" />
+                                      <circle cx="12" cy="12" r="3" />
+                                    </svg>
+                                  </span>
+                                </div>
 
-                  <!-- Google sign-in -->
-                  <a class="btn-google" href="/auth/google">
-                    <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="G">
-                    Đăng nhập với Google
-                  </a>
-                  <!-- Bạn có thể thêm Facebook sau: /auth/facebook -->
-                </form>
-              </div>
-            </div>
-          </div>
-        </div>
+                                <div class="d-flex align-items-center mb-3 pb-2">
+                                  <div class="form-check mb-0">
+                                    <input class="form-check-input" type="checkbox" id="rememberMe">
+                                    <label class="form-check-label mini" for="rememberMe">Ghi nhớ đăng nhập</label>
+                                  </div>
+                                  <a href="/forgot-password" class="btn-text ms-auto">Quên mật khẩu?</a>
+                                </div>
 
-        <!-- ===== REGISTER ===== -->
-        <div class="tab-pane fade <%= _tab==='register' ? 'show active' : '' %>" id="tab-item-register" role="tabpanel" aria-labelledby="register-tab">
-          <div class="row g-4">
-            <div class="col-md-8 mx-auto">
-              <div class="register-form auth-field">
-                <!-- Theo yêu cầu: khi đăng ký chỉ nhập Email, Họ tên, Địa chỉ giao hàng -->
-                <form name="register-form" action="/register" method="POST" class="needs-validation" novalidate>
-                  <div class="form-floating mb-3">
-                    <input name="register_name" type="text" class="form-control form-control_gray" id="regName" placeholder="Họ tên *" required>
-                    <label for="regName">Họ tên *</label>
-                  </div>
+                                <button class="btn-cta" type="submit">Đăng nhập</button>
+                                <!-- (nút CTA giữ style giống ảnh, text bạn có thể đổi sang "Đăng nhập") -->
 
-                  <div class="form-floating mb-3">
-                    <input name="register_email" type="email" class="form-control form-control_gray" id="regEmail" placeholder="Email *" required>
-                    <label for="regEmail">Email *</label>
-                  </div>
+                                <div class="auth-divider">hoặc</div>
 
-                  <div class="form-floating mb-1">
-                    <input name="register_address" type="text" class="form-control form-control_gray" id="regAddress" placeholder="Địa chỉ giao hàng *" required>
-                    <label for="regAddress">Địa chỉ giao hàng *</label>
-                  </div>
-                  <div class="addr-help">Bạn có thể thêm nhiều địa chỉ sau khi đăng ký trong mục “Hồ sơ”.</div>
+                                <!-- Google sign-in -->
+                                <a href="/api/auth/google" class="btn btn-google">
+                                  <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="G">
+                                  Đăng nhập với Google
+                                </a>
+                                <!-- Bạn có thể thêm Facebook sau: /auth/facebook -->
+                              </form>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
 
-                  <div class="form-check my-3">
-                    <input class="form-check-input" type="checkbox" id="agree" required>
-                    <label class="form-check-label mini" for="agree">Tôi đồng ý với Điều khoản & Chính sách.</label>
-                  </div>
+                      <!-- ===== REGISTER ===== -->
+                      <div class="tab-pane fade <%= _tab==='register' ? 'show active' : '' %>" id="tab-item-register"
+                        role="tabpanel" aria-labelledby="register-tab">
+                        <div class="row g-4">
+                          <div class="col-md-8 mx-auto">
+                            <div class="register-form auth-field">
+                              <!-- Theo yêu cầu: khi đăng ký chỉ nhập Email, Họ tên, Địa chỉ giao hàng -->
+                              <form name="register-form" action="/register" method="POST" class="needs-validation"
+                                novalidate>
+                                <div class="form-floating mb-3">
+                                  <input name="register_name" type="text" class="form-control form-control_gray"
+                                    id="regName" placeholder="Họ tên *" required>
+                                  <label for="regName">Họ tên *</label>
+                                </div>
 
-                  <button class="btn-cta" type="submit">Tạo tài khoản</button>
+                                <div class="form-floating mb-3">
+                                  <input name="register_email" type="email" class="form-control form-control_gray"
+                                    id="regEmail" placeholder="Email *" required>
+                                  <label for="regEmail">Email *</label>
+                                </div>
 
-                  <div class="auth-divider">hoặc</div>
-                  <a class="btn-google" href="/auth/google">
-                    <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="G">
-                    Đăng ký nhanh bằng Google
-                  </a>
-                </form>
-              </div>
-            </div>
-          </div>
-        </div>
+                                <div class="form-floating mb-1">
+                                  <input name="register_address" type="text" class="form-control form-control_gray"
+                                    id="regAddress" placeholder="Địa chỉ giao hàng *" required>
+                                  <label for="regAddress">Địa chỉ giao hàng *</label>
+                                </div>
+                                <div class="addr-help">Bạn có thể thêm nhiều địa chỉ sau khi đăng ký trong mục “Hồ sơ”.
+                                </div>
 
-      </div>
-    </section>
-  </main>
+                                <div class="form-check my-3">
+                                  <input class="form-check-input" type="checkbox" id="agree" required>
+                                  <label class="form-check-label mini" for="agree">Tôi đồng ý với Điều khoản & Chính
+                                    sách.</label>
+                                </div>
 
-  <div class="mb-5 pb-xl-5"></div>
+                                <button class="btn-cta" type="submit">Tạo tài khoản</button>
 
-  <%- include('partials/footer') %>
-  <%- include('partials/icons') %>
-  <%- include('partials/login_form') %>
-  <%- include('partials/cart_drawer') %>
-  <%- include('partials/quick_view') %>
-  <%- include('partials/sitemap') %>
+                                <div class="auth-divider">hoặc</div>
+                                <a href="/api/auth/google" class="btn-google">
+                                  <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="G">
+                                  Đăng ký nhanh bằng Google
+                                </a>
+                              </form>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
 
-  <!-- Go To Top -->
-  <div id="scrollTop" class="visually-hidden end-0"></div>
-  <div class="page-overlay"></div>
+                    </div>
+                </section>
+              </main>
 
-  <!-- External JavaScripts -->
-  <script src="/mixishop/js/plugins/jquery.min.js"></script>
-  <script src="/mixishop/js/plugins/bootstrap.bundle.min.js"></script>
-  <script src="/mixishop/js/plugins/bootstrap-slider.min.js"></script>
-  <script src="/mixishop/js/plugins/swiper.min.js"></script>
-  <script src="/mixishop/js/plugins/countdown.js"></script>
-  <script src="/mixishop/js/plugins/jquery.fancybox.js"></script>
-  <script src="/mixishop/js/theme.js"></script>
+              <div class="mb-5 pb-xl-5"></div>
 
-  <script>
-    // Ẩn alert sau 3s
-    setTimeout(function() {
-      let alert = document.querySelector('.alert');
-      if (alert) { alert.classList.add('fade'); alert.classList.remove('show'); }
-    }, 3000);
+              <%- include('partials/footer') %>
+                <%- include('partials/icons') %>
+                  <%- include('partials/login_form') %>
+                    <%- include('partials/cart_drawer') %>
+                      <%- include('partials/quick_view') %>
+                        <%- include('partials/sitemap') %>
 
-    // Toggle mắt mật khẩu
-    document.addEventListener('click', function(e){
-      const eye = e.target.closest('.eye-toggle');
-      if(!eye) return;
-      const sel = eye.getAttribute('data-target');
-      const input = document.querySelector(sel);
-      if(!input) return;
-      input.type = input.type === 'password' ? 'text' : 'password';
-      eye.classList.toggle('active');
-    });
+                          <!-- Go To Top -->
+                          <div id="scrollTop" class="visually-hidden end-0"></div>
+                          <div class="page-overlay"></div>
 
-    // (optional) mở tab qua hash/query
-    (function(){
-      const byHash=(location.hash||'').replace('#','');
-      const urlTab=new URLSearchParams(location.search).get('tab');
-      const want=(byHash||urlTab||'').toLowerCase();
-      const id= want==='register' ? 'register-tab' : (want==='login' ? 'login-tab' : null);
-      if(id) document.getElementById(id)?.click();
-    })();
-  </script>
+                          <!-- External JavaScripts -->
+                          <script src="/mixishop/js/plugins/jquery.min.js"></script>
+                          <script src="/mixishop/js/plugins/bootstrap.bundle.min.js"></script>
+                          <script src="/mixishop/js/plugins/bootstrap-slider.min.js"></script>
+                          <script src="/mixishop/js/plugins/swiper.min.js"></script>
+                          <script src="/mixishop/js/plugins/countdown.js"></script>
+                          <script src="/mixishop/js/plugins/jquery.fancybox.js"></script>
+                          <script src="/mixishop/js/theme.js"></script>
+
+                          <script>
+                            // Ẩn alert sau 3s
+                            setTimeout(function () {
+                              let alert = document.querySelector('.alert');
+                              if (alert) { alert.classList.add('fade'); alert.classList.remove('show'); }
+                            }, 3000);
+
+                            // Toggle mắt mật khẩu
+                            document.addEventListener('click', function (e) {
+                              const eye = e.target.closest('.eye-toggle');
+                              if (!eye) return;
+                              const sel = eye.getAttribute('data-target');
+                              const input = document.querySelector(sel);
+                              if (!input) return;
+                              input.type = input.type === 'password' ? 'text' : 'password';
+                              eye.classList.toggle('active');
+                            });
+
+                            // (optional) mở tab qua hash/query
+                            (function () {
+                              const byHash = (location.hash || '').replace('#', '');
+                              const urlTab = new URLSearchParams(location.search).get('tab');
+                              const want = (byHash || urlTab || '').toLowerCase();
+                              const id = want === 'register' ? 'register-tab' : (want === 'login' ? 'login-tab' : null);
+                              if (id) document.getElementById(id)?.click();
+                            })();
+                          </script>
 </body>
+
 </html>

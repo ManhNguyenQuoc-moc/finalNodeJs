@@ -58,6 +58,55 @@ module.exports = function createAdminRouter({ BACKEND, proxy } = {}) {
       return fallback();
     }
   }
+  async function fetchUpdateUser(req, id) {
+    console.log("[ADMIN FE] Update user body:", req.body);
+    try {
+      if (!BACKEND) {
+        // mock local
+        const i = USERS.findIndex(u => String(u._id) === String(id));
+        if (i === -1) return { ok: false, message: "Không tìm thấy user (mock)" };
+
+        USERS[i] = {
+          ...USERS[i],
+          full_name: req.body.full_name ?? USERS[i].full_name,
+          email: req.body.email ?? USERS[i].email,
+          role: req.body.role ?? USERS[i].role,
+          gender: req.body.gender ?? USERS[i].gender,
+          birthday: req.body.birthday ?? USERS[i].birthday,
+          phone: req.body.phone ?? USERS[i].phone,
+        };
+        return { ok: true, message: "Cập nhật user (mock) thành công!" };
+      }
+
+      const url = `${BACKEND}/api/user/${id}`;
+      const payload = {
+        full_name: req.body.full_name,
+        email: req.body.email,
+        role: req.body.role,
+        gender: req.body.gender,
+        birthday: req.body.birthday,  // BE tự parse
+        phone: req.body.phone,
+      };
+
+      // xoá field undefined để tránh ghi đè lung tung
+      Object.keys(payload).forEach(k => payload[k] === undefined && delete payload[k]);
+
+      const data = await fetchJSONAuth(req, url, {
+        method: "PUT",
+        body: JSON.stringify(payload),
+      });
+
+      if (!data?.success) {
+        throw new Error(data?.message || "Cập nhật user thất bại");
+      }
+
+      return { ok: true, message: "Cập nhật user thành công!", data: data.data };
+    } catch (err) {
+      console.error("Update USER failed:", err.message);
+      return { ok: false, message: err.message || "Không thể cập nhật user" };
+    }
+  }
+
   async function fetchCreateColor(req) {
     try {
       if (!BACKEND) {
@@ -94,7 +143,6 @@ module.exports = function createAdminRouter({ BACKEND, proxy } = {}) {
       return { ok: false, message: err.message || "Không thể tạo màu" };
     }
   }
-
   async function fetchUpdateColor(req, id) {
     try {
       if (!BACKEND) {
@@ -249,22 +297,34 @@ module.exports = function createAdminRouter({ BACKEND, proxy } = {}) {
       return { ok: false, message: err.message || "Không thể xoá size" };
     }
   }
-  // ========== Helpers (locals) ==========
-  let ADMIN_ACCOUNT = { id: "admin1", full_name: "Admin", password: "admin123" }; // demo
 
-  router.use((req, res, next) => {
+  router.use(async (req, res, next) => {
+    // helper format tiền
     res.locals.money = (v) => {
-      try { return (v || 0).toLocaleString("vi-VN", { style: "currency", currency: "VND" }); }
-      catch { return v; }
+      try {
+        return (v || 0).toLocaleString("vi-VN", {
+          style: "currency",
+          currency: "VND",
+        });
+      } catch {
+        return v;
+      }
     };
-    res.locals.admin = { full_name: ADMIN_ACCOUNT.full_name };
     res.locals.activePath = "/admin" + req.path;
     res.locals.flash = {};
     if (req.query?.s) res.locals.flash.success = req.query.s;
     if (req.query?.e) res.locals.flash.error = req.query.e;
+    let adminUser = null;
+    if (BACKEND) {
+      adminUser = await fetchAdminProfile(req);
+    }
+    if (adminUser) {
+      res.locals.admin = adminUser;
+    } else {
+      return res.redirect("/login?=Bạn cần đăng nhập để vào trang quản trị");
+    }
     next();
   });
-
   router.use(express.urlencoded({ extended: true }));
 
   // ========== Mock data (unchanged for fallback) ==========
@@ -992,7 +1052,7 @@ module.exports = function createAdminRouter({ BACKEND, proxy } = {}) {
         pageSize,
       };
 
-      // ⬅️ Quan trọng: list dùng RAW items để EJS đọc product/color/size/images
+      //Quan trọng: list dùng RAW items để EJS đọc product/color/size/images
       return { items: rawItems, pagination: VARIANTS_PAGINATION };
     } catch (e) {
       console.error("Load VARIANTS failed:", e.message);
@@ -1010,37 +1070,58 @@ module.exports = function createAdminRouter({ BACKEND, proxy } = {}) {
 
   async function fetchUpdateVariantStockAdmin(req, id) {
     try {
+      // MOCK MODE
       if (!BACKEND) {
         const i = PRODUCT_VARIANTS.findIndex((x) => String(x._id || x.sku) === String(id));
         if (i === -1) return { ok: false, message: "Variant not found (mock)" };
+
+        const qty = Number(req.body.quantity || 0);
+        const importPrice = Number(req.body.import_price || 0);
+
+        if (!qty || !importPrice) {
+          return { ok: false, message: "quantity và import_price là bắt buộc (mock)" };
+        }
+
+        // Tăng tồn kho mock
         PRODUCT_VARIANTS[i] = {
           ...PRODUCT_VARIANTS[i],
-          price: Number(req.body.price || PRODUCT_VARIANTS[i].price || 0),
-          stock_quantity: Number(req.body.stock_quantity || PRODUCT_VARIANTS[i].stock_quantity || 0),
+          stock_quantity: Number(PRODUCT_VARIANTS[i].stock_quantity || 0) + qty,
+          last_import_price: importPrice,
         };
-        return { ok: true, message: "Cập nhật tồn kho (mock) thành công!" };
+
+        return { ok: true, message: "Nhập hàng (mock) thành công!" };
       }
 
-      const url = `${BACKEND}/api/product/variants/${id}/stock`;
+      // REAL BACKEND
+      const url = `${BACKEND}/api/import`;
+
       const payload = {
-        price: req.body.price !== undefined ? Number(req.body.price) : undefined,
-        stock_quantity: req.body.stock_quantity !== undefined ? Number(req.body.stock_quantity) : undefined,
+        productVariantId: id, // lấy từ params
+        quantity: req.body.quantity !== undefined ? Number(req.body.quantity) : undefined,
+        import_price: req.body.import_price !== undefined ? Number(req.body.import_price) : undefined,
+        note: req.body.note || "",
       };
+
+      // xóa field undefined
       Object.keys(payload).forEach((k) => payload[k] === undefined && delete payload[k]);
 
+      if (!payload.productVariantId || !payload.quantity || !payload.import_price) {
+        throw new Error("productVariantId, quantity, import_price là bắt buộc");
+      }
+
       const data = await fetchJSONAuth(req, url, {
-        method: "PUT",
+        method: "POST",
         body: JSON.stringify(payload),
       });
 
       if (!data?.success) {
-        throw new Error(data?.message || "Cập nhật tồn kho thất bại");
+        throw new Error(data?.message || "Nhập hàng thất bại");
       }
 
-      return { ok: true, message: "Cập nhật tồn kho thành công!" };
+      return { ok: true, message: "Nhập hàng thành công!" };
     } catch (err) {
-      console.error("Update VARIANT STOCK failed:", err.message);
-      return { ok: false, message: err.message || "Không thể cập nhật tồn kho" };
+      console.error("Import VARIANT STOCK failed:", err.message);
+      return { ok: false, message: err.message || "Không thể nhập hàng" };
     }
   }
 
@@ -1166,55 +1247,627 @@ module.exports = function createAdminRouter({ BACKEND, proxy } = {}) {
 
     return url + (q.toString() ? `?${q.toString()}&page=` : "?page=");
   }
+  // ========== DASHBOARD HELPERS ==========
 
-  // ========== Dashboard ==========
-  router.get("/", (req, res) => {
-    const charts = {
-      revenue: { labels: ["T1", "T2", "T3", "T4", "T5", "T6"], revenue: [12, 18, 10, 22, 19, 25], profit: [3, 5, 2, 6, 5, 8] },
-      orders: { labels: ["T1", "T2", "T3", "T4", "T5", "T6"], orders: [120, 180, 150, 220, 190, 240] },
-      compare: { labels: ["Q1", "Q2", "Q3", "Q4"], revenue: [40, 55, 48, 70], profit: [10, 14, 12, 18], orders: [120, 180, 160, 240] }
+  // Build query cho BE dashboard từ req.query
+  function buildDashboardQuery(req) {
+    const q = new URLSearchParams();
+
+    const granularity = req.query.granularity || "month";
+    const start = req.query.start;
+    const end = req.query.end;
+
+    // Nếu chọn khoảng ngày cụ thể -> dùng custom
+    if (start && end) {
+      q.set("granularity", "custom");
+      q.set("startDate", start);
+      q.set("endDate", end);
+    } else {
+      // forward thẳng granularity + year/month/quarter/week nếu có
+      q.set("granularity", granularity);
+      if (req.query.year) q.set("year", req.query.year);
+      if (req.query.month) q.set("month", req.query.month);
+      if (req.query.quarter) q.set("quarter", req.query.quarter);
+      if (req.query.week) q.set("week", req.query.week);
+    }
+
+    return q.toString(); // "granularity=month&year=2025&month=11"
+  }
+
+  async function fetchSimpleDashboardFromBackend(req, res) {
+    if (!BACKEND) {
+      throw new Error("BACKEND not configured");
+    }
+
+    const qs = buildDashboardQuery(req);
+
+    // Gọi song song 4 API
+    const [kpisResp, rpResp, ocResp, tpResp] = await Promise.all([
+      fetchJSONAuth(req, `${BACKEND}/api/admin-dashboard/dashboard/simple/kpis?${qs}`),
+      fetchJSONAuth(req, `${BACKEND}/api/admin-dashboard/dashboard/simple/revenue-profit?${qs}`),
+      fetchJSONAuth(req, `${BACKEND}/api/admin-dashboard/dashboard/simple/orders-count?${qs}`),
+      fetchJSONAuth(req, `${BACKEND}/api/admin-dashboard/dashboard/simple/top-products?limit=10&${qs}`),
+    ]);
+
+    // ====== KPIs ======
+    // Chấp cả 2 dạng: { success, data:{...} } hoặc { kpis, compareToPrevious }
+    const kPayload =
+      (kpisResp && (kpisResp.data || kpisResp)) || {};
+
+    const k = kPayload.kpis || {};
+    const cmp = kPayload.compareToPrevious || {};
+
+    const toPercent = (v) => {
+      if (v === null || v === undefined) return 0;
+      return Math.round(v * 100); // 0.123 -> 12%
     };
 
-    const metrics = { totalUsers: USERS.length, ordersCount: ORDERS.length, revenue: 75299000, profit: 12600000 };
+    const formatMoney = (v) => {
+      try {
+        if (res?.locals?.money) return res.locals.money(v || 0);
+        return (v || 0).toLocaleString("vi-VN", {
+          style: "currency",
+          currency: "VND",
+        });
+      } catch {
+        return v || 0;
+      }
+    };
 
-    const kpis = [
-      { label: "Tổng người dùng", value: metrics.totalUsers, delta: 5, icon: "users" },
-      { label: "Đơn hàng", value: metrics.ordersCount, delta: 12, icon: "receipt" },
-      { label: "Doanh thu", value: metrics.revenue, valueDisplay: metrics.revenue.toLocaleString("vi-VN", { style: "currency", currency: "VND" }), delta: 8, icon: "credit-card" },
-      { label: "Lợi nhuận", value: metrics.profit, valueDisplay: metrics.profit.toLocaleString("vi-VN", { style: "currency", currency: "VND" }), delta: -3, icon: "badge-dollar-sign" },
+    const kpiCards = [
+      {
+        label: "Tổng người dùng",
+        value: k.totalUsers || 0,
+        delta: toPercent(cmp.users),
+        icon: "users",
+      },
+      {
+        label: "Người dùng mới",
+        value: k.newUsers || 0,
+        delta: toPercent(cmp.users),
+        icon: "user-plus",
+      },
+      {
+        label: "Tổng đơn hàng",
+        value: k.totalOrders || 0,
+        delta: toPercent(cmp.orders),
+        icon: "receipt",
+      },
+      {
+        label: "Doanh thu",
+        value: k.totalRevenue || 0,
+        valueDisplay: formatMoney(k.totalRevenue || 0),
+        delta: toPercent(cmp.revenue),
+        icon: "credit-card",
+      },
+      {
+        label: "Lợi nhuận",
+        value: k.totalProfit || 0,
+        valueDisplay: formatMoney(k.totalProfit || 0),
+        delta: toPercent(cmp.profit),
+        icon: "badge-dollar-sign",
+      },
     ];
 
-    const topProducts = PRODUCTS.slice(0, 10).map((p, i) => ({ name: p.name, total_sold: 100 - i * 3 }));
+    // ====== Doanh thu & lợi nhuận theo thời gian ======
+    const rpData = Array.isArray(rpResp?.data) ? rpResp.data : [];
+    const chartsRevenue = {
+      labels: rpData.map((d) => d.label || d.timeKey || ""),
+      revenue: rpData.map((d) => d.revenue || 0),
+      profit: rpData.map((d) => d.profit || 0),
+    };
 
-    res.render("dashboard", {
-      title: "Dashboard",
-      pageHeading: "Dashboard",
-      charts, kpis, topProducts,
-      filters: { granularity: "month", mode: req.query.mode || "simple" }
-    });
-  });
+    // ====== Số đơn theo thời gian ======
+    const ocData = Array.isArray(ocResp?.data) ? ocResp.data : [];
+    const chartsOrders = {
+      labels: ocData.map((d) => d.label || d.timeKey || ""),
+      orders: ocData.map((d) => d.ordersCount || 0),
+    };
 
-  // ========== Products ==========
-  router.get("/products", async (req, res) => {
-    await Promise.all([tryLoadBrands(req), tryLoadCategories(req), tryLoadColors(req), tryLoadSizes(req)]);
-    const list = await fetchProducts(req);
-    const { page = 1 } = req.query;
-
-    // Normalize brand/category to objects if backend only returns IDs
-    const mapped = list.map((p) => ({
-      ...p,
-      brand: typeof p.brand === 'string' ? (BRANDS.find(b => String(b._id) === String(p.brand)) || p.brand) : p.brand,
-      category: typeof p.category === 'string' ? (CATEGORIES.find(c => String(c._id) === String(p.category)) || p.category) : p.category,
+    // ====== Top sản phẩm ======
+    const tpItems = Array.isArray(tpResp?.items) ? tpResp.items : [];
+    const topProducts = tpItems.map((p) => ({
+      name: p.name || p.productName || p.product_name || p.sku || "Sản phẩm",
+      total_sold:
+        p.totalSold ||
+        p.total_sold ||
+        p.quantitySold ||
+        p.quantity ||
+        p.totalQuantity ||
+        0,
     }));
 
-    const p = paginate(mapped, page, 10);
-    res.render("products_index", {
-      title: "Sản phẩm",
-      pageHeading: "Quản lý sản phẩm",
-      items: p.items, brands: BRANDS, categories: CATEGORIES,
-      query: req.query, pagination: { ...p, baseUrl: baseUrl(req) }
-    });
+    const charts = {
+      revenue: chartsRevenue,
+      orders: chartsOrders,
+      compare: null, // Tab nâng cao vẫn dùng SAMPLE ở FE
+    };
+
+    return {
+      charts,
+      kpis: kpiCards,
+      topProducts,
+      filters: {
+        mode: req.query.mode || "simple",
+        granularity: req.query.granularity || "month",
+        start: req.query.start || "",
+        end: req.query.end || "",
+      },
+    };
+  }
+  // ========== Dashboard ==========
+  router.get("/", async (req, res) => {
+    try {
+      if (!BACKEND) {
+        // Fallback cũ nếu chưa cấu hình BACKEND
+        const charts = {
+          revenue: {
+            labels: ["T1", "T2", "T3", "T4", "T5", "T6"],
+            revenue: [12, 18, 10, 22, 19, 25],
+            profit: [3, 5, 2, 6, 5, 8],
+          },
+          orders: {
+            labels: ["T1", "T2", "T3", "T4", "T5", "T6"],
+            orders: [120, 180, 150, 220, 190, 240],
+          },
+          compare: null,
+        };
+
+        const metrics = {
+          totalUsers: USERS.length,
+          ordersCount: ORDERS.length,
+          revenue: 75299000,
+          profit: 12600000,
+        };
+
+        const kpis = [
+          {
+            label: "Tổng người dùng",
+            value: metrics.totalUsers,
+            delta: 5,
+            icon: "users",
+          },
+          {
+            label: "Đơn hàng",
+            value: metrics.ordersCount,
+            delta: 12,
+            icon: "receipt",
+          },
+          {
+            label: "Doanh thu",
+            value: metrics.revenue,
+            valueDisplay: metrics.revenue.toLocaleString("vi-VN", {
+              style: "currency",
+              currency: "VND",
+            }),
+            delta: 8,
+            icon: "credit-card",
+          },
+          {
+            label: "Lợi nhuận",
+            value: metrics.profit,
+            valueDisplay: metrics.profit.toLocaleString("vi-VN", {
+              style: "currency",
+              currency: "VND",
+            }),
+            delta: -3,
+            icon: "badge-dollar-sign",
+          },
+        ];
+
+        const topProducts = PRODUCTS.slice(0, 10).map((p, i) => ({
+          name: p.name,
+          total_sold: 100 - i * 3,
+        }));
+
+        return res.render("dashboard", {
+          title: "Dashboard",
+          pageHeading: "Dashboard",
+          charts,
+          kpis,
+          topProducts,
+          filters: {
+            granularity: req.query.granularity || "month",
+            start: req.query.start || "",
+            end: req.query.end || "",
+            mode: req.query.mode || "simple",
+          },
+          advanced: null,   // mock chưa có
+        });
+      }
+
+      // ======== DÙNG BACKEND THẬT ========
+      const [simple, advanced] = await Promise.all([
+        fetchSimpleDashboardFromBackend(req, res),
+        fetchAdvancedDashboardFromBackend(req).catch((err) => {
+          console.error("Fetch advanced dashboard failed:", err.message);
+          return null;
+        }),
+      ]);
+
+      return res.render("dashboard", {
+        title: "Dashboard",
+        pageHeading: "Dashboard",
+        charts: simple.charts,
+        kpis: simple.kpis,
+        topProducts: simple.topProducts,
+        filters: simple.filters,
+        advanced, // <-- quan trọng
+      });
+    } catch (err) {
+      console.error("Render /admin dashboard failed:", err.message);
+      const charts = {
+        revenue: { labels: [], revenue: [], profit: [] },
+        orders: { labels: [], orders: [] },
+        compare: null,
+      };
+      return res.render("dashboard", {
+        title: "Dashboard",
+        pageHeading: "Dashboard",
+        charts,
+        kpis: [],
+        topProducts: [],
+        filters: {
+          granularity: req.query.granularity || "month",
+          start: req.query.start || "",
+          end: req.query.end || "",
+          mode: req.query.mode || "simple",
+        },
+        advanced: null,
+      });
+    }
   });
+
+  async function fetchAdvancedDashboardFromBackend(req) {
+    if (!BACKEND) {
+      throw new Error("BACKEND not configured");
+    }
+
+    const qs = buildDashboardQuery(req);
+
+    // Gọi song song 4 API
+    const [summaryResp, customersResp, ordersResp, productCompareResp] =
+      await Promise.all([
+        fetchJSONAuth(req, `${BACKEND}/api/admin-dashboard/dashboard/advanced/summary?${qs}`),
+        fetchJSONAuth(req, `${BACKEND}/api/admin-dashboard/dashboard/advanced/customers?${qs}`),
+        fetchJSONAuth(req, `${BACKEND}/api/admin-dashboard/dashboard/advanced/orders?${qs}`),
+        fetchJSONAuth(req, `${BACKEND}/api/admin-dashboard/dashboard/advanced/product-comparison?${qs}`)
+      ]);
+
+    const summary = summaryResp?.data || {};
+    const customers = customersResp?.data || {};
+    const orders = ordersResp?.data || {};
+    const productCompare = productCompareResp?.data || {};
+
+    const summaryData = summary.data || [];
+
+    // ==========================================
+    // 1) BIỂU ĐỒ CHÍNH: SO SÁNH ĐƠN – DOANH THU – LỢI NHUẬN
+    // ==========================================
+    const compare = {
+      labels: summaryData.map(d => d.label || d.timeKey),
+      orders: summaryData.map(d => d.ordersCount || 0),
+      revenue: summaryData.map(d => d.totalRevenue || 0),
+      profit: summaryData.map(d => d.totalProfit || 0),
+    };
+
+    // ==========================================
+    // 2) BIỂU ĐỒ SỐ LƯỢNG SẢN PHẨM THEO NĂM
+    // ==========================================
+    const yearly = productCompare.yearly || [];
+    const productsCount = {
+      labels: yearly.map(d => d.label),
+      productsSold: yearly.map(d => d.totalProductsSold || 0),
+    };
+
+    // ==========================================
+    // 3) PIE CHART PHÂN BỔ SẢN PHẨM
+    // ==========================================
+    const distribution = productCompare.distribution || [];
+    const productDistribution = {
+      labels: distribution.map(d => d.label),
+      quantities: distribution.map(d => d.quantity),
+    };
+    const customerSegments = customers.segments || {};
+    const customerNewReturning = customers.newVsReturning || {};
+
+    return {
+      chartsAdvanced: {
+        compare,
+        productsCount,
+        productDistribution,
+        customerSegments,        // <--- thêm vào
+        customerNewReturning     // <--- thêm vào
+      },
+      customers,
+      raw: {
+        summary,
+        customers,
+        orders,
+        productCompare
+      }
+    };
+  }
+
+  router.get("/", async (req, res) => {
+    try {
+      // ==============================
+      // 1. FALLBACK KHI KHÔNG CẤU HÌNH BACKEND
+      // ==============================
+      if (!BACKEND) {
+        const charts = {
+          revenue: {
+            labels: ["T1", "T2", "T3", "T4", "T5", "T6"],
+            revenue: [12, 18, 10, 22, 19, 25],
+            profit: [3, 5, 2, 6, 5, 8],
+          },
+          orders: {
+            labels: ["T1", "T2", "T3", "T4", "T5", "T6"],
+            orders: [120, 180, 150, 220, 190, 240],
+          },
+          compare: null,
+        };
+
+        const metrics = {
+          totalUsers: USERS.length,
+          ordersCount: ORDERS.length,
+          revenue: 75299000,
+          profit: 12600000,
+        };
+
+        const kpis = [
+          {
+            label: "Tổng người dùng",
+            value: metrics.totalUsers,
+            delta: 5,
+            icon: "users",
+          },
+          {
+            label: "Đơn hàng",
+            value: metrics.ordersCount,
+            delta: 12,
+            icon: "receipt",
+          },
+          {
+            label: "Doanh thu",
+            value: metrics.revenue,
+            valueDisplay: metrics.revenue.toLocaleString("vi-VN", {
+              style: "currency",
+              currency: "VND",
+            }),
+            delta: 8,
+            icon: "credit-card",
+          },
+          {
+            label: "Lợi nhuận",
+            value: metrics.profit,
+            valueDisplay: metrics.profit.toLocaleString("vi-VN", {
+              style: "currency",
+              currency: "VND",
+            }),
+            delta: -3,
+            icon: "badge-dollar-sign",
+          },
+        ];
+
+        const topProducts = PRODUCTS.slice(0, 10).map((p, i) => ({
+          name: p.name,
+          total_sold: 100 - i * 3,
+        }));
+
+        return res.render("dashboard", {
+          title: "Dashboard",
+          pageHeading: "Dashboard",
+          charts,
+          kpis,
+          topProducts,
+          filters: {
+            granularity: req.query.granularity || "month",
+            start: req.query.start || "",
+            end: req.query.end || "",
+            mode: req.query.mode || "simple",
+          },
+          advanced: null,
+        });
+      }
+
+      // ==============================
+      // 2. DÙNG BACKEND THẬT
+      // ==============================
+
+      const [simple, advanced] = await Promise.all([
+        fetchSimpleDashboardFromBackend(req, res),
+
+        // Nếu advanced fail thì không crash dashboard, chỉ log lỗi
+        fetchAdvancedDashboardFromBackend(req).catch((err) => {
+          console.error("Fetch advanced dashboard failed:", err.message);
+          return null;
+        }),
+      ]);
+
+      // ==============================
+      // 3. TRẢ VỀ VIEW
+      // ==============================
+      return res.render("dashboard", {
+        title: "Dashboard",
+        pageHeading: "Dashboard",
+        charts: simple.charts,
+        kpis: simple.kpis,
+        topProducts: simple.topProducts,
+        filters: simple.filters,
+        advanced: advanced || null, // <--- QUAN TRỌNG
+      });
+
+    } catch (err) {
+      console.error("Render /admin dashboard failed:", err.message);
+
+      const charts = {
+        revenue: { labels: [], revenue: [], profit: [] },
+        orders: { labels: [], orders: [] },
+        compare: null,
+      };
+
+      return res.render("dashboard", {
+        title: "Dashboard",
+        pageHeading: "Dashboard",
+        charts,
+        kpis: [],
+        topProducts: [],
+        filters: {
+          granularity: req.query.granularity || "month",
+          start: req.query.start || "",
+          end: req.query.end || "",
+          mode: req.query.mode || "simple",
+        },
+        advanced: null,
+      });
+    }
+  });
+
+ // ========== Products ==========
+router.get("/products", async (req, res) => {
+  await Promise.all([
+    tryLoadBrands(req),
+    tryLoadCategories(req),
+    tryLoadColors(req),
+    tryLoadSizes(req),
+  ]);
+
+  const list = await fetchProducts(req);
+  const { page = 1 } = req.query;
+
+  // chuẩn hoá brand/category
+  const mapped = list.map((p) => ({
+    ...p,
+    brand:
+      typeof p.brand === "string"
+        ? BRANDS.find((b) => String(b._id) === String(p.brand)) || p.brand
+        : p.brand,
+    category:
+      typeof p.category === "string"
+        ? CATEGORIES.find((c) => String(c._id) === String(p.category)) || p.category
+        : p.category,
+  }));
+
+  // ====== LỌC / TÌM KIẾM / SẮP XẾP ======
+  const { q, brand, category, min, max, sort } = req.query || {};
+  let filtered = mapped.slice();
+
+  // tìm theo tên / slug / sku
+  if (q) {
+    const key = String(q).toLowerCase();
+    filtered = filtered.filter((p) => {
+      const name = (p.name || "").toLowerCase();
+      const slug = (p.slug || "").toLowerCase();
+      const sku =
+        (Array.isArray(p.variants) && p.variants[0] && p.variants[0].sku) ||
+        p.sku ||
+        "";
+      return (
+        name.includes(key) ||
+        slug.includes(key) ||
+        String(sku).toLowerCase().includes(key)
+      );
+    });
+  }
+
+  // lọc thương hiệu
+  if (brand) {
+    filtered = filtered.filter((p) => {
+      const id = p.brand && (p.brand._id || p.brand.id || p.brand);
+      return String(id) === String(brand);
+    });
+  }
+
+  // lọc danh mục
+  if (category) {
+    filtered = filtered.filter((p) => {
+      const id = p.category && (p.category._id || p.category.id || p.category);
+      return String(id) === String(category);
+    });
+  }
+
+  // lọc giá (dùng khoảng price_min / price_max của sản phẩm)
+  if (min) {
+    const minNum = Number(min);
+    filtered = filtered.filter(
+      (p) => Number(p.price_min ?? p.price ?? 0) >= minNum
+    );
+  }
+  if (max) {
+    const maxNum = Number(max);
+    filtered = filtered.filter(
+      (p) => Number(p.price_max ?? p.price ?? 0) <= maxNum
+    );
+  }
+
+  // sort
+  if (sort) {
+    filtered.sort((a, b) => {
+      switch (sort) {
+        case "name_asc":
+          return (a.name || "").localeCompare(b.name || "", "vi");
+        case "name_desc":
+          return (b.name || "").localeCompare(a.name || "", "vi");
+        case "price_asc":
+          return (Number(a.price_min || a.price || 0) -
+            Number(b.price_min || b.price || 0));
+        case "price_desc":
+          return (Number(b.price_max || b.price || 0) -
+            Number(a.price_max || a.price || 0));
+        case "created_desc":
+          return (
+            new Date(b.createdAt || 0).getTime() -
+            new Date(a.createdAt || 0).getTime()
+          );
+        default:
+          return 0;
+      }
+    });
+  }
+
+  // ====== PAGINATE SAU KHI ĐÃ LỌC ======
+  const p = paginate(filtered, Number(page) || 1, 10);
+  const total = filtered.length; // tổng theo bộ lọc
+
+  const isAjax =
+    req.xhr ||
+    req.headers["x-requested-with"] === "XMLHttpRequest" ||
+    req.query.ajax === "1";
+
+  if (isAjax) {
+    return res.render(
+      "partials/_products_table",
+      {
+        layout: false,
+        items: p.items,
+        pagination: { ...p, baseUrl: baseUrl(req) },
+        total,
+        query: req.query,
+      },
+      (err, html) => {
+        if (err) {
+          console.error("Render products AJAX failed:", err);
+          return res.json({ ok: false, error: err.message });
+        }
+        res.json({ ok: true, html });
+      }
+    );
+  }
+
+  // lần đầu load trang (không ajax)
+  res.render("products_index", {
+    title: "Sản phẩm",
+    pageHeading: "Quản lý sản phẩm",
+    items: p.items,
+    brands: BRANDS,
+    categories: CATEGORIES,
+    query: req.query,
+    total,
+    pagination: { ...p, baseUrl: baseUrl(req) },
+  });
+});
+
 
   router.get("/products/new", async (req, res) => {
     await Promise.all([tryLoadBrands(req), tryLoadCategories(req), tryLoadColors(req), tryLoadSizes(req)]);
@@ -1706,7 +2359,6 @@ module.exports = function createAdminRouter({ BACKEND, proxy } = {}) {
       res.status(404).send("Không tìm thấy mã giảm giá");
     }
   });
-
   // Update từ form /admin/discounts/:id
   router.post("/discounts/:id", async (req, res) => {
     const r = await fetchUpdateDiscountCode(req, req.params.id);
@@ -1771,17 +2423,78 @@ module.exports = function createAdminRouter({ BACKEND, proxy } = {}) {
         return res.status(404).send("Không tìm thấy người dùng");
       }
 
+      const editMode = req.query.edit === "1" || req.query.edit === "true";
+
       return res.render("user_detail", {
         title: `Người dùng: ${user.full_name || user.email}`,
         pageHeading: "Chi tiết người dùng",
         user,
         addresses,
         orders,
+        editMode,
       });
     } catch (err) {
       console.error("Load user detail failed:", err.message);
       return res.status(500).send("Không thể tải thông tin người dùng");
     }
+  });
+  router.get("/users/:id/edit", async (req, res) => {
+    try {
+      const id = req.params.id;
+
+      if (!BACKEND) {
+        // MOCK: lấy user từ mảng USERS
+        const user = USERS.find(u => String(u._id) === String(id));
+        if (!user) return res.status(404).send("Không tìm thấy người dùng (mock)");
+
+        // mock addresses & orders theo user
+        const addresses = ADDRESSES.filter(a => String(a.user) === String(user._id));
+        const orders = ORDERS.filter(o => {
+          // tuỳ bạn đang lưu user trong order thế nào
+          const orderUserId = o.user && (o.user._id || o.user);
+          return String(orderUserId) === String(user._id);
+        });
+
+        return res.render("user_detail", {
+          title: `Sửa người dùng: ${user.full_name || user.email}`,
+          pageHeading: "Sửa người dùng",
+          user,
+          addresses,
+          orders,
+          editMode: true, // 🔥 quan trọng
+        });
+      }
+
+      // === BACKEND MODE ===
+      // dùng luôn API details để có đủ user + addresses + orders
+      const data = await fetchJSONAuth(req, `${BACKEND}/api/user/${id}/details`);
+
+      const user = data.user;
+      const addresses = data.addresses || [];
+      const orders = data.orders || [];
+
+      if (!user) {
+        return res.status(404).send("Không tìm thấy người dùng");
+      }
+
+      return res.render("user_detail", {
+        title: `Sửa người dùng: ${user.full_name || user.email}`,
+        pageHeading: "Sửa người dùng",
+        user,
+        addresses,
+        orders,
+        editMode: true, // 🔥 bật chế độ edit
+      });
+    } catch (err) {
+      console.error("Load user edit failed:", err.message);
+      return res.status(500).send("Không thể tải thông tin người dùng");
+    }
+  });
+  router.post("/users/:id", async (req, res) => {
+    const r = await fetchUpdateUser(req, req.params.id);
+    const q = new URLSearchParams(r.ok ? { s: r.message } : { e: r.message });
+    // quay lại trang detail (không còn edit)
+    res.redirect(`/admin/users/${req.params.id}?${q.toString()}`);
   });
   // Ban user
   router.post("/users/:id/ban", async (req, res) => {
@@ -1840,7 +2553,12 @@ module.exports = function createAdminRouter({ BACKEND, proxy } = {}) {
       res.redirect(`/admin/users?e=${encodeURIComponent(err.message || "Không thể xóa người dùng")}`);
     }
   });
-
+  router.post("/users/:id/addresses", async (req, res) => {
+    const userId = req.params.id;
+    const r = await fetchAdminAddAddress(req, userId);
+    const q = new URLSearchParams(r.ok ? { s: r.message } : { e: r.message });
+    res.redirect(`/admin/users/${userId}?${q.toString()}`);
+  });
 
   // ========== Generic helpers: Addresses / Reviews / Wishlists ==========
   function renderEntityIndex(res, title, items, fields) {
@@ -1900,10 +2618,67 @@ module.exports = function createAdminRouter({ BACKEND, proxy } = {}) {
     ADMIN_ACCOUNT.password = new_password;
     return res.render("account_password", { ...viewBase, errorMsg: null, successMsg: "Đổi mật khẩu thành công." });
   });
+  // Lấy accessToken từ cookie của request
+  function getAccessTokenFromCookie(req) {
+    const raw = req?.headers?.cookie || "";
+    if (!raw) return null;
 
-  router.post("/logout", (_req, res) => {
-    res.redirect("/admin?s=Đã đăng xuất");
+    const parts = raw.split(";").map((s) => s.trim());
+    for (const part of parts) {
+      const [k, v] = part.split("=");
+      if (k === "accessToken") {
+        return decodeURIComponent(v || "");
+      }
+    }
+    return null;
+  }
+
+  async function fetchAdminProfile(req) {
+    if (!BACKEND) return null;
+
+    // Nếu không có accessToken trong cookie => coi như chưa đăng nhập
+    const accessToken = getAccessTokenFromCookie(req);
+    if (!accessToken) {
+      return null;
+    }
+
+    try {
+      // Dùng cả cookie + Authorization cho chắc
+      const url = `${BACKEND}/api/user/account/profile`;
+      const data = await fetchJSONRaw(url, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          cookie: req.headers.cookie || "",
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+
+      // BE chuẩn: { success: true, user: {...} }
+      if (data && data.success && data.user) {
+        return data.user;
+      }
+
+      return null;
+    } catch (err) {
+      // 401 / 403 / các lỗi khác -> fallback về admin mock
+      console.error("Fetch admin profile failed:", err.message);
+      return null;
+    }
+  }
+  router.get("/me", async (req, res) => {
+    const adminUser = await fetchAdminProfile(req);
+    if (!adminUser) return res.status(401).json({ success: false, message: "Unauthenticated" });
+    res.json({ success: true, user: adminUser });
   });
+  router.post("/logout", (req, res) => {
+    // Xoá token + role
+    res.clearCookie("accessToken", { path: "/" });
+    res.clearCookie("refreshToken", { path: "/" });
+    res.clearCookie("role", { path: "/" });
 
+    // Redirect về trang login
+    return res.redirect("/login?s=Đăng xuất thành công");
+  });
   return router;
 };

@@ -105,7 +105,7 @@ class AIService {
 
 
     // ======================== 2. SENTIMENT ANALYSIS ========================
-    async analyzeSentiment(text) {
+    async   analyzeSentiment(text) {
         const systemPrompt = `
     Bạn là mô hình phân tích cảm xúc của khách hàng.
     Chỉ trả JSON theo dạng:

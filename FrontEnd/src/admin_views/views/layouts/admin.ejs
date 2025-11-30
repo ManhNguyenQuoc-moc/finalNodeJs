@@ -83,7 +83,60 @@
                   <% if (flash && flash.error) { %>
                     <!-- Alert error -->
                     <% } %>
+                    <% if (flash.success) { %>
+<div id="adminAlertSuccess" class="admin-alert alert-success show-alert">
+  <%= flash.success %>
+</div>
+<% } %>
 
+<% if (flash.error) { %>
+<div id="adminAlertError" class="admin-alert alert-error show-alert">
+  <%= flash.error %>
+</div>
+<% } %>
+
+<style>
+.admin-alert {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  min-width: 300px;
+  padding: 15px 20px;
+  border-radius: 6px;
+  font-size: 15px;
+  font-weight: 500;
+  z-index: 99999;
+  display: none;
+  animation: fadeIn 0.3s ease-out;
+}
+.admin-alert.show-alert { display: block; }
+
+.alert-success {
+  background: #4caf50;
+  color: white;
+}
+.alert-error {
+  background: #f44336;
+  color: white;
+}
+
+@keyframes fadeOut {
+  from { opacity: 1; }
+  to   { opacity: 0; transform: translateY(-10px); }
+}
+</style>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  const alertBox = document.querySelector(".show-alert");
+  if (alertBox) {
+    setTimeout(() => {
+      alertBox.style.animation = "fadeOut 0.5s forwards";
+      setTimeout(() => alertBox.remove(), 500);
+    }, 3000);
+  }
+});
+</script>
                       <%- body %>
             </div>
           </main>
