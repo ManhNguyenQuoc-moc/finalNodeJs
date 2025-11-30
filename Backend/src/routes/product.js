@@ -10,8 +10,19 @@ const reviewController = require("../controllers/reviewController");
 router.post("/", upload.any(), productController.createProduct);
 router.get("/", productController.getAllProducts);
 router.post(
+  "/:id/reviews/reply",
+  requireAuthOptional,
+  reviewController.createReply
+);
+router.post(
+  "/:id/reviews/:reviewId/like",
+  requireAuthOptional,
+  reviewController.toggleLike
+);
+router.post(
   "/:id/reviews",
   requireAuthOptional,
+  upload.array('images', 5), // Cho phép upload tối đa 5 ảnh
   reviewController.createReview
 );
 // ===== Color (đặt TRƯỚC /:id) =====

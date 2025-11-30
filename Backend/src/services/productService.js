@@ -438,7 +438,9 @@ async function updateVariantStock(variantId, dto) {
   });
 }
 // ===== ADD AT BOTTOM OF src/services/productService.js =====
-const { ProductVariant } = require("../models");
+const { ProductVariant, Review } = require("../models");
+const mongoose = require("mongoose");
+
 async function normalizeProductsColors(products) {
   if (!Array.isArray(products) || products.length === 0) return [];
 
@@ -448,6 +450,56 @@ async function normalizeProductsColors(products) {
   const variants = await ProductVariant.find({ product: { $in: ids } })
     .populate("color")
     .lean();
+
+  // ========= TÍNH RATING STATS TỪ REVIEW COLLECTION =========
+  const productIds = ids.map(id => new mongoose.Types.ObjectId(id));
+  
+  // Aggregate rating stats cho tất cả products trong 1 lần
+  // CHỈ tính những review có rating (rating != null và rating > 0)
+  const ratingStats = await Review.aggregate([
+    {
+      $match: {
+        product: { $in: productIds },
+        rating: { $ne: null, $exists: true, $gt: 0, $lte: 5 }
+      }
+    },
+    {
+      $group: {
+        _id: "$product",
+        avg: { $avg: "$rating" },
+        count: { $sum: 1 }
+      }
+    }
+  ]);
+
+  // Aggregate comment count (tất cả reviews, kể cả không có rating)
+  const commentStats = await Review.aggregate([
+    {
+      $match: {
+        product: { $in: productIds }
+      }
+    },
+    {
+      $group: {
+        _id: "$product",
+        count: { $sum: 1 }
+      }
+    }
+  ]);
+
+  // Tạo map để lookup nhanh
+  const ratingMap = new Map();
+  ratingStats.forEach(stat => {
+    ratingMap.set(String(stat._id), {
+      avg_rating: Number((stat.avg || 0).toFixed(1)),
+      rating_count: stat.count || 0
+    });
+  });
+
+  const commentMap = new Map();
+  commentStats.forEach(stat => {
+    commentMap.set(String(stat._id), stat.count || 0);
+  });
 
   // map: productId -> (colorId -> {color,color_id,color_code,imageUrls[]})
   const byProduct = new Map();
@@ -501,10 +553,27 @@ async function normalizeProductsColors(products) {
       }];
     }
 
-    // các field “an toàn”
+    // các field "an toàn"
     p.short_description = (p.short_description || p.long_description || "").trim();
-    p.avg_rating = Number((p.avg_rating || 0).toFixed(1));
-    p.rating_count = p.rating_count || 0;
+    
+    // Lấy rating stats từ Review collection (tính toán thực tế)
+    const ratingData = ratingMap.get(key);
+    if (ratingData) {
+      p.avg_rating = ratingData.avg_rating;
+      p.rating_count = ratingData.rating_count;
+    } else {
+      // Nếu không có rating nào, set về 0
+      p.avg_rating = 0;
+      p.rating_count = 0;
+    }
+
+    // Lấy comment count (tổng số reviews, kể cả không có rating)
+    const commentCount = commentMap.get(key) || 0;
+    p.comment_count = commentCount;
+    // Giữ rating_count cho backward compatibility
+    if (!p.rating_count) {
+      p.rating_count = 0;
+    }
 
     // nếu chưa có price ở product -> lấy min price từ variants thuộc product đó
     if (p.price == null) {
