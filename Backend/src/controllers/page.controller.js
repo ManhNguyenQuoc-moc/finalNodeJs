@@ -81,7 +81,11 @@ exports.categoryById = async (req, res) => {
 
 exports.search = async (req, res) => {
   const q = (req.query.q || "").trim();
-  if (!q) return res.json({ ok: true, products: [], q: "" });
+  if (!q) return res.json({ ok: true, products: [], q: "", total: 0, page: 1, totalPages: 0 });
+
+  const page = Math.max(parseInt(req.query.page || "1", 10), 1);
+  const limit = parseInt(req.query.limit || "12", 10);
+  const skip = (page - 1) * limit;
 
   const productsRaw = await Product.find({
     $or: [
@@ -91,8 +95,12 @@ exports.search = async (req, res) => {
     ],
   }).populate("brand category").lean();
 
-  const products = await normalizeProductsColors(productsRaw);
-  res.json({ ok: true, products, q });
+  const total = productsRaw.length;
+  const totalPages = Math.ceil(total / limit);
+  const paginatedProducts = productsRaw.slice(skip, skip + limit);
+  
+  const products = await normalizeProductsColors(paginatedProducts);
+  res.json({ ok: true, products, q, total, page, totalPages, limit });
 };
 
 exports.productDetail = async (req, res) => {
@@ -186,15 +194,54 @@ exports.productDetail = async (req, res) => {
   const reviews = await Review.find({ product: p._id })
     .sort({ createdAt: -1 })
     .populate("user", "full_name email")
-    .select("comment rating user guest_name guest_email sentiment sentiment_score ai_label createdAt")
+    .select("_id comment rating user guest_name guest_email sentiment sentiment_score ai_label parent_id likes guest_likes images createdAt")
     .lean();
 
+  // Add likes_count and is_liked for each review
+  const currentUserId = req.currentUser?._id?.toString();
+  let guestIdentifier = null;
+  if (!currentUserId) {
+    // Try to get IP address
+    const ip = req.ip || 
+              (req.headers['x-forwarded-for'] && req.headers['x-forwarded-for'].split(',')[0].trim()) ||
+              req.connection?.remoteAddress ||
+              req.socket?.remoteAddress ||
+              'anonymous';
+    // Use session ID if available, otherwise use IP
+    guestIdentifier = req.sessionID || ip;
+  }
+  
+  reviews.forEach(review => {
+    const userLikes = review.likes ? review.likes.length : 0;
+    const guestLikes = review.guest_likes ? review.guest_likes.length : 0;
+    review.likes_count = userLikes + guestLikes;
+    
+    if (currentUserId) {
+      // Logged-in user: check if user ID is in likes array
+      review.is_liked = review.likes 
+        ? review.likes.some(likeId => likeId.toString() === currentUserId)
+        : false;
+    } else if (guestIdentifier) {
+      // Guest: check if IP/session is in guest_likes array
+      review.is_liked = review.guest_likes 
+        ? review.guest_likes.includes(guestIdentifier)
+        : false;
+    } else {
+      review.is_liked = false;
+    }
+    
+    // Remove arrays from response to reduce payload size
+    delete review.likes;
+    delete review.guest_likes;
+  });
+
+  // CHỈ tính những review có rating (rating != null và rating > 0)
   const ratingNumbers = reviews
-    .map(r => Number(r.rating))
-    .filter(n => Number.isFinite(n));
+    .map(r => r.rating != null ? Number(r.rating) : null)
+    .filter(n => n != null && Number.isFinite(n) && n > 0 && n <= 5);
 
   const ratingCount = ratingNumbers.length;
-  const ratingAvg = ratingCount
+  const ratingAvg = ratingCount > 0
     ? ratingNumbers.reduce((a, b) => a + b, 0) / ratingCount
     : 0;
 
@@ -247,6 +294,21 @@ exports.productDetail = async (req, res) => {
     stock_total,
   };
 
+  // ========= LẤY SẢN PHẨM LIÊN QUAN (cùng category, loại trừ sản phẩm hiện tại) =========
+  let relatedProducts = [];
+  if (p.category && p.category._id) {
+    const relatedRaw = await Product.find({
+      category: p.category._id,
+      _id: { $ne: p._id }, // Loại trừ sản phẩm hiện tại
+    })
+      .populate("brand category productStatus")
+      .limit(12)
+      .sort({ createdAt: -1 }) // Sắp xếp theo sản phẩm mới nhất
+      .lean();
+    
+    relatedProducts = await normalizeProductsColors(relatedRaw);
+  }
+
   return res.json({
     ok: true,
     product: {
@@ -255,6 +317,9 @@ exports.productDetail = async (req, res) => {
       price_max,
       stock_total,
       colors: productColors, // nếu bạn muốn trả ra
+      avg_rating: Number(ratingAvg.toFixed(1)), // Thêm avg_rating vào product
+      rating_count: ratingCount, // Thêm rating_count vào product
+      comment_count: reviews.length, // Tổng số reviews (kể cả không có rating)
     },
     variants,
     allImages,
@@ -267,7 +332,7 @@ exports.productDetail = async (req, res) => {
       sentiment: sentimentStats,
       sentimentScoreAvg: sentimentScoreAvg,
     },
-    products: [],
+    products: relatedProducts,
   });
 };
 
