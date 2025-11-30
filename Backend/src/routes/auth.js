@@ -13,21 +13,24 @@ router.post("/logout", authController.logout);
 router.post("/forgot-password", authController.forgotPassword);
 router.post("/reset-password", authController.resetPassword);
 router.post("/change-password", currentUser, authController.changePassword);
+const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:3000";
+// ===== GOOGLE =====
 router.get(
   "/google",
   passport.authenticate("google", {
     scope: ["email", "profile"],
-    authType: "reauthenticate",
   })
 );
+
 router.get(
   "/google/login",
   passport.authenticate("google", {
-    failureRedirect: "/login",
+    failureRedirect: `${FRONTEND_URL}/login?error=google_login_failed`,
     session: false,
   }),
   authController.googleLogin
 );
+
 router.get(
   "/facebook",
   passport.authenticate("facebook", {

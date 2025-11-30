@@ -142,7 +142,7 @@ exports.getProductById = async (req, res) => {
 };
 exports.getAllVariants = async (req, res) => {
   try {
-    const { page, limit } = req.query; // lấy từ query ?page=&limit=
+    const { page, limit } = req.query; 
 
     const variants = await productService.getAllVariants(page, limit);
 

@@ -78,7 +78,7 @@
     </div>
 
     <!-- FILTERS -->
-    <form
+    <form id="products-filter-form"
       class="grid grid-cols-1 gap-3 rounded-2xl border border-slate-200 bg-white/70 p-4 shadow-sm backdrop-blur-sm lg:grid-cols-6"
       method="get">
       <div class="lg:col-span-2">
@@ -185,220 +185,30 @@
         </button>
       </div>
     </form>
-
-    <!-- TABLE CARD -->
-    <div class="overflow-hidden rounded-2xl border border-slate-200 bg-white/80 shadow-sm">
-      <!-- Header row: tổng / quick info -->
-      <div class="flex items-center justify-between border-b border-slate-100 px-4 py-3 text-sm">
-        <div class="flex items-center gap-2 text-slate-600">
-          <i data-lucide="list-tree" class="h-6 w-6 text-slate-400"></i>
-          <span>
-            Có
-            <span class="font-semibold text-slate-900">
-              <%= (total||0).toLocaleString?.('vi-VN') || total || 0 %>
-            </span>
-            sản phẩm trong hệ thống
-          </span>
-        </div>
-      </div>
-
-      <!-- BULK FORM (multi delete) -->
-      <form id="bulkProductsForm" action="/admin/products/bulk-delete" method="post">
-        <div class="overflow-x-auto">
-          <table class="w-full text-sm">
-            <thead class="sticky top-0 z-10 bg-slate-50/90 backdrop-blur">
-              <tr class="text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
-                <th class="w-10 px-3 py-2.5">
-                  <input id="select-all-products" type="checkbox" class="checkbox-custom" />
-                </th>
-                <th class="px-3 py-2.5">Sản phẩm</th>
-                <th class="px-3 py-2.5">Thương hiệu</th>
-                <th class="px-3 py-2.5">Danh mục</th>
-                <th class="px-3 py-2.5 text-center">Biến thể</th>
-                <th class="px-3 py-2.5">Giá</th>
-                <th class="px-3 py-2.5 text-center">Tồn kho</th>
-                <th class="px-3 py-2.5">Trạng thái</th>
-                <th class="w-32 px-3 py-2.5 text-right"></th>
-              </tr>
-            </thead>
-            <tbody class="divide-y divide-slate-100">
-              <% (items||[]).forEach(p=>{ %>
-                <% const statusName=(p.productStatus && p.productStatus.statusName) || 'New' ; %>
-                  <% const statusColor={ 'New' : 'bg-sky-100 text-sky-700' , 'Bán chạy'
-                    : 'bg-emerald-100 text-emerald-700' , 'Trending' : 'bg-amber-100 text-amber-700' , 'Active'
-                    : 'bg-emerald-100 text-emerald-700' , 'Inactive' : 'bg-slate-100 text-slate-700' , 'Draft'
-                    : 'bg-slate-100 text-slate-700' , 'Out of stock' : 'bg-rose-100 text-rose-700' }[statusName]
-                    || 'bg-slate-100 text-slate-700' ; %>
-
-                    <tr class="transition-colors hover:bg-slate-50/80">
-                      <!-- Checkbox -->
-                      <td class="px-3 py-2.5 align-top">
-                        <input type="checkbox" name="ids[]" class="product-row-check checkbox-custom"
-                          value="<%= p._id %>" />
-                      </td>
-
-                      <!-- Sản phẩm -->
-                      <td class="px-3 py-2.5 align-top">
-                        <div class="flex items-center gap-3">
-                          <div
-                            class="relative h-12 w-12 shrink-0 overflow-hidden rounded-xl border border-slate-200 bg-slate-50 shadow-sm">
-                            <img src="<%= p.cover || '/placeholder.png' %>" alt="cover"
-                              class="h-full w-full object-cover transition-transform duration-200 group-hover:scale-105" />
-                          </div>
-                          <div class="min-w-0">
-                            <div class="truncate text-[13px] font-semibold text-slate-900">
-                              <%= p.name %>
-                            </div>
-                            <div class="mt-0.5 flex items-center gap-2 text-[11px] text-slate-500">
-                              <span class="truncate">/<%= p.slug %></span>
-                            </div>
-                          </div>
-                        </div>
-                      </td>
-
-                      <!-- Thương hiệu -->
-                      <td class="px-3 py-2.5 align-top text-[13px] text-slate-700">
-                        <%= (p.brand && p.brand.name) || '-' %>
-                      </td>
-
-                      <!-- Danh mục -->
-                      <td class="px-3 py-2.5 align-top text-[13px] text-slate-700">
-                        <%= (p.category && p.category.name) || '-' %>
-                      </td>
-
-                      <!-- Biến thể -->
-                      <td class="px-3 py-2.5 align-top text-center text-[13px] text-slate-700">
-                        <span
-                          class="inline-flex items-center justify-center rounded-full bg-slate-50 px-2 py-1 text-[11px] font-medium text-slate-700">
-                          <i data-lucide="layers" class="mr-1 h-5 w-5"></i>
-                          <%= p.variants_count || 0 %>
-                        </span>
-                      </td>
-
-                      <!-- Giá -->
-                      <td class="px-3 py-2.5 align-top text-[13px] font-medium text-slate-900">
-                        <div class="flex flex-col gap-0.5">
-                          <span>
-                            <%= money(p.price_min || 0) %>
-                          </span>
-                          <span class="text-[11px] text-slate-500">→ <%= money(p.price_max || 0) %></span>
-                        </div>
-                      </td>
-
-                      <!-- Tồn kho -->
-                      <td class="px-3 py-2.5 align-top text-center text-[13px] text-slate-700">
-                        <span
-                          class="inline-flex items-center justify-center rounded-full bg-slate-50 px-2 py-1 text-[11px] font-medium text-slate-800">
-                          <i data-lucide="boxes" class="mr-1 h-5 w-5"></i>
-                          <%= p.stock_total || 0 %>
-                        </span>
-                      </td>
-
-                      <!-- Trạng thái -->
-                      <td class="px-3 py-2.5 align-top">
-                        <span
-                          class="inline-flex items-center gap-1 rounded-full px-2 py-1 text-[11px] font-medium <%= statusColor %>">
-                          <%= statusName %>
-                        </span>
-                      </td>
-
-                      <!-- Actions -->
-                      <td class="px-3 py-2.5 align-top">
-                        <div class="flex items-center justify-end gap-1.5">
-                          <a class="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-[11px] font-medium text-slate-800 shadow-sm transition hover:-translate-y-0.5 hover:border-emerald-500 hover:bg-emerald-50 hover:text-emerald-700"
-                            href="/admin/products/<%= p._id %>">
-                            <i data-lucide="pencil-line" class="h-4 w-4"></i>
-                            Sửa
-                          </a>
-
-                          <!-- Xoá đơn lẻ -->
-                          <form action="/admin/products/<%= p._id %>/delete" method="post" class="inline"
-                            onsubmit="return confirm('Xóa sản phẩm này?')">
-                            <button type="submit"
-                              class="inline-flex items-center gap-1.5 rounded-lg border border-rose-200 bg-rose-50 px-2.5 py-1.5 text-[11px] font-medium text-rose-700 shadow-sm transition hover:-translate-y-0.5 hover:border-rose-400 hover:bg-rose-100">
-                              <i data-lucide="trash-2" class="h-5 w-5"></i>
-                              Xóa
-                            </button>
-                          </form>
-                        </div>
-                      </td>
-                    </tr>
-                    <% }) %>
-
-                      <% if(!items || items.length===0){ %>
-                        <tr>
-                          <td colspan="9" class="p-10 text-center">
-                            <div class="mx-auto max-w-md">
-                              <div
-                                class="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-100">
-                                <i data-lucide="package-open" class="h-8 w-8 text-slate-500"></i>
-                              </div>
-                              <div class="text-base font-medium text-slate-900">Chưa có sản phẩm phù hợp</div>
-                              <p class="mt-1 text-sm text-slate-500">
-                                Hãy điều chỉnh bộ lọc hoặc thêm sản phẩm mới vào hệ thống.
-                              </p>
-                              <a href="/admin/products/new"
-                                class="mt-3 inline-flex items-center justify-center gap-2 rounded-xl bg-slate-900 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-slate-800">
-                                <i data-lucide="plus" class="h-6 w-6"></i>
-                                Thêm sản phẩm
-                              </a>
-                            </div>
-                          </td>
-                        </tr>
-                        <% } %>
-            </tbody>
-          </table>
-        </div>
-
-        <!-- Bulk action bar + Pagination -->
-        <div class="border-t border-slate-100 bg-white/90 px-4 py-3">
-          <div class="flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <!-- Bulk bar -->
-            <div id="bulk-bar"
-              class="hidden items-center gap-3 rounded-2xl bg-slate-900 px-4 py-2 text-xs sm:text-[13px] text-slate-100 shadow-sm">
-              <!-- Count -->
-              <div class="inline-flex items-center gap-2 rounded-xl bg-slate-800/80 px-2.5 py-1">
-                <span id="bulk-count" class="text-sm font-semibold">0</span>
-                <span class="text-[12px]">sản phẩm đã chọn</span>
-              </div>
-
-              <!-- Delete selected -->
-              <button type="submit" onclick="return confirm('Bạn có chắc muốn xóa các sản phẩm đã chọn?')"
-                class="inline-flex items-center gap-1.5 rounded-xl bg-rose-500 px-3 py-1.5 text-xs font-semibold text-white shadow-sm transition hover:bg-rose-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-400/70">
-                <i data-lucide="trash-2" class="h-5 w-5"></i>
-                Xóa đã chọn
-              </button>
-            </div>
-
-            <!-- Pagination -->
-            <div class="w-full sm:w-auto sm:ml-auto">
-              <%- include('partials/_pagination') %>
-            </div>
-          </div>
-        </div>
-
-      </form>
+    <div id="products-table-wrapper">
+      <%- include('partials/_products_table', { items, total, pagination, query }) %>
     </div>
+
   </section>
 
   <script>
-    document.addEventListener("DOMContentLoaded", function () {
+    // Hàm bulk checkbox bạn đã có, chỉ cần chắc chắn tên là initProductsBulkUI
+    function initProductsBulkUI() {
       const master = document.getElementById("select-all-products");
       const rowChecks = Array.from(document.querySelectorAll(".product-row-check"));
       const bulkBar = document.getElementById("bulk-bar");
       const bulkCount = document.getElementById("bulk-count");
 
-      if (!master || !rowChecks.length) return;
+      if (!master || !rowChecks.length) {
+        if (bulkBar) bulkBar.classList.add("hidden");
+        return;
+      }
 
       function updateBulkUI() {
         const selected = rowChecks.filter(c => c.checked).length;
         if (bulkCount) bulkCount.textContent = selected;
         if (bulkBar) {
-          if (selected > 0) {
-            bulkBar.classList.remove("hidden");
-          } else {
-            bulkBar.classList.add("hidden");
-          }
+          bulkBar.classList.toggle("hidden", selected === 0);
         }
       }
 
@@ -417,5 +227,90 @@
       });
 
       updateBulkUI();
+    }
+
+    document.addEventListener("DOMContentLoaded", function () {
+      const filterForm = document.getElementById("products-filter-form");
+      const tableWrapper = document.getElementById("products-table-wrapper");
+
+      if (!filterForm || !tableWrapper) return;
+
+      initProductsBulkUI();
+
+      // build URL từ form + page
+      function buildUrl(page) {
+        const fd = new FormData(filterForm);
+        const params = new URLSearchParams();
+
+        for (const [k, v] of fd.entries()) {
+          if (v !== "") params.append(k, v);
+        }
+
+        if (page) params.set("page", page);
+        params.set("ajax", "1");
+
+        return "/admin/products?" + params.toString();
+      }
+
+      function loadAjax(url) {
+        fetch(url, {
+          headers: {
+            "X-Requested-With": "XMLHttpRequest",
+            "Accept": "application/json",
+          },
+        })
+          .then(r => r.json())
+          .then(data => {
+            if (!data || !data.ok) {
+              console.error("products ajax error:", data && data.error);
+              return;
+            }
+
+            // thay bảng
+            tableWrapper.innerHTML = data.html;
+
+            // re-init bulk checkbox cho HTML mới
+            initProductsBulkUI();
+
+            // cập nhật URL (loại ajax=1)
+            try {
+              const u = new URL(url, window.location.origin);
+              u.searchParams.delete("ajax");
+              window.history.replaceState({}, "", u.toString());
+            } catch (e) {
+              console.warn(e);
+            }
+          })
+          .catch(err => console.error(err));
+      }
+
+      // --- submit form (nút Lọc hoặc Enter) ---
+      filterForm.addEventListener("submit", function (e) {
+        e.preventDefault();
+        const url = buildUrl(1); // luôn quay về page 1 khi lọc
+        loadAjax(url);
+      });
+
+      // --- tự lọc khi đổi brand/category/sort (optional) ---
+      ["brand", "category", "sort"].forEach(name => {
+        const el = filterForm.elements[name];
+        if (el) {
+          el.addEventListener("change", function () {
+            const url = buildUrl(1);
+            loadAjax(url);
+          });
+        }
+      });
+
+      // --- click phân trang dùng event delegation trên wrapper ---
+      tableWrapper.addEventListener("click", function (e) {
+        const link = e.target.closest("a.js-products-page");
+        if (!link) return;
+        e.preventDefault();
+
+        const page = link.dataset.page || 1;
+        const url = buildUrl(page);
+        loadAjax(url);
+      });
     });
   </script>

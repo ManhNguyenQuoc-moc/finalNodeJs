@@ -2,24 +2,34 @@ const Variant = require("../models/ProductVariant");
 
 class VariantRepository {
   async create(data) {
-    const variant = new Brand(data);
+    const variant = new Variant(data);
     return variant.save();
   }
 
   async findAll() {
-    return variant.find();
+    return Variant.find();
   }
 
   async findById(id) {
-    return variant.findById(id);
+    return Variant.findById(id);
   }
 
   async update(id, data) {
-    return variant.findByIdAndUpdate(id, data, { new: true });
+    return Variant.findByIdAndUpdate(id, data, { new: true });
   }
 
   async delete(id) {
-    return variant.findByIdAndDelete(id);
+    return Variant.findByIdAndDelete(id);
+  }
+  async findBySku(sku) {
+    return Variant.findOne({ sku }).lean();
+  }
+  async increaseStock(productVariantId, quantity, session = null) {
+    return Variant.findByIdAndUpdate(
+      productVariantId,
+      { $inc: { stock_quantity: quantity } },
+      { new: true, session }
+    );
   }
 }
 
