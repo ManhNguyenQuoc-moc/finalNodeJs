@@ -297,8 +297,6 @@ module.exports = function createAdminRouter({ BACKEND, proxy } = {}) {
       return { ok: false, message: err.message || "Không thể xoá size" };
     }
   }
-  // ========== Helpers (locals) ==========
-  let ADMIN_ACCOUNT = { id: "admin1", full_name: "Admin", password: "admin123" }; // demo
 
   router.use(async (req, res, next) => {
     // helper format tiền
@@ -312,32 +310,21 @@ module.exports = function createAdminRouter({ BACKEND, proxy } = {}) {
         return v;
       }
     };
-
-    // activePath cho menu/tabs
     res.locals.activePath = "/admin" + req.path;
-
-    // flash message
     res.locals.flash = {};
     if (req.query?.s) res.locals.flash.success = req.query.s;
     if (req.query?.e) res.locals.flash.error = req.query.e;
-
-    // 🔥 LẤY ADMIN TỪ BACKEND
     let adminUser = null;
     if (BACKEND) {
       adminUser = await fetchAdminProfile(req);
     }
-
-    // Nếu backend fail / chưa config -> fallback mock
     if (adminUser) {
-      // data.user từ BE: { id, email, full_name, ... }
       res.locals.admin = adminUser;
     } else {
-      res.locals.admin = { full_name: ADMIN_ACCOUNT.full_name };
+      return res.redirect("/login?=Bạn cần đăng nhập để vào trang quản trị");
     }
-
     next();
   });
-
   router.use(express.urlencoded({ extended: true }));
 
   // ========== Mock data (unchanged for fallback) ==========
@@ -1737,27 +1724,150 @@ module.exports = function createAdminRouter({ BACKEND, proxy } = {}) {
     }
   });
 
-  // ========== Products ==========
-  router.get("/products", async (req, res) => {
-    await Promise.all([tryLoadBrands(req), tryLoadCategories(req), tryLoadColors(req), tryLoadSizes(req)]);
-    const list = await fetchProducts(req);
-    const { page = 1 } = req.query;
+ // ========== Products ==========
+router.get("/products", async (req, res) => {
+  await Promise.all([
+    tryLoadBrands(req),
+    tryLoadCategories(req),
+    tryLoadColors(req),
+    tryLoadSizes(req),
+  ]);
 
-    // Normalize brand/category to objects if backend only returns IDs
-    const mapped = list.map((p) => ({
-      ...p,
-      brand: typeof p.brand === 'string' ? (BRANDS.find(b => String(b._id) === String(p.brand)) || p.brand) : p.brand,
-      category: typeof p.category === 'string' ? (CATEGORIES.find(c => String(c._id) === String(p.category)) || p.category) : p.category,
-    }));
+  const list = await fetchProducts(req);
+  const { page = 1 } = req.query;
 
-    const p = paginate(mapped, page, 10);
-    res.render("products_index", {
-      title: "Sản phẩm",
-      pageHeading: "Quản lý sản phẩm",
-      items: p.items, brands: BRANDS, categories: CATEGORIES,
-      query: req.query, pagination: { ...p, baseUrl: baseUrl(req) }
+  // chuẩn hoá brand/category
+  const mapped = list.map((p) => ({
+    ...p,
+    brand:
+      typeof p.brand === "string"
+        ? BRANDS.find((b) => String(b._id) === String(p.brand)) || p.brand
+        : p.brand,
+    category:
+      typeof p.category === "string"
+        ? CATEGORIES.find((c) => String(c._id) === String(p.category)) || p.category
+        : p.category,
+  }));
+
+  // ====== LỌC / TÌM KIẾM / SẮP XẾP ======
+  const { q, brand, category, min, max, sort } = req.query || {};
+  let filtered = mapped.slice();
+
+  // tìm theo tên / slug / sku
+  if (q) {
+    const key = String(q).toLowerCase();
+    filtered = filtered.filter((p) => {
+      const name = (p.name || "").toLowerCase();
+      const slug = (p.slug || "").toLowerCase();
+      const sku =
+        (Array.isArray(p.variants) && p.variants[0] && p.variants[0].sku) ||
+        p.sku ||
+        "";
+      return (
+        name.includes(key) ||
+        slug.includes(key) ||
+        String(sku).toLowerCase().includes(key)
+      );
     });
+  }
+
+  // lọc thương hiệu
+  if (brand) {
+    filtered = filtered.filter((p) => {
+      const id = p.brand && (p.brand._id || p.brand.id || p.brand);
+      return String(id) === String(brand);
+    });
+  }
+
+  // lọc danh mục
+  if (category) {
+    filtered = filtered.filter((p) => {
+      const id = p.category && (p.category._id || p.category.id || p.category);
+      return String(id) === String(category);
+    });
+  }
+
+  // lọc giá (dùng khoảng price_min / price_max của sản phẩm)
+  if (min) {
+    const minNum = Number(min);
+    filtered = filtered.filter(
+      (p) => Number(p.price_min ?? p.price ?? 0) >= minNum
+    );
+  }
+  if (max) {
+    const maxNum = Number(max);
+    filtered = filtered.filter(
+      (p) => Number(p.price_max ?? p.price ?? 0) <= maxNum
+    );
+  }
+
+  // sort
+  if (sort) {
+    filtered.sort((a, b) => {
+      switch (sort) {
+        case "name_asc":
+          return (a.name || "").localeCompare(b.name || "", "vi");
+        case "name_desc":
+          return (b.name || "").localeCompare(a.name || "", "vi");
+        case "price_asc":
+          return (Number(a.price_min || a.price || 0) -
+            Number(b.price_min || b.price || 0));
+        case "price_desc":
+          return (Number(b.price_max || b.price || 0) -
+            Number(a.price_max || a.price || 0));
+        case "created_desc":
+          return (
+            new Date(b.createdAt || 0).getTime() -
+            new Date(a.createdAt || 0).getTime()
+          );
+        default:
+          return 0;
+      }
+    });
+  }
+
+  // ====== PAGINATE SAU KHI ĐÃ LỌC ======
+  const p = paginate(filtered, Number(page) || 1, 10);
+  const total = filtered.length; // tổng theo bộ lọc
+
+  const isAjax =
+    req.xhr ||
+    req.headers["x-requested-with"] === "XMLHttpRequest" ||
+    req.query.ajax === "1";
+
+  if (isAjax) {
+    return res.render(
+      "partials/_products_table",
+      {
+        layout: false,
+        items: p.items,
+        pagination: { ...p, baseUrl: baseUrl(req) },
+        total,
+        query: req.query,
+      },
+      (err, html) => {
+        if (err) {
+          console.error("Render products AJAX failed:", err);
+          return res.json({ ok: false, error: err.message });
+        }
+        res.json({ ok: true, html });
+      }
+    );
+  }
+
+  // lần đầu load trang (không ajax)
+  res.render("products_index", {
+    title: "Sản phẩm",
+    pageHeading: "Quản lý sản phẩm",
+    items: p.items,
+    brands: BRANDS,
+    categories: CATEGORIES,
+    query: req.query,
+    total,
+    pagination: { ...p, baseUrl: baseUrl(req) },
   });
+});
+
 
   router.get("/products/new", async (req, res) => {
     await Promise.all([tryLoadBrands(req), tryLoadCategories(req), tryLoadColors(req), tryLoadSizes(req)]);

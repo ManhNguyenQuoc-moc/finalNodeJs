@@ -1,10 +1,19 @@
 <% if (pagination && pagination.totalPages > 0) { %>
 <nav class="mt-6 flex items-center justify-between">
-  <div class="text-sm text-slate-500 px-4">Trang <%= pagination.page %> / <%= pagination.totalPages %> • Tổng <%= pagination.totalItems %> mục </div>
+  <div class="text-sm text-slate-500 px-4">
+    Trang <%= pagination.page %> / <%= pagination.totalPages %> • Tổng <%= pagination.totalItems %> mục
+  </div>
+
   <ul class="inline-flex items-center gap-1">
     <% for (let i = 1; i <= pagination.totalPages; i++) { %>
       <li>
-        <a href="<%= pagination.baseUrl %><%= i %>" class="px-3 py-2 rounded-lg border text-sm <%= i===pagination.page ? 'bg-brand-500 text-white border-brand-500' : 'bg-white text-black hover:bg-slate-50' %>"><%= i %></a>
+        <a
+          href="<%= pagination.baseUrl %><%= i %>"
+          class="js-products-page px-3 py-2 rounded-lg border text-sm <%= i===pagination.page ? 'bg-brand-500 text-white border-brand-500' : 'bg-white text-black hover:bg-slate-50' %>"
+          data-page="<%= i %>"
+        >
+          <%= i %>
+        </a>
       </li>
     <% } %>
   </ul>
