@@ -419,7 +419,9 @@ module.exports = function createPagesRouter({ BACKEND, proxy }) {
       ...dataMini,
     });
   });
-
+  router.get("/auth/google", (req, res) => {
+    return res.redirect("/api/auth/google");
+  });
   // Xử lý submit reset password -> gọi BE /api/auth/reset-password
   router.post("/reset-password", async (req, res) => {
     const { token, password, confirm_password } = req.body;
