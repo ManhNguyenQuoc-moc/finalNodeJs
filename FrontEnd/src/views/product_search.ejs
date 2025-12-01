@@ -104,54 +104,16 @@
 
       /* Search Input Section */
       .search-input-section {
-        background: linear-gradient(180deg, rgba(255, 255, 255, 0.95) 0%, #ffffff 100%);
-        padding: 3rem 0 2.5rem;
-        margin-top: -2rem;
+        background: transparent;
+        padding: 2rem 0 1.5rem;
         position: relative;
-        z-index: 2;
-        box-shadow: 0 -8px 30px rgba(0, 0, 0, 0.08);
-      }
-
-      .search-input-section::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        height: 1px;
-        background: linear-gradient(90deg, transparent 0%, rgba(102, 126, 234, 0.3) 50%, transparent 100%);
       }
 
       .search-input-wrapper {
-        max-width: 900px;
+        max-width: 800px;
         margin: 0 auto;
         position: relative;
         padding: 0 1rem;
-      }
-
-      .search-input-label {
-        display: block;
-        text-align: center;
-        font-size: 0.95rem;
-        font-weight: 600;
-        color: #475569;
-        margin-bottom: 1.25rem;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        position: relative;
-        padding-bottom: 0.75rem;
-      }
-
-      .search-input-label::after {
-        content: '';
-        position: absolute;
-        bottom: 0;
-        left: 50%;
-        transform: translateX(-50%);
-        width: 50px;
-        height: 2px;
-        background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
-        border-radius: 2px;
       }
 
       .search-input-container {
@@ -161,17 +123,15 @@
         background: #ffffff;
         border: 2px solid #e2e8f0;
         border-radius: 50px;
-        padding: 0.6rem 1.25rem;
-        transition: all 0.3s ease;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
-        background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+        padding: 0.65rem 1.5rem;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
       }
 
       .search-input-container:focus-within {
         border-color: #667eea;
-        box-shadow: 0 6px 20px rgba(102, 126, 234, 0.2), 0 0 0 3px rgba(102, 126, 234, 0.08);
-        transform: translateY(-2px);
-        background: #ffffff;
+        box-shadow: 0 4px 16px rgba(102, 126, 234, 0.25), 0 0 0 4px rgba(102, 126, 234, 0.1);
+        transform: translateY(-1px);
       }
 
       .search-input-container input {
@@ -242,32 +202,6 @@
         stroke-width: 2.5;
       }
 
-      /* Gradient Bar */
-      .gradient-bar {
-        height: 4px;
-        background: linear-gradient(90deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
-        margin: 2rem auto 0;
-        max-width: 1200px;
-        border-radius: 2px;
-        position: relative;
-        overflow: hidden;
-      }
-
-      .gradient-bar::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: -100%;
-        width: 100%;
-        height: 100%;
-        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
-        animation: shimmer 3s infinite;
-      }
-
-      @keyframes shimmer {
-        0% { left: -100%; }
-        100% { left: 100%; }
-      }
 
       /* Results Header */
       .search-results-header {
@@ -275,46 +209,34 @@
         justify-content: space-between;
         align-items: center;
         margin-bottom: 2.5rem;
-        padding: 2rem 2.5rem;
-        background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
-        border-radius: 20px;
+        padding: 1.5rem 2rem;
+        background: #ffffff;
+        border-radius: 16px;
         border: 1px solid #e2e8f0;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
         position: relative;
-        overflow: hidden;
-      }
-
-      .search-results-header::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 4px;
-        height: 100%;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       }
 
       .search-results-count {
-        font-size: 1.2rem;
-        font-weight: 700;
-        color: #1e293b;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+        font-size: 1rem;
+        font-weight: 600;
+        color: #334155;
         display: flex;
         align-items: center;
-        gap: 0.5rem;
-      }
-
-      .search-results-count::before {
-        content: '📦';
-        font-size: 1.5rem;
+        gap: 0.75rem;
+        line-height: 1.5;
       }
 
       .search-results-count .count-number {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         background-clip: text;
-        font-size: 1.8rem;
-        font-weight: 800;
+        font-size: 1.5rem;
+        font-weight: 700;
+        display: inline-block;
       }
 
       /* Empty State */
@@ -397,49 +319,178 @@
 
       /* Product Cards */
       .product-card {
-        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-        border-radius: 16px;
+        background: #ffffff;
+        border: 1px solid #f1f5f9;
+        border-radius: 20px;
         overflow: hidden;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        position: relative;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
       }
 
       .product-card:hover {
-        transform: translateY(-12px) scale(1.02);
-        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+        transform: translateY(-8px);
+        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12);
+        border-color: #e2e8f0;
+      }
+
+      .product-card .pc__img-wrapper {
+        position: relative;
+        overflow: hidden;
+        background: #f8fafc;
+        border-radius: 20px 20px 0 0;
+      }
+
+      .product-card .pc__img-wrapper img {
+        transition: transform 0.5s ease;
+      }
+
+      .product-card:hover .pc__img-wrapper img.pc__img {
+        transform: scale(1.05);
+      }
+
+      .product-card .pc__img-wrapper img.pc__img-second {
+        opacity: 0;
+        position: absolute;
+        top: 0;
+        left: 0;
+      }
+
+      .product-card:hover .pc__img-wrapper img.pc__img {
+        opacity: 0;
+      }
+
+      .product-card:hover .pc__img-wrapper img.pc__img-second {
+        opacity: 1;
+      }
+
+      .product-card .pc__info {
+        padding: 1.25rem;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .product-card .pc__category {
+        font-size: 0.75rem;
+        color: #94a3b8;
+        text-transform: uppercase;
+        letter-spacing: 0.8px;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+      }
+
+      .product-card .pc__title {
+        margin: 0 0 0.75rem 0;
+        font-size: 1rem;
+        font-weight: 600;
+        line-height: 1.4;
+      }
+
+      .product-card .pc__title a {
+        color: #1e293b;
+        text-decoration: none;
+        transition: color 0.3s ease;
+      }
+
+      .product-card .pc__title a:hover {
+        color: #667eea;
       }
 
       .rating-stars {
         display: flex;
         align-items: center;
-        gap: 0.25rem;
-        margin: 0.75rem 0;
+        gap: 0.2rem;
+        margin: 0.5rem 0;
+        flex-wrap: wrap;
       }
 
       .rating-stars .star {
         color: #fbbf24;
-        font-size: 1.1rem;
-        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+        font-size: 1rem;
+        line-height: 1;
       }
 
       .rating-stars .star.empty {
-        color: #e5e7eb;
+        color: #e2e8f0;
       }
 
       .rating-text {
-        font-size: 0.875rem;
-        color: #6b7280;
+        font-size: 0.8rem;
+        color: #64748b;
         margin-left: 0.5rem;
         font-weight: 500;
+        line-height: 1.4;
+      }
+
+      .product-card__price {
+        margin-top: auto;
+        padding-top: 1rem;
+      }
+
+      .product-card__price .money {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: #667eea;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       }
 
       .product-brand {
-        font-size: 0.875rem;
-        color: #64748b;
-        margin-top: 0.5rem;
+        font-size: 0.8rem;
+        color: #94a3b8;
+        margin-top: 0.75rem;
+        padding-top: 0.75rem;
+        border-top: 1px solid #f1f5f9;
       }
 
       .product-brand strong {
         color: #475569;
-        font-weight: 700;
+        font-weight: 600;
+      }
+
+      .custom-swatch-container {
+        padding: 0.75rem 1.25rem 0;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+      }
+
+      .custom-swatch-color {
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        border: 2px solid #ffffff;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+        transition: all 0.3s ease;
+        cursor: pointer;
+      }
+
+      .custom-swatch-color:hover {
+        transform: scale(1.15);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      }
+
+      .custom-swatch-color.swatch_active {
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+      }
+
+      .product-card .anim_appear-bottom {
+        background: rgba(255, 255, 255, 0.98);
+        backdrop-filter: blur(10px);
+        padding: 1rem 1.25rem;
+        border-top: 1px solid #f1f5f9;
+        border-radius: 0 0 20px 20px;
+        opacity: 0;
+        transform: translateY(10px);
+        transition: all 0.3s ease;
+      }
+
+      .product-card:hover .anim_appear-bottom {
+        opacity: 1;
+        transform: translateY(0);
       }
 
       /* Products Grid */
@@ -580,7 +631,6 @@
     <section class="search-input-section">
       <div class="container">
         <div class="search-input-wrapper">
-          <label class="search-input-label">Bạn đang cần tìm kiếm gì?</label>
           <form method="GET" action="/search" class="search-input-container">
             <input 
               type="text" 
@@ -596,7 +646,6 @@
             </button>
           </form>
         </div>
-        <div class="gradient-bar"></div>
       </div>
     </section>
 
@@ -608,8 +657,8 @@
       <div class="search-results-header">
         <div class="search-results-count">
           Tìm thấy <span class="count-number"><%= quantity || total || (productsList ? productsList.length : 0) %></span> sản phẩm
-          <% if (totalPages > 1) { %>
-            <span class="text-muted" style="font-size: 0.9rem; font-weight: 400; margin-left: 0.5rem;">
+          <% if (totalPages && totalPages > 1) { %>
+            <span style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 0.875rem; font-weight: 400; color: #64748b; margin-left: 0.5rem;">
               (Trang <%= currentPage || 1 %>/<%= totalPages %>)
             </span>
           <% } %>
@@ -652,63 +701,69 @@
             }
           }
         %>
-          <div class="col-6 col-md-4 col-lg-3">
-            <div class="product-card product-card_style3 mb-3 mb-md-4 mb-xxl-5">
+          <div class="col-6 col-md-4 col-lg-3 mb-4">
+            <div class="product-card">
               <div class="pc__img-wrapper">
                 <a href="/product_detail/<%= productId %>">
                   <img loading="lazy"
-                       src="<%= product.colors.length > 0 ? product.colors[0].imageUrls[0] : '/mixishop/images/default.png' %>"
+                       src="<%= product.colors && product.colors.length > 0 && product.colors[0].imageUrls && product.colors[0].imageUrls.length > 0 ? product.colors[0].imageUrls[0] : '/mixishop/images/default.png' %>"
                        width="258" height="313"
                        alt="<%= productName %>" class="pc__img">
                   <img loading="lazy"
-                       src="<%= product.colors.length > 0 && product.colors[0].imageUrls.length > 1 ? product.colors[0].imageUrls[1] : (product.colors.length > 0 && product.colors[0].imageUrls.length > 0 ? product.colors[0].imageUrls[0] : '/mixishop/images/default.png') %>"
+                       src="<%= product.colors && product.colors.length > 0 && product.colors[0].imageUrls && product.colors[0].imageUrls.length > 1 ? product.colors[0].imageUrls[1] : (product.colors && product.colors.length > 0 && product.colors[0].imageUrls && product.colors[0].imageUrls.length > 0 ? product.colors[0].imageUrls[0] : '/mixishop/images/default.png') %>"
                        width="258" height="313"
                        alt="<%= productName %>" class="pc__img pc__img-second">
                   <% if (product.productStatus && product.productStatus.statusName) { %>
-                    <img class="category-banner__frame"
+                    <img class="category-banner__frame position-absolute top-0 start-0"
+                         style="width: 100%; height: 100%; object-fit: contain; pointer-events: none;"
                          src="<%= product.productStatus.statusName === 'Bán chạy' ? '/mixishop/images/frame_banchay.png' : (product.productStatus.statusName === 'Trending' ? '/mixishop/images/frame_trending.png' : '/mixishop/images/frame_new.png') %>"
                          alt="Status Frame">
                   <% } %>
                 </a>
               </div>
 
-              <div class="d-flex align-items-center mt-1 custom-swatch-container">
-                <% product.colors.forEach(function(productColor) { %>
-                  <a href="#"
-                     class="swatch-color custom-swatch-color"
-                     style="background-image: url('<%= productColor.imageUrls.length > 0 ? productColor.imageUrls[0] : '' %>'); background-size: cover;"
-                     data-images="<%= productColor.imageUrls.length > 0 ? productColor.imageUrls[0] : '' %><%= productColor.imageUrls.length > 1 ? ',' + productColor.imageUrls[1] : '' %><%= productColor.imageUrls.length > 2 ? ',' + productColor.imageUrls[2] : '' %>"
-                     onclick="changeColor(this); return false;"
-                     title="<%= productColor.color %>"></a>
-                <% }) %>
-              </div>
+              <% if (product.colors && product.colors.length > 0) { %>
+                <div class="custom-swatch-container">
+                  <% product.colors.slice(0, 6).forEach(function(productColor, index) { %>
+                    <a href="#"
+                       class="swatch-color custom-swatch-color <%= index === 0 ? 'swatch_active' : '' %>"
+                       style="background-image: url('<%= productColor.imageUrls && productColor.imageUrls.length > 0 ? productColor.imageUrls[0] : '' %>'); background-size: cover; background-color: #f5f5f5;"
+                       data-images="<%= productColor.imageUrls && productColor.imageUrls.length > 0 ? productColor.imageUrls[0] : '' %><%= productColor.imageUrls && productColor.imageUrls.length > 1 ? ',' + productColor.imageUrls[1] : '' %><%= productColor.imageUrls && productColor.imageUrls.length > 2 ? ',' + productColor.imageUrls[2] : '' %>"
+                       onclick="changeColor(this); return false;"
+                       title="<%= productColor.color || 'Màu sắc' %>"></a>
+                  <% }) %>
+                </div>
+              <% } %>
 
-              <div class="pc__info position-relative">
+              <div class="pc__info">
                 <% if (categoryName) { %>
-                  <p class="pc__category mb-1" style="font-size: 0.75rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px;">
-                    <%= categoryName %>
-                  </p>
+                  <p class="pc__category"><%= categoryName %></p>
                 <% } %>
+                
                 <h3 class="pc__title">
                   <a href="/product_detail/<%= productId %>"><%= productName %></a>
                 </h3>
                 
-                <% if (ratingCount > 0) { %>
+                <% if (ratingCount > 0 || commentCount > 0) { %>
                   <div class="rating-stars">
-                    <%- starsHtml %>
+                    <% if (ratingCount > 0) { %>
+                      <%- starsHtml %>
+                    <% } %>
                     <span class="rating-text">
-                      (<%= ratingCount %> đánh giá<% if (commentCount > 0) { %>, <%= commentCount %> bình luận<% } %>)
+                      <% if (ratingCount > 0) { %>
+                        <%= ratingCount %> đánh giá
+                      <% } %>
+                      <% if (commentCount > 0) { %>
+                        <% if (ratingCount > 0) { %>, <% } %>
+                        <%= commentCount %> bình luận
+                      <% } %>
                     </span>
-                  </div>
-                <% } else if (commentCount > 0) { %>
-                  <div class="rating-text" style="margin-top: 0.5rem;">
-                    <%= commentCount %> bình luận
                   </div>
                 <% } %>
 
-                <div class="product-card__price d-flex align-items-center">
-                  <span class="money price text-primary" style="font-weight: 700; font-size: 1.1rem;">
-                    <%= product.getFormattedPrice ? product.getFormattedPrice(product.price) : new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(product.price || 0) %>
+                <div class="product-card__price">
+                  <span class="money price">
+                    <%= new Intl.NumberFormat('vi-VN').format(product.price || 0) %> đ
                   </span>
                 </div>
 
@@ -718,23 +773,18 @@
                   </div>
                 <% } %>
 
-                <div class="anim_appear-bottom position-absolute bottom-0 start-0 d-none d-sm-flex align-items-center bg-body">
+                <div class="anim_appear-bottom d-flex align-items-center justify-content-between w-100">
                   <a href="/product_detail/<%= productId %>"
-                     class="btn-icon btn-link btn-link_lg me-4 fw-medium"
-                     title="Thêm vào giỏ hàng">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-                      <use href="#icon_cart" />
-                    </svg>
-                    <span class="ms-2 small-text">Thêm giỏ hàng</span>
+                     class="btn btn-sm btn-primary flex-fill me-2"
+                     style="border-radius: 12px; font-weight: 600; padding: 0.5rem 1rem;">
+                    Xem chi tiết
                   </a>
-
-                  <button class="btn-icon btn-link btn-link_lg me-4 fw-medium js-quick-view" data-bs-toggle="modal" data-bs-target="#quickView" title="Quick View">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><use href="#icon_view" /></svg>
-                    <span class="ms-2 small-text">Chi tiết</span>
-                  </button>
-
-                  <button class="pc__btn-wl bg-transparent border-0 js-add-wishlist" title="Thêm yêu thích">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><use href="#icon_heart" /></svg>
+                  <button class="btn btn-sm btn-outline-secondary js-add-wishlist" 
+                          style="border-radius: 12px; width: 40px; height: 40px; padding: 0; display: flex; align-items: center; justify-content: center;"
+                          title="Thêm yêu thích">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                    </svg>
                   </button>
                 </div>
               </div>

@@ -87,35 +87,15 @@
                     <div class="search-popup js-hidden-content">
                         <style>
                             .search-popup {
-                                background: linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, #ffffff 100%);
-                                backdrop-filter: blur(10px);
+                                background: transparent !important;
+                                padding-top: 2rem !important;
+                                padding-bottom: 1.5rem !important;
+                                border-top: 0 !important;
+                                box-shadow: none !important;
                             }
                             .search-popup .search-field {
-                                max-width: 900px;
+                                max-width: 800px;
                                 margin: 0 auto;
-                            }
-                            .search-popup .search-popup-label {
-                                display: block;
-                                text-align: center;
-                                font-size: 0.95rem;
-                                font-weight: 600;
-                                color: #475569;
-                                margin-bottom: 1.25rem;
-                                text-transform: uppercase;
-                                letter-spacing: 0.5px;
-                                position: relative;
-                                padding-bottom: 0.75rem;
-                            }
-                            .search-popup .search-popup-label::after {
-                                content: '';
-                                position: absolute;
-                                bottom: 0;
-                                left: 50%;
-                                transform: translateX(-50%);
-                                width: 50px;
-                                height: 2px;
-                                background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
-                                border-radius: 2px;
                             }
                             .search-popup .search-input-wrapper-modern {
                                 position: relative;
@@ -124,16 +104,14 @@
                                 background: #ffffff;
                                 border: 2px solid #e2e8f0;
                                 border-radius: 50px;
-                                padding: 0.6rem 1.25rem;
-                                transition: all 0.3s ease;
-                                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
-                                background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+                                padding: 0.65rem 1.5rem;
+                                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
                             }
                             .search-popup .search-input-wrapper-modern:focus-within {
                                 border-color: #667eea;
-                                box-shadow: 0 6px 20px rgba(102, 126, 234, 0.2), 0 0 0 3px rgba(102, 126, 234, 0.08);
-                                transform: translateY(-2px);
-                                background: #ffffff;
+                                box-shadow: 0 4px 16px rgba(102, 126, 234, 0.25), 0 0 0 4px rgba(102, 126, 234, 0.1);
+                                transform: translateY(-1px);
                             }
                             .search-popup .search-input-wrapper-modern input {
                                 flex: 1;
@@ -195,7 +173,6 @@
                             }
                         </style>
                         <form method="GET" action="/search" class="search-field container">
-                            <p class="search-popup-label">Bạn đang cần tìm kiếm gì?</p>
                             <div class="search-input-wrapper-modern">
                                 <input 
                                     class="search-field__input w-100"
