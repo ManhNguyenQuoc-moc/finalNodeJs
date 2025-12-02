@@ -1251,28 +1251,27 @@ module.exports = function createAdminRouter({ BACKEND, proxy } = {}) {
 
   // Build query cho BE dashboard từ req.query
   function buildDashboardQuery(req) {
-    const q = new URLSearchParams();
+  const q = new URLSearchParams();
 
-    const granularity = req.query.granularity || "month";
-    const start = req.query.start;
-    const end = req.query.end;
+  const granularity = req.query.granularity || "month";
+  const start = req.query.start;
+  const end = req.query.end;
 
-    // Nếu chọn khoảng ngày cụ thể -> dùng custom
-    if (start && end) {
-      q.set("granularity", "custom");
-      q.set("startDate", start);
-      q.set("endDate", end);
-    } else {
-      // forward thẳng granularity + year/month/quarter/week nếu có
-      q.set("granularity", granularity);
-      if (req.query.year) q.set("year", req.query.year);
-      if (req.query.month) q.set("month", req.query.month);
-      if (req.query.quarter) q.set("quarter", req.query.quarter);
-      if (req.query.week) q.set("week", req.query.week);
-    }
+  // Luôn gửi granularity đúng như user chọn
+  q.set("granularity", granularity);
 
-    return q.toString(); // "granularity=month&year=2025&month=11"
-  }
+  // Nếu có chọn khoảng ngày thì gửi thêm startDate / endDate
+  if (start) q.set("startDate", start);
+  if (end) q.set("endDate", end);
+
+  // Nếu BE của bạn có xài thêm year / month / quarter / week thì vẫn forward
+  if (req.query.year) q.set("year", req.query.year);
+  if (req.query.month) q.set("month", req.query.month);
+  if (req.query.quarter) q.set("quarter", req.query.quarter);
+  if (req.query.week) q.set("week", req.query.week);
+
+  return q.toString();
+}
 
   async function fetchSimpleDashboardFromBackend(req, res) {
     if (!BACKEND) {
