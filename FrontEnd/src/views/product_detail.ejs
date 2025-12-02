@@ -82,6 +82,205 @@
         padding: 18px;
       }
 
+<head>
+  <style>
+    .chat-bubble {
+      background: #f6f7f9;
+      border-radius: 12px;
+      padding: 10px 12px;
+    }
+
+    .chat-meta {
+      font-size: 12px;
+      color: #6b7280;
+    }
+
+    .comment-item {
+      margin-bottom: 12px;
+    }
+
+    .comment-item .children {
+      margin-left: 20px;
+      margin-top: 8px;
+    }
+
+    .btn-xxs {
+      padding: 2px 8px;
+      font-size: 12px;
+      line-height: 20px;
+    }
+
+    .like-btn {
+      background: transparent;
+      border: 0;
+      cursor: pointer;
+    }
+
+    .like-btn .heart {
+      font-size: 16px;
+      vertical-align: -2px;
+      margin-right: 4px;
+    }
+
+    .reply-form textarea {
+      min-height: 70px;
+    }
+
+    .star,
+    .rate-star {
+      font-style: normal;
+      font-size: 18px;
+      line-height: 1;
+      color: #bbb;
+      cursor: default;
+      transition: transform .08s ease, color .12s ease;
+      user-select: none;
+    }
+
+    .star.filled,
+    .rate-star.filled {
+      color: #f5a623;
+    }
+
+    .rating-box {
+      background: linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%);
+      padding: 1rem 1.5rem;
+      border-radius: 12px;
+      border: 2px solid #fed7aa;
+      box-shadow: 0 2px 8px rgba(251, 146, 60, 0.1);
+      position: relative;
+      z-index: 1;
+    }
+
+    .rating-box .rate-star {
+      cursor: pointer;
+      font-size: 28px;
+      margin-right: 4px;
+      transition: all 0.2s ease;
+      filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+    }
+
+    .rating-box .rate-star:hover {
+      transform: scale(1.2) rotate(5deg);
+      filter: drop-shadow(0 4px 8px rgba(251, 146, 60, 0.3));
+    }
+
+    .rating-box .rate-star.filled {
+      color: #f59e0b;
+      animation: starPulse 0.3s ease;
+    }
+
+    @keyframes starPulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.3); }
+      100% { transform: scale(1); }
+    }
+
+    .cmt-item:last-child {
+      border-bottom: 0 !important;
+    }
+
+    .qa-card {
+      background: #fff;
+      border: 1px solid #eef2f7;
+      border-radius: 14px;
+      box-shadow: 0 1px 2px rgba(16, 24, 40, .04);
+      padding: 18px;
+    }
+
+    .qa-hero {
+      display: flex;
+      gap: 18px;
+      align-items: center;
+      background: #f7f8fb;
+      border-radius: 14px;
+      padding: 18px;
+    }
+
+    .qa-hero__img {
+      width: 110px;
+      flex: 0 0 110px;
+    }
+
+    .qa-hero__img img {
+      width: 100%;
+      height: auto;
+    }
+
+    .qa-title {
+      font-weight: 800;
+      font-size: 28px;
+      margin-bottom: 8px;
+    }
+
+    .qa-desc {
+      color: #6b7280;
+    }
+
+    .qa-input {
+      display: flex;
+      gap: 14px;
+      margin-top: 14px;
+    }
+
+    .qa-input .form-control {
+      height: 48px;
+    }
+
+    .btn-ask {
+      background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+      color: #fff;
+      border: 0;
+      height: 52px;
+      border-radius: 12px;
+      padding: 0 2.5rem;
+      font-weight: 700;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .btn-ask::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+      transition: left 0.5s ease;
+    }
+
+    .btn-ask:hover {
+      background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+    }
+
+    .btn-ask:hover::before {
+      left: 100%;
+    }
+
+    .btn-ask:active {
+      transform: translateY(0);
+      box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+    }
+
+    .btn-ask:disabled {
+      background: #9ca3af;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+
+    @media (max-width:768px) {
       .qa-hero {
         display: flex;
         gap: 18px;
@@ -178,140 +377,814 @@
         color: #374151;
         text-decoration: none;
       }
+    }
 
-      .pdp-subnav__list a:hover,
-      .pdp-subnav__list a.active {
-        background: #f1f5f9;
-        color: #111827;
+    .pdp-subnav {
+      background: #fff;
+      z-index: 2;
+      border-bottom: 1px solid #eee;
+    }
+
+    .pdp-subnav__list {
+      display: flex;
+      gap: 18px;
+      padding: 10px 0;
+      margin: 0;
+      list-style: none;
+      overflow: auto;
+    }
+
+    .pdp-subnav__list a {
+      display: inline-block;
+      padding: 8px 10px;
+      border-radius: 8px;
+      font-weight: 600;
+      color: #374151;
+      text-decoration: none;
+    }
+
+    .pdp-subnav__list a:hover,
+    .pdp-subnav__list a.active {
+      background: #f1f5f9;
+      color: #111827;
+    }
+
+    .pdp-section {
+      scroll-margin-top: 80px;
+    }
+
+    .section-title {
+      font-size: 20px;
+      font-weight: 700;
+    }
+
+    .card {
+      border: 1px solid #eef2f7;
+      border-radius: 14px;
+      box-shadow: 0 1px 2px rgba(16, 24, 40, .04);
+    }
+
+    .feature-tile {
+      border: 1px dashed #e5e7eb;
+      border-radius: 12px;
+      padding: 12px;
+      background: #fafafa;
+    }
+
+    .ft-title {
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .rating-large .star {
+      font-size: 24px;
+      color: #bbb;
+    }
+
+    .star.filled,
+    .rate-star.filled {
+      color: #f59e0b;
+    }
+
+    .custom-swatch-container .custom-swatch-color {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      border: 1px solid #e5e7eb;
+      margin-right: 8px;
+    }
+
+    .custom-swatch-container .custom-swatch-color.swatch_active {
+      outline: 2px solid #111827;
+    }
+
+    .qty-control {
+      border: 1px solid #e5e7eb;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    .qty-control__reduce,
+    .qty-control__increase {
+      width: 38px;
+      cursor: pointer;
+    }
+
+    /* NEW: size/color swatch styling + disabled state */
+    .swatch-list .swatch {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 36px;
+      height: 32px;
+      padding: 0 10px;
+      border-radius: 999px;
+      border: 1px solid #e5e7eb;
+      font-size: 14px;
+      font-weight: 500;
+      color: #111827;
+      margin: 0 6px 6px 0;
+      cursor: pointer;
+      transition: all .15s ease;
+    }
+
+    .swatch-list .swatch_active,
+    .swatch-list input[type="radio"]:checked+.swatch {
+      border-color: #111827;
+      background: #111827;
+      color: #fff;
+    }
+
+    .swatch-disabled {
+      opacity: .35 !important;
+      cursor: not-allowed !important;
+      position: relative;
+    }
+
+    .swatch-disabled::after {
+      content: "";
+      position: absolute;
+      left: 4px;
+      right: 4px;
+      top: 50%;
+      border-top: 1px solid #9ca3af;
+      transform: rotate(-18deg);
+    }
+
+    .combination-status {
+      font-size: 13px;
+      margin-top: 4px;
+    }
+
+    .combination-status.ok {
+      color: #16a34a;
+    }
+
+    .combination-status.error {
+      color: #dc2626;
+    }
+
+    /* ========== BEAUTIFUL MODERN REVIEWS SECTION ========== */
+    .reviews-section {
+      margin-top: 3rem;
+      margin-bottom: 3rem;
+    }
+
+    .reviews-header-card {
+      background: #fff;
+      border: 1px solid #e5e7eb;
+      border-radius: 16px;
+      padding: 2.5rem;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+      margin-bottom: 2.5rem;
+    }
+
+    .reviews-stats {
+      display: flex;
+      align-items: flex-start;
+      gap: 3rem;
+      margin-bottom: 2.5rem;
+      padding-bottom: 2rem;
+      border-bottom: 2px solid #f3f4f6;
+    }
+
+    .reviews-stats-left {
+      flex: 1;
+      position: relative;
+      padding: 2rem;
+      background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 50%, #e2e8f0 100%);
+      border-radius: 16px;
+      border: 1px solid #e2e8f0;
+      box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.03);
+      overflow: hidden;
+    }
+
+    .reviews-stats-left::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      right: -20%;
+      width: 300px;
+      height: 300px;
+      background: radial-gradient(circle, rgba(59, 130, 246, 0.08) 0%, transparent 70%);
+      border-radius: 50%;
+      pointer-events: none;
+    }
+
+    .reviews-stats-left::after {
+      content: '';
+      position: absolute;
+      bottom: -30%;
+      left: -10%;
+      width: 200px;
+      height: 200px;
+      background: radial-gradient(circle, rgba(139, 92, 246, 0.06) 0%, transparent 70%);
+      border-radius: 50%;
+      pointer-events: none;
+    }
+
+    .reviews-stats-left .qa-title {
+      color: #111827;
+      font-size: 2rem;
+      font-weight: 800;
+      margin-bottom: 0.75rem;
+      letter-spacing: -0.5px;
+      position: relative;
+      z-index: 1;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .reviews-stats-left .qa-title::before {
+      content: '💬';
+      font-size: 2.25rem;
+      filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+    }
+
+    .reviews-stats-left .qa-desc {
+      color: #475569;
+      font-size: 1.0625rem;
+      line-height: 1.75;
+      position: relative;
+      z-index: 1;
+      padding-left: 0.5rem;
+      display: flex;
+      align-items: flex-start;
+      gap: 0.5rem;
+    }
+
+    .reviews-stats-left .qa-desc::before {
+      content: '✨';
+      font-size: 1.25rem;
+      margin-top: 0.125rem;
+    }
+
+    .reviews-stats-right {
+      text-align: right;
+      background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
+      padding: 1.75rem 2rem;
+      border-radius: 14px;
+      border: 1px solid #e5e7eb;
+      min-width: 200px;
+    }
+
+    .reviews-stats-right .rating-large {
+      margin-bottom: 0.75rem;
+    }
+
+    .reviews-stats-right .rating-large .star {
+      color: #fbbf24;
+      font-size: 1.5rem;
+      margin-right: 2px;
+    }
+
+    .reviews-stats-right .fw-bold {
+      color: #111827;
+      font-size: 2rem;
+      font-weight: 800;
+    }
+
+    .reviews-stats-right #sentimentStats {
+      color: #4b5563;
+      font-size: 0.875rem;
+      margin-top: 0.75rem;
+      line-height: 1.8;
+    }
+
+    .reviews-stats-right .text-muted {
+      color: #6b7280 !important;
+      font-size: 0.9375rem;
+      margin-top: 0.5rem;
+    }
+
+    .reviews-form-section {
+      background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+      border-radius: 16px;
+      padding: 2.5rem;
+      border: 2px solid #e2e8f0;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04), inset 0 1px 0 rgba(255, 255, 255, 0.8);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .reviews-form-section::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, #3b82f6 0%, #8b5cf6 50%, #ec4899 100%);
+      border-radius: 16px 16px 0 0;
+    }
+
+    .reviews-form-section::after {
+      content: '';
+      position: absolute;
+      top: -50%;
+      right: -10%;
+      width: 200px;
+      height: 200px;
+      background: radial-gradient(circle, rgba(59, 130, 246, 0.05) 0%, transparent 70%);
+      border-radius: 50%;
+      pointer-events: none;
+    }
+
+    /* Toggle button cho reviews list */
+    .reviews-toggle-section {
+      display: flex;
+      justify-content: center;
+      padding: 1rem 0;
+    }
+
+    .btn-toggle-reviews {
+      background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+      border: 2px solid #cbd5e1;
+      border-radius: 12px;
+      padding: 0.75rem 1.5rem;
+      font-weight: 600;
+      font-size: 0.9375rem;
+      color: #475569;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    }
+
+    .btn-toggle-reviews:hover {
+      background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%);
+      border-color: #94a3b8;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      color: #334155;
+    }
+
+    .btn-toggle-reviews:active {
+      transform: translateY(0);
+    }
+
+    .btn-toggle-reviews .toggle-icon {
+      transition: transform 0.3s ease;
+      display: inline-flex;
+      align-items: center;
+    }
+
+    .btn-toggle-reviews[aria-expanded="false"] .toggle-icon {
+      transform: rotate(180deg);
+    }
+
+    .btn-toggle-reviews[aria-expanded="false"] .toggle-text::after {
+      content: ' (Nhấn để xem)';
+      font-size: 0.875rem;
+      font-weight: 400;
+      opacity: 0.7;
+    }
+
+    /* Reviews list container với collapse/expand */
+    .reviews-list-container {
+      max-height: 2000px;
+      overflow: hidden;
+      transition: max-height 0.5s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
+      opacity: 1;
+    }
+
+    .reviews-list-container.collapsed {
+      max-height: 0;
+      opacity: 0;
+      margin: 0;
+      padding: 0;
+    }
+
+    .reviews-list-container.expanded {
+      max-height: none;
+      opacity: 1;
+    }
+
+    /* Scrollable container nếu có quá nhiều comments */
+    .reviews-list-container.has-scroll {
+      max-height: 800px;
+      overflow-y: auto;
+      overflow-x: hidden;
+      padding-right: 0.5rem;
+    }
+
+    .reviews-list-container.has-scroll::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    .reviews-list-container.has-scroll::-webkit-scrollbar-track {
+      background: #f1f5f9;
+      border-radius: 10px;
+    }
+
+    .reviews-list-container.has-scroll::-webkit-scrollbar-thumb {
+      background: linear-gradient(135deg, #cbd5e1 0%, #94a3b8 100%);
+      border-radius: 10px;
+    }
+
+    .reviews-list-container.has-scroll::-webkit-scrollbar-thumb:hover {
+      background: linear-gradient(135deg, #94a3b8 0%, #64748b 100%);
+    }
+
+    .comment-item {
+      padding: 1.75rem;
+      border-bottom: 1px solid #f3f4f6;
+      transition: all 0.25s ease;
+      background: #fff;
+      border-radius: 14px;
+      margin-bottom: 1.25rem;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+    }
+
+    .comment-item:hover {
+      background: #fafbfc;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+      transform: translateY(-2px);
+    }
+
+    .comment-item:last-child {
+      border-bottom: none;
+      margin-bottom: 0;
+    }
+
+    .comment-avatar {
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 1.25rem;
+      flex-shrink: 0;
+      box-shadow: 0 2px 8px rgba(102, 126, 234, 0.25);
+    }
+
+    .comment-content {
+      flex: 1;
+      margin-left: 1.25rem;
+    }
+
+    .comment-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      margin-bottom: 0.75rem;
+    }
+
+    .comment-author {
+      font-weight: 700;
+      font-size: 1.0625rem;
+      color: #111827;
+      margin-bottom: 0.25rem;
+    }
+
+    .comment-author-badge {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+
+    .admin-badge {
+      background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+      color: #fff;
+      font-size: 0.6875rem;
+      font-weight: 700;
+      padding: 0.3125rem 0.625rem;
+      border-radius: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      box-shadow: 0 2px 4px rgba(245, 158, 11, 0.3);
+    }
+
+    .comment-meta {
+      font-size: 0.8125rem;
+      color: #9ca3af;
+      font-weight: 500;
+    }
+
+    .comment-rating {
+      display: flex;
+      gap: 3px;
+    }
+
+    .comment-rating .star {
+      font-size: 1.0625rem;
+      color: #d1d5db;
+    }
+
+    .comment-rating .star.filled {
+      color: #fbbf24;
+    }
+
+    .comment-text {
+      color: #374151;
+      line-height: 1.7;
+      margin-bottom: 1rem;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      font-size: 1rem;
+      padding: 1rem 1.25rem;
+      background: #f9fafb;
+      border-radius: 10px;
+      border-left: 3px solid #e5e7eb;
+    }
+
+    .comment-sentiment {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.625rem;
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      font-size: 0.8125rem;
+      font-weight: 600;
+      margin-bottom: 1rem;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+    }
+
+    .comment-sentiment.positive {
+      background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+      color: #065f46;
+      border: 1px solid #6ee7b7;
+    }
+
+    .comment-sentiment.negative {
+      background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+      color: #991b1b;
+      border: 1px solid #fca5a5;
+    }
+
+    .comment-sentiment.neutral {
+      background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+      color: #4b5563;
+      border: 1px solid #d1d5db;
+    }
+
+    .comment-actions {
+      display: flex;
+      align-items: center;
+      gap: 1.25rem;
+      margin-top: 1rem;
+      padding-top: 1rem;
+      border-top: 1px solid #f3f4f6;
+    }
+
+    .comment-action-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: transparent;
+      border: none;
+      color: #6b7280;
+      font-size: 0.9375rem;
+      font-weight: 600;
+      cursor: pointer;
+      padding: 0.625rem 1rem;
+      border-radius: 8px;
+      transition: all 0.2s ease;
+    }
+
+    .comment-action-btn:hover {
+      background: #f3f4f6;
+      color: #374151;
+      transform: translateY(-1px);
+    }
+
+    .like-btn {
+      position: relative;
+    }
+
+    .like-btn.liked {
+      color: #ef4444;
+    }
+
+    .like-btn.liked:hover {
+      background: #fee2e2;
+    }
+
+    .like-btn .heart-icon {
+      width: 18px;
+      height: 18px;
+      transition: transform 0.2s ease;
+      flex-shrink: 0;
+    }
+
+    .like-btn:hover .heart-icon {
+      transform: scale(1.1);
+    }
+
+    .like-btn.liked .heart-icon path {
+      fill: #ef4444;
+      stroke: #ef4444;
+    }
+
+    .like-count {
+      font-weight: 600;
+      min-width: 1.5rem;
+      display: inline-block;
+    }
+
+    .reply-btn {
+      color: #3b82f6;
+    }
+
+    .reply-btn:hover {
+      background: #eff6ff;
+      color: #2563eb;
+    }
+
+    .replies-list {
+      margin-top: 1.25rem;
+      margin-left: 2.5rem;
+      padding: 1rem 1.25rem;
+      border-left: 3px solid #e5e7eb;
+      background: #fafbfc;
+      border-radius: 0 12px 12px 0;
+    }
+
+    .replies-list:empty {
+      display: none !important;
+    }
+
+    .reply-item {
+      padding: 1.25rem;
+      border-bottom: 1px solid #f3f4f6;
+      transition: all 0.2s ease;
+      background: #fff;
+      border-radius: 10px;
+      margin-bottom: 0.75rem;
+    }
+
+    .reply-item:hover {
+      background: #fafbfc;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+      transform: translateX(4px);
+    }
+
+    .reply-item:last-child {
+      border-bottom: none;
+      margin-bottom: 0;
+    }
+
+    .reply-item .comment-avatar {
+      width: 44px;
+      height: 44px;
+      font-size: 1rem;
+      background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+      color: #fff;
+      box-shadow: 0 2px 6px rgba(59, 130, 246, 0.25);
+    }
+
+    .reply-item .comment-text {
+      padding: 0.875rem 1rem;
+      font-size: 0.9375rem;
+    }
+
+    .reply-form-container {
+      margin-top: 1.25rem;
+      padding: 1.5rem;
+      background: #fafbfc;
+      border-radius: 12px;
+      border: 1px solid #e5e7eb;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    }
+
+    .reply-form-header {
+      margin-bottom: 1rem;
+    }
+
+    .reply-form-guest-name {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      font-size: 0.9375rem;
+      transition: all 0.2s ease;
+    }
+
+    .reply-form-guest-name:focus {
+      outline: none;
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+
+    .reply-form-input-wrapper {
+      display: flex;
+      gap: 1rem;
+      align-items: flex-end;
+    }
+
+    .reply-form-input {
+      flex: 1;
+      padding: 0.875rem 1rem;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      font-size: 0.9375rem;
+      resize: vertical;
+      min-height: 90px;
+      font-family: inherit;
+      transition: all 0.2s ease;
+    }
+
+    .reply-form-input:focus {
+      outline: none;
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+
+    .reply-form-submit {
+      padding: 0.875rem 2rem;
+      background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 0.9375rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      white-space: nowrap;
+      box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+    }
+
+    .reply-form-submit:hover {
+      background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+      transform: translateY(-1px);
+    }
+
+    .comments-empty {
+      text-align: center;
+      padding: 3rem 1rem;
+      color: #6b7280;
+    }
+
+    .comments-empty-icon {
+      font-size: 3rem;
+      margin-bottom: 1rem;
+      opacity: 0.5;
+    }
+
+    .comments-empty .fw-semibold {
+      font-size: 1.125rem;
+      margin-bottom: 0.5rem;
+    }
+
+    @media (max-width: 768px) {
+      .reviews-header-card {
+        padding: 1.5rem;
+        border-radius: 20px;
       }
 
-      .pdp-section {
-        scroll-margin-top: 80px;
+      .reviews-stats {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1.5rem;
       }
 
-      .section-title {
-        font-size: 20px;
-        font-weight: 700;
+      .reviews-stats-right {
+        text-align: left;
+        width: 100%;
       }
 
-      .card {
-        border: 1px solid #eef2f7;
-        border-radius: 14px;
-        box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
+      .comment-item {
+        padding: 1.5rem;
       }
 
-      .feature-tile {
-        border: 1px dashed #e5e7eb;
-        border-radius: 12px;
-        padding: 12px;
-        background: #fafafa;
+      .comment-actions {
+        flex-wrap: wrap;
       }
 
-      .ft-title {
-        font-weight: 600;
-        margin-bottom: 4px;
+      .reply-form-input-wrapper {
+        flex-direction: column;
       }
 
-      .rating-large .star {
-        font-size: 24px;
-        color: #bbb;
+      .reply-form-submit {
+        width: 100%;
       }
 
-      .star.filled,
-      .rate-star.filled {
-        color: #f59e0b;
+      .replies-list {
+        margin-left: 1rem;
+        padding-left: 1rem;
       }
+    }
+  </style>
 
-      .custom-swatch-container .custom-swatch-color {
-        width: 32px;
-        height: 32px;
-        border-radius: 8px;
-        border: 1px solid #e5e7eb;
-        margin-right: 8px;
-      }
+  <%- include('partials/head') %>
+</head>
 
-      .custom-swatch-container .custom-swatch-color.swatch_active {
-        outline: 2px solid #111827;
-      }
+<body>
+  <%- include('partials/header') %>
 
-      .qty-control {
-        border: 1px solid #e5e7eb;
-        border-radius: 10px;
-        overflow: hidden;
-      }
-
-      .qty-control__reduce,
-      .qty-control__increase {
-        width: 38px;
-        cursor: pointer;
-      }
-
-      /* NEW: size/color swatch styling + disabled state */
-      .swatch-list .swatch {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        min-width: 36px;
-        height: 32px;
-        padding: 0 10px;
-        border-radius: 999px;
-        border: 1px solid #e5e7eb;
-        font-size: 14px;
-        font-weight: 500;
-        color: #111827;
-        margin: 0 6px 6px 0;
-        cursor: pointer;
-        transition: all 0.15s ease;
-      }
-
-      .swatch-list .swatch_active,
-      .swatch-list input[type="radio"]:checked + .swatch {
-        border-color: #111827;
-        background: #111827;
-        color: #fff;
-      }
-
-      .swatch-disabled {
-        opacity: 0.35 !important;
-        cursor: not-allowed !important;
-        position: relative;
-      }
-
-      .swatch-disabled::after {
-        content: "";
-        position: absolute;
-        left: 4px;
-        right: 4px;
-        top: 50%;
-        border-top: 1px solid #9ca3af;
-        transform: rotate(-18deg);
-      }
-
-      .combination-status {
-        font-size: 13px;
-        margin-top: 4px;
-      }
-
-      .combination-status.ok {
-        color: #16a34a;
-      }
-
-      .combination-status.error {
-        color: #dc2626;
-      }
-    </style>
-
-    <%- include('partials/head') %>
-  </head>
-
-  <body>
-    <%- include('partials/header') %>
-
-    <div id="notificationModal" class="notification-modal">
-      <div class="notification-modal-content">
-        <span class="close-button" id="closeModal">&times;</span>
-        <p id="modalMessage"></p>
-      </div>
+  <div id="notificationModal" class="notification-modal">
+    <div class="notification-modal-content">
+      <span class="close-button" id="closeModal">&times;</span>
+      <p id="modalMessage"></p>
     </div>
 
     <main>
@@ -440,20 +1313,36 @@
               </div>
             </div>
 
-            <!-- rating summary -->
-            <div class="mb-3">
-              <% const __avg = Number(product.avg_rating || 0); const __cnt =
-              Number(product.rating_count || 0); const __rounded =
-              Math.round(__avg); %>
-              <span class="rating-summary align-middle">
+          <!-- rating summary -->
+          <% 
+            const __avg  = Number(product.avg_rating || 0);
+            const __cnt  = Number(product.rating_count || 0);
+            const hasRating = __cnt > 0 && __avg > 0;
+          %>
+          <% if (hasRating) { %>
+            <div class="mb-3" id="productRatingSummary">
+              <% const __rounded = Math.round(__avg); %>
+              <span class="rating-summary align-middle" id="productRatingStars">
                 <% for (let i = 1; i <= 5; i++) { %>
-                <i class="star <%= i <= __rounded ? 'filled' : '' %>">★</i>
+                  <i class="star <%= i <= __rounded ? 'filled' : '' %>">★</i>
                 <% } %>
               </span>
-              <span class="small text-muted ms-2">
-                <%= __avg.toFixed(1) %>/5 • <%= __cnt %> lượt đánh giá
+              <span class="small text-muted ms-2" id="productRatingText">
+                <span id="productRatingAvg"><%= __avg.toFixed(1) %></span>/5 • <span id="productRatingCount"><%= __cnt %></span> lượt đánh giá
               </span>
             </div>
+          <% } else { %>
+            <div class="mb-3" id="productRatingSummary" style="display: none;">
+              <span class="rating-summary align-middle" id="productRatingStars">
+                <% for (let i = 1; i <= 5; i++) { %>
+                  <i class="star">★</i>
+                <% } %>
+              </span>
+              <span class="small text-muted ms-2" id="productRatingText">
+                <span id="productRatingAvg">0</span>/5 • <span id="productRatingCount">0</span> lượt đánh giá
+              </span>
+            </div>
+          <% } %>
 
             <div class="product-single__short-desc">
               <p style="white-space: pre-line">
@@ -669,213 +1558,378 @@
           </div>
         </div>
 
-        <!-- (phần tabs giữ nguyên nếu có) -->
-      </section>
+      <!-- (phần tabs giữ nguyên nếu có) -->
+    </section>
 
-      <!-- ========== ĐÁNH GIÁ & BÌNH LUẬN ========== -->
-      <section id="section-reviews" class="container pdp-section mt-4 mb-4">
-        <% const __ratingAvg = Number((rating && rating.average) ||
-        product.avg_rating || 0); const __ratingCount = Number((rating &&
-        rating.count) || product.rating_count || 0); const __ratingRounded =
-        Math.round(__ratingAvg || 0); %>
+    <!-- ========== ĐÁNH GIÁ & BÌNH LUẬN ========== -->
+    <section id="section-reviews" class="container pdp-section reviews-section">
+      <% 
+        const __ratingAvg    = Number((rating && rating.average) || product.avg_rating || 0);
+        const __ratingCount  = Number((rating && rating.count) || product.rating_count || 0);
+        const __ratingRounded = Math.round(__ratingAvg || 0);
+      %>
 
-        <div class="qa-card mb-4">
-          <div class="qa-hero">
-            <div class="qa-hero__img d-none d-md-block">
-              <img src="/mixishop/images/qa-hero.svg" alt="Q&A" />
+      <div class="reviews-header-card">
+        <div class="reviews-stats">
+          <div class="reviews-stats-left">
+            <h3 class="qa-title mb-2">Đánh giá & bình luận</h3>
+            <p class="qa-desc mb-0">Hãy chia sẻ cảm nhận của bạn về sản phẩm để mọi người cùng tham khảo nhé.</p>
+          </div>
+          <div class="reviews-stats-right">
+            <div class="rating-large mb-2">
+              <% for (let i = 1; i <= 5; i++) { %>
+                <i class="star <%= i <= __ratingRounded ? 'filled' : '' %>">★</i>
+              <% } %>
             </div>
-            <div class="flex-grow-1">
-              <div
-                class="d-flex flex-wrap align-items-center justify-content-between gap-3"
-              >
-                <div>
-                  <div class="qa-title">Đánh giá & bình luận</div>
-                  <div class="qa-desc">
-                    Hãy chia sẻ cảm nhận của bạn về sản phẩm để mọi người cùng
-                    tham khảo nhé.
-                  </div>
-                </div>
-                <div class="text-end">
-                  <div class="rating-large mb-1">
-                    <% for (let i = 1; i <= 5; i++) { %>
-                    <i class="star <%= i <= __ratingRounded ? 'filled' : '' %>"
-                      >★</i
-                    >
-                    <% } %>
-                  </div>
-                  <div class="fw-bold" style="font-size: 18px">
-                    <span id="ratingAverage"><%= __ratingAvg.toFixed(1) %></span
-                    >/5
-                  </div>
-                  <div id="sentimentStats" class="mt-2 small">
-                    <% if (rating && rating.sentiment) { %>
-                    <div>
-                      😊 Tích cực:
-                      <strong><%= rating.sentiment.positive %></strong>
-                    </div>
-                    <div>
-                      😐 Trung tính:
-                      <strong><%= rating.sentiment.neutral %></strong>
-                    </div>
-                    <div>
-                      😡 Tiêu cực:
-                      <strong><%= rating.sentiment.negative %></strong>
-                    </div>
-                    <div>
-                      ⚪ Không xác định:
-                      <strong><%= rating.sentiment.null %></strong>
-                    </div>
-                    <% } %>
-                  </div>
-                  <div class="small text-muted">
-                    <span id="ratingCount"><%= __ratingCount %></span> lượt đánh
-                    giá
-                  </div>
-                </div>
-              </div>
-
-              <!-- Ô nhập nhanh bình luận -->
-              <form id="reviewForm" class="mt-3">
-                <% if (!loggedInUser) { %>
-                <div class="row g-2 mb-2">
-                  <div class="col-md-4">
-                    <input
-                      type="text"
-                      class="form-control"
-                      name="guest_name"
-                      placeholder="Tên hiển thị *"
-                      required
-                    />
-                  </div>
-                  <div class="col-md-4">
-                    <input
-                      type="email"
-                      class="form-control"
-                      name="guest_email"
-                      placeholder="Email (tuỳ chọn)"
-                    />
-                  </div>
-                  <div
-                    class="col-md-4 d-flex align-items-center small text-muted"
-                  >
-                    <i class="me-1 bi bi-info-circle"></i>
-                    Không cần đăng nhập để bình luận.
-                  </div>
-                </div>
-                <% } else { %>
-                <div class="mb-2 small text-muted">
-                  Đang đăng nhập:
-                  <strong
-                    ><%= (user && user.full_name) || 'Tài khoản của bạn'
-                    %></strong
-                  >
-                </div>
-                <% } %>
-
-                <div class="mb-2">
-                  <textarea
-                    class="form-control"
-                    name="comment"
-                    id="reviewComment"
-                    placeholder="Viết cảm nhận của bạn về sản phẩm..."
-                    required
-                  ></textarea>
-                </div>
-
-                <div
-                  class="d-flex flex-wrap align-items-center justify-content-between gap-3"
-                >
-                  <div class="rating-box d-flex align-items-center">
-                    <span class="me-2 small text-muted">Đánh giá sao:</span>
-
-                    <div id="ratingStars">
-                      <% for (let i = 1; i <= 5; i++) { %>
-                      <i class="rate-star" data-value="<%= i %>">★</i>
-                      <% } %>
-                    </div>
-
-                    <% if (!loggedInUser) { %>
-                    <span class="small text-muted ms-2">
-                      (Bạn cần đăng nhập để đánh giá sao)
-                    </span>
-                    <% } %>
-
-                    <input
-                      type="hidden"
-                      id="reviewRating"
-                      name="rating"
-                      value=""
-                    />
-                  </div>
-
-                  <button type="submit" class="btn-ask">Gửi đánh giá</button>
-                </div>
-
-                <div id="reviewMessage" class="small mt-2"></div>
-              </form>
+            <div class="fw-bold" style="font-size: 24px; color: #1f2937;">
+              <span id="ratingAverage"><%= __ratingAvg.toFixed(1) %></span><span style="font-size: 18px; color: #6b7280;">/5</span>
+            </div>
+            <div id="sentimentStats" class="mt-2 small" style="color: #6b7280;">
+              <% if (rating && rating.sentiment) { %>
+                <div>😊 Tích cực: <strong><%= rating.sentiment.positive %></strong></div>
+                <div>😐 Trung tính: <strong><%= rating.sentiment.neutral %></strong></div>
+                <div>😡 Tiêu cực: <strong><%= rating.sentiment.negative %></strong></div>
+                <div>⚪ Không xác định: <strong><%= rating.sentiment.null %></strong></div>
+              <% } %>
+            </div>
+            <div class="small text-muted mt-1">
+              <span id="ratingCount"><%= __ratingCount %></span> lượt đánh giá
             </div>
           </div>
         </div>
 
-        <!-- DANH SÁCH BÌNH LUẬN -->
-        <div class="card p-3">
-          <div class="section-title mb-3">Bình luận sản phẩm</div>
-
-          <div id="reviewsList">
-            <% if (!reviews || !reviews.length) { %>
-            <div class="text-muted small">
-              Chưa có bình luận nào. Hãy là người đầu tiên đánh giá sản phẩm
-              này!
-            </div>
-            <% } else { %> <% reviews.forEach(function (r) { const displayName =
-            (r.user && r.user.full_name) || r.guest_name || 'Ẩn danh'; const
-            createdLabel = r.createdAt ? new
-            Date(r.createdAt).toLocaleString('vi-VN') : ''; const rRating =
-            Number(r.rating || 0); const rRounded = Math.round(rRating || 0);
-            const sentiment = r.sentiment || null; const score = (typeof
-            r.sentiment_score === 'number') ? r.sentiment_score : null; const
-            aiLabel = r.ai_label || null; let sentimentText = ''; let
-            sentimentColor = '#6b7280'; if (sentiment === 'positive') {
-            sentimentText = 'Tích cực'; sentimentColor = '#16a34a'; } else if
-            (sentiment === 'negative') { sentimentText = 'Tiêu cực';
-            sentimentColor = '#dc2626'; } else if (sentiment === 'neutral') {
-            sentimentText = 'Trung tính'; } let aiLabelText = ''; if (aiLabel
-            === 'happy') aiLabelText = 'Khách hài lòng'; if (aiLabel ===
-            'complain') aiLabelText = 'Khách phàn nàn'; if (aiLabel ===
-            'urgent') aiLabelText = 'Cần hỗ trợ gấp'; %>
-            <div
-              class="comment-item cmt-item border-bottom pb-3 mb-3"
-              data-id="<%= r._id %>"
-            >
-              <div class="d-flex">
-                <div class="me-3">
-                  <div
-                    class="avatar rounded-circle d-flex align-items-center justify-content-center"
-                    style="
-                      width: 40px;
-                      height: 40px;
-                      background: #e5e7eb;
-                      font-weight: 600;
-                    "
-                  >
-                    <%= (displayName || 'Ẩn danh').charAt(0).toUpperCase() %>
+        <!-- Ô nhập nhanh bình luận -->
+        <div class="reviews-form-section">
+          <form id="reviewForm" novalidate>
+            <div class="mb-4" style="position: relative; z-index: 1;">
+              <% if (!loggedInUser) { %>
+                <div class="alert alert-info border-0 shadow-sm mb-0" style="background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%); border-left: 4px solid #3b82f6 !important; border-radius: 10px; padding: 1rem 1.25rem;">
+                  <div class="d-flex align-items-center gap-2">
+                    <i class="bi bi-info-circle-fill text-primary" style="font-size: 1.25rem;"></i>
+                    <span class="small mb-0" style="color: #1e40af; font-weight: 500;">
+                      Không cần đăng nhập để bình luận. Tên hiển thị sẽ là <strong>"Người dùng ẩn danh"</strong>.
+                    </span>
                   </div>
                 </div>
-                <div class="flex-grow-1">
-                  <div
-                    class="d-flex align-items-center justify-content-between mb-1"
-                  >
-                    <div>
-                      <div class="fw-semibold"><%= displayName %></div>
-                      <div class="chat-meta"><%= createdLabel %></div>
-                    </div>
-                    <% if (rRating) { %>
-                    <div class="rating-small">
-                      <% for (let i = 1; i <= 5; i++) { %>
-                      <i class="star <%= i <= rRounded ? 'filled' : '' %>">★</i>
+              <% } else { %>
+                <div class="alert alert-success border-0 shadow-sm mb-0" style="background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%); border-left: 4px solid #10b981 !important; border-radius: 10px; padding: 1rem 1.25rem;">
+                  <div class="d-flex align-items-center gap-2">
+                    <i class="bi bi-check-circle-fill text-success" style="font-size: 1.25rem;"></i>
+                    <span class="small mb-0" style="color: #065f46; font-weight: 500;">
+                      Đang đăng nhập: <strong><%= (user && user.full_name) || 'Tài khoản của bạn' %></strong>
+                    </span>
+                  </div>
+                </div>
+              <% } %>
+            </div>
+
+            <div class="mb-4" style="position: relative; z-index: 1;">
+              <label for="reviewComment" class="form-label fw-semibold mb-2" style="color: #1e293b; font-size: 0.9375rem;">
+                <i class="bi bi-chat-left-text me-1 text-primary"></i>
+                Viết cảm nhận của bạn
+              </label>
+              <textarea
+                class="form-control"
+                name="comment"
+                id="reviewComment"
+                placeholder="Chia sẻ trải nghiệm của bạn về sản phẩm này... 💭"
+                rows="5"
+                style="border: 2px solid #e2e8f0; border-radius: 12px; padding: 1rem 1.25rem; font-size: 0.9375rem; transition: all 0.3s ease; background: #ffffff; resize: vertical;"
+                onfocus="this.style.borderColor='#3b82f6'; this.style.boxShadow='0 0 0 3px rgba(59, 130, 246, 0.1)';"
+                onblur="this.style.borderColor='#e2e8f0'; this.style.boxShadow='none';"></textarea>
+            </div>
+
+            <div class="d-flex flex-wrap align-items-center justify-content-between gap-3" style="position: relative; z-index: 1;">
+              <div class="rating-box d-flex align-items-center gap-2">
+                <span class="fw-semibold" style="color: #92400e; font-size: 0.9375rem; white-space: nowrap;">
+                  <i class="bi bi-star-fill me-1" style="color: #f59e0b;"></i>
+                  Đánh giá sao:
+                </span>
+
+                <div id="ratingStars" class="d-flex align-items-center">
+                  <% for (let i = 1; i <= 5; i++) { %>
+                    <i class="rate-star" data-value="<%= i %>">★</i>
+                  <% } %>
+                </div>
+
+                <% if (!loggedInUser) { %>
+                  <span class="small ms-2" style="color: #92400e; font-weight: 500;">
+                    <i class="bi bi-lock-fill me-1"></i>
+                    Cần đăng nhập
+                  </span>
+                <% } %>
+
+                <input type="hidden" id="reviewRating" name="rating" value="">
+              </div>
+
+              <button type="submit" class="btn-ask">
+                <i class="bi bi-send-fill"></i>
+                <span>Gửi đánh giá</span>
+              </button>
+            </div>
+
+            <div id="reviewMessage" class="small mt-2"></div>
+          </form>
+        </div>
+
+      <!-- DANH SÁCH BÌNH LUẬN -->
+      <div class="card p-4" style="background: #fff; border: 1px solid #e5e7eb; border-radius: 16px; box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);">
+        <div class="section-title mb-4" style="font-size: 1.5rem; font-weight: 800; color: #111827; padding-bottom: 1rem; border-bottom: 2px solid #f3f4f6;">💬 Bình luận sản phẩm</div>
+
+        <!-- BỘ LỌC -->
+        <div class="mb-3 d-flex flex-wrap gap-2 align-items-center">
+          <span class="small text-muted">Lọc theo:</span>
+          <button class="btn btn-sm btn-outline-primary filter-btn active" data-filter="all">Tất cả</button>
+          <button class="btn btn-sm btn-outline-primary filter-btn" data-filter="comments-only">Chỉ bình luận</button>
+          <button class="btn btn-sm btn-outline-primary filter-btn" data-filter="with-rating-comment">Có sao & bình luận</button>
+        </div>
+
+        <!-- Toggle button để thu gọn/mở rộng danh sách bình luận -->
+        <div class="reviews-toggle-section mb-3">
+          <button 
+            type="button" 
+            id="toggleReviewsBtn" 
+            class="btn-toggle-reviews"
+            aria-expanded="true"
+            aria-controls="reviewsList">
+            <span class="toggle-icon">
+              <i class="bi bi-chevron-up"></i>
+            </span>
+            <span class="toggle-text">Thu gọn bình luận</span>
+          </button>
+        </div>
+
+        <div id="reviewsList" class="reviews-list-container">
+          <% if (!reviews || !reviews.length) { %>
+            <div class="comments-empty">
+              <div class="comments-empty-icon">💬</div>
+              <div class="fw-semibold mb-1">Chưa có bình luận nào</div>
+              <div>Hãy là người đầu tiên đánh giá sản phẩm này!</div>
+            </div>
+          <% } else { 
+                 // Separate comments and replies
+                 const mainComments = reviews.filter(r => !r.parent_id);
+                 const repliesMap = {};
+                 reviews.forEach(r => {
+                   if (r.parent_id) {
+                     const parentId = String(r.parent_id);
+                     if (!repliesMap[parentId]) {
+                       repliesMap[parentId] = [];
+                     }
+                     repliesMap[parentId].push(r);
+                   }
+                 });
+                 
+                 // Sort replies by createdAt (oldest first)
+                 Object.keys(repliesMap).forEach(parentId => {
+                   repliesMap[parentId].sort((a, b) => {
+                     const dateA = new Date(a.createdAt || 0);
+                     const dateB = new Date(b.createdAt || 0);
+                     return dateA - dateB;
+                   });
+                 });
+            %>
+            <% mainComments.forEach(function (r) {
+                 const commentReplies = repliesMap[String(r._id)] || [];
+                 const displayName  = (r.user && r.user.full_name) || r.guest_name || 'Ẩn danh';
+                 const isAdmin      = (r.user && r.user.role === 'admin') || (r.user && r.user.isAdmin);
+                 const createdLabel = r.createdAt ? new Date(r.createdAt).toLocaleString('vi-VN') : '';
+                 const rRating      = Number(r.rating || 0);
+                 const rRounded     = Math.round(rRating || 0);
+                 const likeCount    = Number(r.likes_count || r.likes?.length || 0);
+                 const isLiked      = r.is_liked || false;
+
+                 const sentiment    = r.sentiment || null;
+                 const score        = (typeof r.sentiment_score === 'number') ? r.sentiment_score : null;
+                 const aiLabel      = r.ai_label || null;
+
+                 let sentimentText  = '';
+                 let sentimentClass = '';
+
+                 if (sentiment === 'positive') {
+                   sentimentText  = 'Tích cực';
+                   sentimentClass = 'positive';
+                 } else if (sentiment === 'negative') {
+                   sentimentText  = 'Tiêu cực';
+                   sentimentClass = 'negative';
+                 } else if (sentiment === 'neutral') {
+                   sentimentText  = 'Trung tính';
+                   sentimentClass = 'neutral';
+                 }
+
+                 let aiLabelText = '';
+                 if (aiLabel === 'happy')    aiLabelText = 'Khách hài lòng';
+                 if (aiLabel === 'complain') aiLabelText = 'Khách phàn nàn';
+                 if (aiLabel === 'urgent')   aiLabelText = 'Cần hỗ trợ gấp';
+
+                 let starsHtml = '';
+                 if (rRating) {
+                   for (let i = 1; i <= 5; i++) {
+                     starsHtml += `<i class="star ${i <= rRounded ? 'filled' : ''}">★</i>`;
+                   }
+                 }
+
+                 const authorName = isAdmin ? 'Quản Trị Viên' : displayName;
+                 const safeComment = r.comment || '';
+                 const safeDate = createdLabel;
+            %>
+              <div class="comment-item" 
+                   data-id="<%= r._id %>"
+                   data-has-rating="<%= rRating ? 'true' : 'false' %>"
+                   data-has-comment="<%= safeComment ? 'true' : 'false' %>">
+                <div class="d-flex">
+                  <div class="comment-avatar">
+                    <%= (displayName || 'Ẩn danh').charAt(0).toUpperCase() %>
+                  </div>
+                  <div class="comment-content">
+                    <div class="comment-header">
+                      <div>
+                        <div class="comment-author-badge">
+                          <span class="comment-author"><%= authorName %></span>
+                          <% if (isAdmin) { %>
+                            <span class="admin-badge">QTV</span>
+                          <% } %>
+                        </div>
+                        <div class="comment-meta"><%= safeDate %></div>
+                      </div>
+                      <% if (rRating) { %>
+                        <div class="comment-rating rating-small"><%- starsHtml %></div>
                       <% } %>
                     </div>
+                    <div class="comment-text"><%= safeComment %></div>
+                    
+                    <% if (sentimentText || score !== null || aiLabelText) { %>
+                      <div class="comment-sentiment <%= sentimentClass %>">
+                        <span>Cảm xúc AI:</span>
+                        <% if (sentimentText) { %>
+                          <span><%= sentimentText %></span>
+                        <% } %>
+                        <% if (score !== null) { %>
+                          <span>• Điểm: <%= score.toFixed(2) %></span>
+                        <% } %>
+                        <% if (aiLabelText) { %>
+                          <span>• <%= aiLabelText %></span>
+                        <% } %>
+                      </div>
                     <% } %>
+                    <div class="comment-actions">
+                      <button 
+                        class="comment-action-btn like-btn <%= isLiked ? 'liked' : '' %>" 
+                        data-comment-id="<%= r._id %>"
+                        title="Thả tim">
+                    <svg class="heart-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+                    </svg>
+                        <span class="like-count" data-count="<%= likeCount %>"><%= likeCount > 0 ? likeCount : '' %></span>
+                        <span>Thích</span>
+                      </button>
+                      <button 
+                        class="comment-action-btn reply-btn" 
+                        data-comment-id="<%= r._id %>"
+                        onclick="toggleReplyForm('<%= r._id %>'); return false;">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <path d="M3 10h10a8 8 0 0 1 8 8v2M3 10l6 6m-6-6l6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                        Phản hồi
+                      </button>
+                    </div>
+                    <div class="replies-list" id="replies-<%= r._id %>" <%= commentReplies.length > 0 ? '' : 'style="display: none;"' %>>
+                      <% if (commentReplies.length > 0) { %>
+                        <% commentReplies.forEach(function (reply) {
+                             const replyName = (reply.user && reply.user.full_name) || reply.guest_name || 'Ẩn danh';
+                             const replyIsAdmin = (reply.user && reply.user.role === 'admin') || (reply.user && reply.user.isAdmin);
+                             const replyDate = reply.createdAt ? new Date(reply.createdAt).toLocaleString('vi-VN') : '';
+                             const replyLikeCount = Number(reply.likes_count || reply.likes?.length || 0);
+                             const replyIsLiked = reply.is_liked || false;
+                             
+                             // Sentiment data
+                             const replySentiment = reply.sentiment || null;
+                             const replyScore = (typeof reply.sentiment_score === 'number') ? reply.sentiment_score : null;
+                             const replyAiLabel = reply.ai_label || null;
+                             
+                             let replySentimentText = '';
+                             let replySentimentClass = '';
+                             
+                             if (replySentiment === 'positive') {
+                               replySentimentText = 'Tích cực';
+                               replySentimentClass = 'positive';
+                             } else if (replySentiment === 'negative') {
+                               replySentimentText = 'Tiêu cực';
+                               replySentimentClass = 'negative';
+                             } else if (replySentiment === 'neutral') {
+                               replySentimentText = 'Trung tính';
+                               replySentimentClass = 'neutral';
+                             }
+                             
+                             let replyAiLabelText = '';
+                             if (replyAiLabel === 'happy') replyAiLabelText = 'Khách hài lòng';
+                             if (replyAiLabel === 'complain') replyAiLabelText = 'Khách phàn nàn';
+                             if (replyAiLabel === 'urgent') replyAiLabelText = 'Cần hỗ trợ gấp';
+                        %>
+                          <div class="reply-item" data-reply-id="<%= reply._id %>">
+                            <div class="d-flex">
+                              <div class="comment-avatar">
+                                <%= (replyName || 'Ẩn danh').charAt(0).toUpperCase() %>
+                              </div>
+                              <div class="comment-content">
+                                <div class="comment-header">
+                                  <div>
+                                    <div class="comment-author-badge">
+                                      <span class="comment-author">
+                                        <%= replyIsAdmin ? 'Quản Trị Viên' : replyName %>
+                                      </span>
+                                      <% if (replyIsAdmin) { %>
+                                        <span class="admin-badge">QTV</span>
+                                      <% } %>
+                                    </div>
+                                    <div class="comment-meta"><%= replyDate %></div>
+                                  </div>
+                                </div>
+                                <div class="comment-text" style="padding: 0.875rem 1rem; font-size: 0.9375rem;"><%= reply.comment %></div>
+                                <% if (replySentimentText || replyScore !== null || replyAiLabelText) { %>
+                                  <div class="comment-sentiment <%= replySentimentClass %>">
+                                    <span>Cảm xúc AI:</span>
+                                    <% if (replySentimentText) { %>
+                                      <span><%= replySentimentText %></span>
+                                    <% } %>
+                                    <% if (replyScore !== null) { %>
+                                      <span>• Điểm: <%= replyScore.toFixed(2) %></span>
+                                    <% } %>
+                                    <% if (replyAiLabelText) { %>
+                                      <span>• <%= replyAiLabelText %></span>
+                                    <% } %>
+                                  </div>
+                                <% } %>
+                                <div class="comment-actions" style="margin-top: 0.75rem; padding-top: 0.75rem;">
+                                  <button 
+                                    class="comment-action-btn like-btn <%= replyIsLiked ? 'liked' : '' %>" 
+                                    data-comment-id="<%= reply._id %>"
+                                    title="Thả tim">
+                                    <svg class="heart-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                      <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+                                    </svg>
+                                    <span class="like-count" data-count="<%= replyLikeCount %>"><%= replyLikeCount > 0 ? replyLikeCount : '' %></span>
+                                    <span>Thích</span>
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        <% }) %>
+                      <% } %>
+                    </div>
+                    <div class="reply-form-container" id="reply-form-<%= r._id %>" style="display: none;">
+                      <form class="reply-form" data-parent-id="<%= r._id %>">
+                        <div class="reply-form-input-wrapper">
+                          <textarea 
+                            class="reply-form-input" 
+                            name="comment" 
+                            placeholder="Viết phản hồi..." 
+                            required></textarea>
+                          <button type="submit" class="reply-form-submit">Gửi</button>
+                        </div>
+                      </form>
+                    </div>
                   </div>
 
                   <div class="chat-bubble"><%= r.comment %></div>
@@ -897,181 +1951,276 @@
             <% }) %> <% } %>
           </div>
         </div>
-      </section>
+      </div>
+    </section>
 
-      <!-- ================= RELATED ================= -->
-      <section
-        id="section-related"
-        class="products-carousel container"
-        style="margin-top: 10px"
-      >
-        <h2 class="h3 mb-4 pb-xl-2 mb-xl-4">
-          Liên quan đến
-          <span><%= product?.category?.name || 'sản phẩm này' %></span>
-        </h2>
+    <!-- ================= RELATED PRODUCTS ================= -->
+    <section id="section-related" class="related-products-section" style="margin-top: 4rem; margin-bottom: 3rem;">
+      <div class="container">
+        <div class="related-products-header mb-4">
+          <h2 class="related-products-title" style="font-size: 2rem; font-weight: 800; color: #111827; margin-bottom: 0.5rem; position: relative; padding-bottom: 1rem;">
+            <span style="color: #e8071b;">✨</span> Sản phẩm liên quan
+            <div style="position: absolute; bottom: 0; left: 0; width: 80px; height: 4px; background: linear-gradient(90deg, #e8071b, #ff6b6b); border-radius: 2px;"></div>
+          </h2>
+          <p class="text-muted" style="font-size: 1rem; color: #6b7280;">
+            Khám phá thêm các sản phẩm tương tự trong danh mục <strong><%= product?.category?.name || 'này' %></strong>
+          </p>
+        </div>
 
         <div id="related_products" class="position-relative">
           <div
             class="swiper-container js-swiper-slider"
             data-settings='{
-            "autoplay": false,
-            "slidesPerView": 4,
-            "slidesPerGroup": 4,
-            "effect": "none",
-            "loop": true,
-            "pagination": {
-              "el": "#related_products .products-pagination",
-              "type": "bullets",
-              "clickable": true
-            },
-            "navigation": {
-              "nextEl": "#related_products .products-carousel__next",
-              "prevEl": "#related_products .products-carousel__prev"
-            },
-            "breakpoints": {
-              "320":  { "slidesPerView": 2, "slidesPerGroup": 2, "spaceBetween": 14 },
-              "768":  { "slidesPerView": 3, "slidesPerGroup": 3, "spaceBetween": 24 },
-              "992":  { "slidesPerView": 4, "slidesPerGroup": 4, "spaceBetween": 30 }
-            }
-          }'
-          >
+              "autoplay": {
+                "delay": 3000,
+                "disableOnInteraction": false
+              },
+              "slidesPerView": 4,
+              "slidesPerGroup": 4,
+              "effect": "slide",
+              "loop": true,
+              "speed": 600,
+              "pagination": {
+                "el": "#related_products .products-pagination",
+                "type": "bullets",
+                "clickable": true
+              },
+              "navigation": {
+                "nextEl": "#related_products .products-carousel__next",
+                "prevEl": "#related_products .products-carousel__prev"
+              },
+              "breakpoints": {
+                "320":  { "slidesPerView": 1, "slidesPerGroup": 1, "spaceBetween": 16 },
+                "576":  { "slidesPerView": 2, "slidesPerGroup": 2, "spaceBetween": 20 },
+                "768":  { "slidesPerView": 3, "slidesPerGroup": 3, "spaceBetween": 24 },
+                "992":  { "slidesPerView": 4, "slidesPerGroup": 4, "spaceBetween": 30 }
+              }
+            }'>
             <div class="swiper-wrapper">
-              <% (products || []).slice(0, Math.min((products || []).length,
-              10)).forEach(function(item){ %>
-              <div class="swiper-slide product-card product-card_style3">
-                <div class="pc__img-wrapper position-relative">
-                  <a href="/product_detail/<%= item.id || item._id %>">
-                    <img
-                      loading="lazy"
-                      src="<%= (item.colors?.[0]?.imageUrls?.[0]) || '/images/default.png' %>"
-                      width="258"
-                      height="313"
-                      alt="<%= item.name %>"
-                      class="pc__img"
-                    />
-                    <img
-                      loading="lazy"
-                      src="<%= (item.colors?.[0]?.imageUrls?.[1]) || (item.colors?.[0]?.imageUrls?.[0]) || '/images/default.png' %>"
-                      width="258"
-                      height="313"
-                      alt="<%= item.name %>"
-                      class="pc__img pc__img-second"
-                    />
+              <% (products || []).slice(0, Math.min((products || []).length, 12)).forEach(function(item){ 
+                   const discountPercent = Math.round(((Number(item.price) + 100000 - Number(item.price)) / (Number(item.price) + 100000)) * 100);
+                   const hasDiscount = discountPercent > 0;
+              %>
+                <div class="swiper-slide">
+                  <div class="related-product-card" style="background: #fff; border-radius: 16px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.08); transition: all 0.3s ease; height: 100%; display: flex; flex-direction: column; position: relative;">
+                    <!-- Discount Badge -->
+                    <% if (hasDiscount) { %>
+                      <div class="discount-badge" style="position: absolute; top: 12px; left: 12px; background: linear-gradient(135deg, #e8071b, #ff6b6b); color: #fff; padding: 6px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; z-index: 10; box-shadow: 0 2px 8px rgba(232, 7, 27, 0.3);">
+                        -<%= discountPercent %>%
+                      </div>
+                    <% } %>
 
-                    <% const st = item.productStatus?.statusName; const frameSrc
-                    = st === 'Bán chạy' ? '/mixishop/images/frame_banchay.png' :
-                    st === 'Trending' ? '/mixishop/images/frame_trending.png' :
-                    '/mixishop/images/frame_new.png'; %>
-                    <img
-                      class="category-banner__frame"
-                      src="<%= frameSrc %>"
-                      alt="Status Frame"
-                    />
-                  </a>
-                </div>
+                    <!-- Status Badge -->
+                    <% 
+                      const st = item.productStatus?.statusName;
+                      if (st) {
+                        const statusConfig = {
+                          'Bán chạy': { bg: '#10b981', text: '🔥 Bán chạy', icon: '🔥' },
+                          'Trending': { bg: '#3b82f6', text: '⭐ Trending', icon: '⭐' },
+                          'Mới': { bg: '#f59e0b', text: '✨ Mới', icon: '✨' }
+                        };
+                        const config = statusConfig[st] || { bg: '#6b7280', text: st, icon: '' };
+                    %>
+                      <div class="status-badge" style="position: absolute; top: 12px; right: 12px; background: <%= config.bg %>; color: #fff; padding: 6px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; z-index: 10; box-shadow: 0 2px 8px rgba(0,0,0,0.15);">
+                        <%= config.text %>
+                      </div>
+                    <% } %>
 
-                <!-- mini swatch chỉ để show màu -->
-                <div
-                  class="d-flex align-items-center mt-1 custom-swatch-container"
-                >
-                  <% (item.colors || []).forEach(function(productColor){ const
-                  img0 = (productColor.imageUrls && productColor.imageUrls[0])
-                  || ''; const title = productColor.color_id?.color_name ||
-                  productColor.color || 'Màu'; const dataVal =
-                  productColor.color_id?.color_name || productColor.color || '';
-                  %>
-                  <span
-                    class="swatch-color custom-swatch-color"
-                    style="
-                      background-image: url('<%= img0 %>');
-                      background-size: cover;
-                    "
-                    title="<%= title %>"
-                    data-value="<%= dataVal %>"
-                  >
-                  </span>
-                  <% }) %>
-                </div>
+                    <!-- Product Image -->
+                    <div class="related-product-image" style="position: relative; padding-top: 100%; overflow: hidden; background: #f9fafb;">
+                      <a href="/product_detail/<%= item.id || item._id %>" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: block;">
+                        <img
+                          loading="lazy"
+                          src="<%= (item.colors?.[0]?.imageUrls?.[0]) || '/images/default.png' %>"
+                          alt="<%= item.name %>"
+                          class="related-product-img-main"
+                          style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; transition: transform 0.4s ease;">
+                        <img
+                          loading="lazy"
+                          src="<%= (item.colors?.[0]?.imageUrls?.[1]) || (item.colors?.[0]?.imageUrls?.[0]) || '/images/default.png' %>"
+                          alt="<%= item.name %>"
+                          class="related-product-img-hover"
+                          style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity 0.4s ease;">
+                      </a>
+                      
+                      <!-- Quick Actions -->
+                      <div class="related-product-actions" style="position: absolute; bottom: 12px; left: 50%; transform: translateX(-50%) translateY(10px); opacity: 0; transition: all 0.3s ease; display: flex; gap: 8px; z-index: 5;">
+                        <button
+                          class="related-action-btn"
+                          style="width: 40px; height: 40px; border-radius: 50%; background: #fff; border: none; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(0,0,0,0.15); cursor: pointer; transition: all 0.2s ease;"
+                          data-aside="cartDrawer"
+                          title="Thêm vào giỏ hàng"
+                          onclick="event.preventDefault(); document.querySelector('[data-product-id=\'<%= item.id || item._id %>\']')?.click();">
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: #111827;">
+                            <circle cx="9" cy="21" r="1"></circle>
+                            <circle cx="20" cy="21" r="1"></circle>
+                            <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+                          </svg>
+                        </button>
+                        <a
+                          href="/product_detail/<%= item.id || item._id %>"
+                          class="related-action-btn"
+                          style="width: 40px; height: 40px; border-radius: 50%; background: #fff; border: none; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(0,0,0,0.15); cursor: pointer; transition: all 0.2s ease; text-decoration: none;"
+                          title="Xem chi tiết">
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: #111827;">
+                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                            <circle cx="12" cy="12" r="3"></circle>
+                          </svg>
+                        </a>
+                        <button
+                          class="related-action-btn js-add-wishlist"
+                          style="width: 40px; height: 40px; border-radius: 50%; background: #fff; border: none; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(0,0,0,0.15); cursor: pointer; transition: all 0.2s ease;"
+                          title="Thêm yêu thích"
+                          data-product="<%= item.id || item._id %>">
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: #111827;">
+                            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                          </svg>
+                        </button>
+                      </div>
+                    </div>
 
-                <div
-                  class="pc__info position-relative d-flex flex-column justify-content-between"
-                >
-                  <h1 class="pc__title">
-                    <a href="/product_detail/<%= item.id || item._id %>"
-                      ><%= item.name %></a
-                    >
-                  </h1>
+                    <!-- Product Info -->
+                    <div class="related-product-info" style="padding: 1.25rem; flex: 1; display: flex; flex-direction: column;">
+                      <!-- Color Swatches -->
+                      <% if (item.colors && item.colors.length > 0) { %>
+                        <div class="related-product-colors mb-2" style="display: flex; gap: 6px; flex-wrap: wrap;">
+                          <% item.colors.slice(0, 5).forEach(function(productColor){ 
+                               const img0 = (productColor.imageUrls && productColor.imageUrls[0]) || '';
+                               const title = productColor.color_id?.color_name || productColor.color || 'Màu';
+                          %>
+                            <span
+                              class="related-color-swatch"
+                              style="width: 24px; height: 24px; border-radius: 50%; border: 2px solid #e5e7eb; background-image: url('<%= img0 %>'); background-size: cover; background-position: center; cursor: pointer; transition: transform 0.2s ease;"
+                              title="<%= title %>"
+                              onmouseover="this.style.transform='scale(1.15)'; this.style.borderColor='#111827';"
+                              onmouseout="this.style.transform='scale(1)'; this.style.borderColor='#e5e7eb';">
+                            </span>
+                          <% }) %>
+                          <% if (item.colors.length > 5) { %>
+                            <span style="width: 24px; height: 24px; border-radius: 50%; border: 2px solid #e5e7eb; background: #f3f4f6; display: flex; align-items: center; justify-content: center; font-size: 0.65rem; color: #6b7280; font-weight: 600;">
+                              +<%= item.colors.length - 5 %>
+                            </span>
+                          <% } %>
+                        </div>
+                      <% } %>
 
-                  <div
-                    class="product-card__price d-flex align-items-center justify-content-between"
-                  >
-                    <span class="money price-old">
-                      <%= formatPrice((Number(item.price) || 0) + 100000) %>
-                    </span>
-                    <span
-                      class="money price text-secondary small-price"
-                      style="color: blue"
-                    >
-                      <%= formatPrice(item.price) %>
-                    </span>
+                      <!-- Product Name -->
+                      <h3 class="related-product-name" style="margin: 0 0 0.75rem 0; font-size: 1rem; font-weight: 600; line-height: 1.4; color: #111827;">
+                        <a href="/product_detail/<%= item.id || item._id %>" style="color: inherit; text-decoration: none; transition: color 0.2s ease;" onmouseover="this.style.color='#e8071b';" onmouseout="this.style.color='#111827';">
+                          <%= item.name %>
+                        </a>
+                      </h3>
+
+                      <!-- Product Price -->
+                      <div class="related-product-price" style="margin-top: auto;">
+                        <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
+                          <span class="related-price-current" style="font-size: 1.25rem; font-weight: 700; color: #e8071b;">
+                            <%= formatPrice(item.price) %>
+                          </span>
+                          <% if (hasDiscount) { %>
+                            <span class="related-price-old" style="font-size: 0.875rem; color: #9ca3af; text-decoration: line-through;">
+                              <%= formatPrice((Number(item.price) || 0) + 100000) %>
+                            </span>
+                          <% } %>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
-
-                <div
-                  class="anim_appear-bottom position-absolute bottom-0 start-0 d-none d-sm-flex align-items-center bg-body"
-                >
-                  <button
-                    class="btn-icon btn-link btn-link_lg me-4 fw-medium js-open-aside"
-                    data-aside="cartDrawer"
-                    title="Add To Cart"
-                  >
-                    <svg
-                      width="16"
-                      height="16"
-                      viewBox="0 0 24 24"
-                      fill="currentColor"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <use href="#icon_cart" />
-                    </svg>
-                    <span class="ms-2 small-text">Thêm giỏ hàng</span>
-                  </button>
-                  <a
-                    class="btn-icon btn-link btn-link_lg me-4 fw-medium"
-                    href="/product_detail/<%= item.id || item._id %>"
-                    title="Quick View"
-                  >
-                    <svg
-                      width="16"
-                      height="16"
-                      viewBox="0 0 24 24"
-                      fill="currentColor"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <use href="#icon_view" />
-                    </svg>
-                    <span class="ms-2 small-text">Chi tiết</span>
-                  </a>
-                  <button
-                    class="pc__btn-wl bg-transparent border-0 js-add-wishlist"
-                    title="Thêm yêu thích"
-                    data-product="<%= item.id || item._id %>"
-                  >
-                    <svg
-                      width="18"
-                      height="18"
-                      viewBox="0 0 24 24"
-                      fill="currentColor"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <use href="#icon_heart" />
-                    </svg>
-                  </button>
-                </div>
-              </div>
               <% }) %>
             </div>
           </div>
+
+          <!-- Navigation Arrows -->
+          <div class="products-carousel__prev related-nav-prev" style="position: absolute; left: -50px; top: 50%; transform: translateY(-50%); width: 48px; height: 48px; border-radius: 50%; background: #fff; box-shadow: 0 2px 12px rgba(0,0,0,0.1); display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 10; transition: all 0.3s ease;" onmouseover="this.style.background='#e8071b'; this.querySelector('svg').style.color='#fff';" onmouseout="this.style.background='#fff'; this.querySelector('svg').style.color='#111827';">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: #111827; transition: color 0.3s ease;">
+              <polyline points="15 18 9 12 15 6"></polyline>
+            </svg>
+          </div>
+          <div class="products-carousel__next related-nav-next" style="position: absolute; right: -50px; top: 50%; transform: translateY(-50%); width: 48px; height: 48px; border-radius: 50%; background: #fff; box-shadow: 0 2px 12px rgba(0,0,0,0.1); display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 10; transition: all 0.3s ease;" onmouseover="this.style.background='#e8071b'; this.querySelector('svg').style.color='#fff';" onmouseout="this.style.background='#fff'; this.querySelector('svg').style.color='#111827';">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: #111827; transition: color 0.3s ease;">
+              <polyline points="9 18 15 12 9 6"></polyline>
+            </svg>
+          </div>
+
+          <!-- Pagination -->
+          <div class="products-pagination mt-4 mb-2 d-flex align-items-center justify-content-center"></div>
+        </div>
+      </div>
+    </section>
+
+    <style>
+      .related-products-section {
+        background: linear-gradient(to bottom, #fafafa, #fff);
+        padding: 3rem 0;
+      }
+
+      .related-product-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 8px 24px rgba(0,0,0,0.12) !important;
+      }
+
+      .related-product-card:hover .related-product-img-main {
+        transform: scale(1.05);
+      }
+
+      .related-product-card:hover .related-product-img-hover {
+        opacity: 1;
+      }
+
+      .related-product-card:hover .related-product-actions {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+      }
+
+      .related-action-btn:hover {
+        background: #e8071b !important;
+        transform: scale(1.1);
+      }
+
+      .related-action-btn:hover svg {
+        color: #fff !important;
+      }
+
+      @media (max-width: 1200px) {
+        .related-nav-prev {
+          left: -30px !important;
+        }
+        .related-nav-next {
+          right: -30px !important;
+        }
+      }
+
+      @media (max-width: 992px) {
+        .related-nav-prev,
+        .related-nav-next {
+          display: none !important;
+        }
+      }
+
+      @media (max-width: 576px) {
+        .related-products-title {
+          font-size: 1.5rem !important;
+        }
+        .related-product-info {
+          padding: 1rem !important;
+        }
+      }
+    </style>
+  </main>
+
+  <div class="mb-5 pb-xl-5"></div>
+
+  <div class="aside-filters aside aside_right" id="shopFilter"></div>
+
+  <%- include('partials/footer') %>
+  <%- include('partials/icons') %>
+  <%- include('partials/login_form') %>
+  <%- include('partials/cart_drawer') %>
+  <%- include('partials/quick_view') %>
+  <%- include('partials/sitemap') %>
+
+  <div id="scrollTop" class="visually-hidden end-0"></div>
 
           <div
             class="products-carousel__prev position-absolute top-50 d-flex align-items-center justify-content-center"
@@ -1548,54 +2697,91 @@
               if (v > 1) qtyInput.value = v - 1;
             });
 
-            incBtn.addEventListener("click", () => {
-              const v = parseInt(qtyInput.value || "1", 10);
-              qtyInput.value = v + 1;
-            });
-          })();
-        });
-      })();
-    </script>
+          incBtn.addEventListener('click', () => {
+            const v = parseInt(qtyInput.value || '1', 10);
+            qtyInput.value = v + 1;
+          });
+        })();
+      });
+    })();
+  </script>
 
-    <script>
-      (function () {
-        const socket      = GLOBAL_SOCKET || null;
-        const productId   = '<%= product._id %>';
-        const isLoggedIn  = <%= loggedInUser ? 'true' : 'false' %>;
-        const apiUrl      = '/api/product/<%= product._id %>/reviews';
+  <script>
+    (function () {
+      const socket      = GLOBAL_SOCKET || null;
+      const productId   = '<%= product._id %>';
+      const isLoggedIn  = <%= loggedInUser ? 'true' : 'false' %>;
+      const apiUrl      = '/api/product/<%= product._id %>/reviews';
 
-        const reviewListEl   = document.getElementById('reviewsList');
-        const ratingAvgEl    = document.getElementById('ratingAverage');
-        const ratingCountEl  = document.getElementById('ratingCount');
-        const ratingMessage  = document.getElementById('reviewMessage');
+      const reviewListEl   = document.getElementById('reviewsList');
+      const ratingAvgEl    = document.getElementById('ratingAverage');
+      const ratingCountEl  = document.getElementById('ratingCount');
+      const ratingMessage  = document.getElementById('reviewMessage');
 
-        // vẽ lại sao trung bình
-        function repaintAverageStars(avg) {
-          const container = document.querySelector('.rating-large');
-          if (!container) return;
+      // vẽ lại sao trung bình (phần reviews section)
+      function repaintAverageStars(avg) {
+        const container = document.querySelector('.rating-large');
+        if (!container) return;
+        const rounded = Math.round(avg || 0);
+        container.innerHTML = '';
+        for (let i = 1; i <= 5; i++) {
+          const iEl = document.createElement('i');
+          iEl.className = 'star' + (i <= rounded ? ' filled' : '');
+          iEl.textContent = '★';
+          container.appendChild(iEl);
+        }
+
+      // Cập nhật rating ở phần product info (phần trên cùng)
+      function updateProductInfoRating(avg, count) {
+        const productRatingSummary = document.getElementById('productRatingSummary');
+        const productRatingAvg = document.getElementById('productRatingAvg');
+        const productRatingCount = document.getElementById('productRatingCount');
+        const productRatingStars = document.getElementById('productRatingStars');
+        
+        // Chỉ hiển thị nếu có rating (count > 0 và avg > 0)
+        const hasRating = count > 0 && avg > 0;
+        
+        if (productRatingSummary) {
+          productRatingSummary.style.display = hasRating ? 'block' : 'none';
+        }
+        
+        if (productRatingAvg) {
+          productRatingAvg.textContent = Number(avg || 0).toFixed(1);
+        }
+        
+        if (productRatingCount) {
+          productRatingCount.textContent = count || 0;
+        }
+        
+        if (productRatingStars) {
           const rounded = Math.round(avg || 0);
-          container.innerHTML = '';
+          productRatingStars.innerHTML = '';
           for (let i = 1; i <= 5; i++) {
             const iEl = document.createElement('i');
             iEl.className = 'star' + (i <= rounded ? ' filled' : '');
             iEl.textContent = '★';
-            container.appendChild(iEl);
+            productRatingStars.appendChild(iEl);
           }
         }
+      }
 
-        // render 1 item review -> HTML string
-        function buildReviewHtml(r) {
-          const displayName  = (r.user && r.user.full_name) || r.guest_name || 'Ẩn danh';
-          const createdLabel = r.createdAt ? new Date(r.createdAt).toLocaleString('vi-VN') : '';
-          const rRating      = Number(r.rating || 0);
-          const rRounded     = Math.round(rRating || 0);
+      // render 1 item review -> HTML string
+      function buildReviewHtml(r) {
+        const displayName  = (r.user && r.user.full_name) || r.guest_name || 'Ẩn danh';
+        const isAdmin      = (r.user && r.user.role === 'admin') || (r.user && r.user.isAdmin);
+        const createdLabel = r.createdAt ? new Date(r.createdAt).toLocaleString('vi-VN') : '';
+        const rRating      = Number(r.rating || 0);
+        const rRounded     = Math.round(rRating || 0);
+        const likeCount    = Number(r.likes_count || r.likes?.length || 0);
+        const isLiked      = r.is_liked || false;
 
           const sentiment    = r.sentiment || null;
           const score        = (typeof r.sentiment_score === 'number') ? r.sentiment_score : null;
           const aiLabel      = r.ai_label || null;
 
-          const safeName    = AppUtils.escapeHtml(displayName);
-          const safeComment = AppUtils.escapeHtml(r.comment || '');
+        const safeName    = AppUtils.escapeHtml(displayName);
+        const safeComment = AppUtils.escapeHtml(r.comment || '');
+        const safeDate    = AppUtils.escapeHtml(createdLabel);
 
           let starsHtml = '';
           if (rRating) {
@@ -1604,56 +2790,97 @@
             }
           }
 
-          let sentimentText  = '';
-          let sentimentColor = '#6b7280';
+        let sentimentText  = '';
+        let sentimentClass = '';
 
-          if (sentiment === 'positive') {
-            sentimentText  = 'Tích cực';
-            sentimentColor = '#16a34a';
-          } else if (sentiment === 'negative') {
-            sentimentText  = 'Tiêu cực';
-            sentimentColor = '#dc2626';
-          } else if (sentiment === 'neutral') {
-            sentimentText = 'Trung tính';
-          }
+        if (sentiment === 'positive') {
+          sentimentText  = 'Tích cực';
+          sentimentClass = 'positive';
+        } else if (sentiment === 'negative') {
+          sentimentText  = 'Tiêu cực';
+          sentimentClass = 'negative';
+        } else if (sentiment === 'neutral') {
+          sentimentText  = 'Trung tính';
+          sentimentClass = 'neutral';
+        }
 
-          let aiLabelText = '';
-          if (aiLabel === 'happy')    aiLabelText = 'Khách hài lòng';
-          if (aiLabel === 'complain') aiLabelText = 'Khách phàn nàn';
-          if (aiLabel === 'urgent')   aiLabelText = 'Cần hỗ trợ gấp';
+        let aiLabelText = '';
+        if (aiLabel === 'happy')    aiLabelText = 'Khách hài lòng';
+        if (aiLabel === 'complain') aiLabelText = 'Khách phàn nàn';
+        if (aiLabel === 'urgent')   aiLabelText = 'Cần hỗ trợ gấp';
 
-          const sentimentParts = [];
-          if (sentimentText)        sentimentParts.push(sentimentText);
-          if (score !== null)       sentimentParts.push(`Điểm: ${score.toFixed(2)}`);
-          if (aiLabelText)          sentimentParts.push(aiLabelText);
+        const sentimentParts = [];
+        if (sentimentText)        sentimentParts.push(`<span>${sentimentText}</span>`);
+        if (score !== null)       sentimentParts.push(`<span>• Điểm: ${score.toFixed(2)}</span>`);
+        if (aiLabelText)          sentimentParts.push(`<span>• ${aiLabelText}</span>`);
 
-          const sentimentLine = sentimentParts.length
-            ? `<div class="small" style="color:${sentimentColor}; font-weight:600;">
-                 Cảm xúc AI: ${sentimentParts.join(' • ')}
-               </div>`
-            : '';
+        const sentimentLine = sentimentParts.length
+          ? `<div class="comment-sentiment ${sentimentClass}">
+               <span>Cảm xúc AI:</span>
+               ${sentimentParts.join('')}
+             </div>`
+          : '';
 
-          return `
-            <div class="comment-item cmt-item border-bottom pb-3 mb-3" data-id="${r._id || ''}">
-              <div class="d-flex">
-                <div class="me-3">
-                  <div class="avatar rounded-circle d-flex align-items-center justify-content-center"
-                       style="width:40px;height:40px;background:#e5e7eb;font-weight:600;">
-                    ${safeName.charAt(0).toUpperCase()}
-                  </div>
-                </div>
+        const adminBadge = isAdmin ? '<span class="admin-badge">QTV</span>' : '';
+        const authorName = isAdmin ? 'Quản Trị Viên' : safeName;
 
-                <div class="flex-grow-1">
-                  <div class="d-flex align-items-center justify-content-between mb-1">
-                    <div>
-                      <div class="fw-semibold">${safeName}</div>
-                      <div class="chat-meta">${AppUtils.escapeHtml(createdLabel)}</div>
+        return `
+          <div class="comment-item" 
+               data-id="${r._id || ''}"
+               data-has-rating="${rRating ? 'true' : 'false'}"
+               data-has-comment="${safeComment ? 'true' : 'false'}">
+            <div class="d-flex">
+              <div class="comment-avatar">
+                ${safeName.charAt(0).toUpperCase()}
+              </div>
+              <div class="comment-content">
+                <div class="comment-header">
+                  <div>
+                    <div class="comment-author-badge">
+                      <span class="comment-author">${authorName}</span>
+                      ${adminBadge}
                     </div>
-                    ${rRating ? `<div class="rating-small">${starsHtml}</div>` : ''}
+                    <div class="comment-meta">${safeDate}</div>
                   </div>
-
-                  <div class="chat-bubble mb-1">${safeComment}</div>
-                  ${sentimentLine}
+                  ${rRating ? `<div class="comment-rating rating-small">${starsHtml}</div>` : ''}
+                </div>
+                <div class="comment-text">${safeComment}</div>
+                ${sentimentLine}
+                <div class="comment-actions">
+                  <button 
+                    class="comment-action-btn like-btn ${isLiked ? 'liked' : ''}" 
+                    data-comment-id="${r._id || ''}"
+                    title="Thả tim">
+                    <svg class="heart-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+                    </svg>
+                    <span class="like-count" data-count="${likeCount}">${likeCount > 0 ? likeCount : ''}</span>
+                    <span>Thích</span>
+                  </button>
+                  <button 
+                    class="comment-action-btn reply-btn" 
+                    data-comment-id="${r._id || ''}"
+                    onclick="toggleReplyForm('${r._id || ''}'); return false;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M3 10h10a8 8 0 0 1 8 8v2M3 10l6 6m-6-6l6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    Phản hồi
+                  </button>   
+                </div>
+                <div class="replies-list" id="replies-${r._id || ''}" style="display: none;">
+                  <!-- Replies will be inserted here -->
+                </div>
+                <div class="reply-form-container" id="reply-form-${r._id || ''}" style="display: none;">
+                  <form class="reply-form" data-parent-id="${r._id || ''}">
+                    <div class="reply-form-input-wrapper">
+                      <textarea 
+                        class="reply-form-input" 
+                        name="comment" 
+                        placeholder="Viết phản hồi..." 
+                        required></textarea>
+                      <button type="submit" class="reply-form-submit">Gửi</button>
+                    </div>
+                  </form>
                 </div>
               </div>
             </div>
@@ -1664,22 +2891,651 @@
           if (!reviewListEl || !r) return;
           const html = buildReviewHtml(r);
 
-          // nếu danh sách đang là "chưa có bình luận" thì clear
-          if (reviewListEl.children.length === 1 &&
-              reviewListEl.textContent.includes('Chưa có bình luận')) {
-            reviewListEl.innerHTML = '';
-          }
-
-          const tmp  = document.createElement('div');
-          tmp.innerHTML = html.trim();
-          const node = tmp.firstChild;
-          reviewListEl.insertBefore(node, reviewListEl.firstChild);
+        // nếu danh sách đang là "chưa có bình luận" thì clear
+        const emptyEl = reviewListEl.querySelector('.comments-empty');
+        if (emptyEl) {
+          emptyEl.remove();
         }
 
-        // ===== RATING UI (chọn sao) =====
-        function initRatingStars() {
-          const stars = AppUtils.qsa('#ratingStars .rate-star');
-          if (!stars.length) return;
+        const tmp  = document.createElement('div');
+        tmp.innerHTML = html.trim();
+        const node = tmp.firstChild;
+        reviewListEl.insertBefore(node, reviewListEl.firstChild);
+
+        // Bind lại event listeners cho comment mới
+        const newReplyForm = node.querySelector('.reply-form');
+        if (newReplyForm) {
+          bindReplyForm(newReplyForm);
+        }
+
+        const newLikeBtn = node.querySelector('.like-btn');
+        if (newLikeBtn) {
+          bindLikeButton(newLikeBtn);
+        }
+      }
+
+      // ===== REPLY FUNCTIONS =====
+      function getOpenReplyForms() {
+        try {
+          const stored = localStorage.getItem(`openReplyForms_${productId}`);
+          return stored ? JSON.parse(stored) : [];
+        } catch (e) {
+          return [];
+        }
+      }
+
+      function saveOpenReplyForms(commentIds) {
+        try {
+          localStorage.setItem(`openReplyForms_${productId}`, JSON.stringify(commentIds));
+        } catch (e) {
+          console.error('Failed to save open reply forms:', e);
+        }
+      }
+
+      function restoreOpenReplyForms() {
+        const openForms = getOpenReplyForms();
+        openForms.forEach(commentId => {
+          const formEl = document.getElementById(`reply-form-${commentId}`);
+          if (formEl) {
+            formEl.style.display = 'block';
+            const form = formEl.querySelector('.reply-form');
+            if (form) {
+              bindReplyForm(form);
+            }
+          }
+        });
+      }
+
+      window.toggleReplyForm = function(commentId) {
+        const formEl = document.getElementById(`reply-form-${commentId}`);
+        if (!formEl) {
+          console.error('Reply form not found for comment:', commentId);
+          return;
+        }
+        
+        const isHidden = formEl.style.display === 'none' || !formEl.style.display;
+        
+        if (isHidden) {
+          // Show form
+          formEl.style.display = 'block';
+          
+          // Save to localStorage
+          const openForms = getOpenReplyForms();
+          if (!openForms.includes(commentId)) {
+            openForms.push(commentId);
+            saveOpenReplyForms(openForms);
+          }
+          
+          // Ensure form is bound
+          const form = formEl.querySelector('.reply-form');
+          if (form) {
+            // Remove old listeners by cloning
+            const newForm = form.cloneNode(true);
+            form.parentNode.replaceChild(newForm, form);
+            bindReplyForm(newForm);
+          }
+          
+          // Focus on textarea
+          const textarea = formEl.querySelector('textarea');
+          if (textarea) {
+            setTimeout(() => textarea.focus(), 100);
+          }
+        } else {
+          // Hide form
+          formEl.style.display = 'none';
+          
+          // Remove from localStorage
+          const openForms = getOpenReplyForms();
+          const index = openForms.indexOf(commentId);
+          if (index > -1) {
+            openForms.splice(index, 1);
+            saveOpenReplyForms(openForms);
+          }
+        }
+      };
+
+      function appendReply(parentId, reply) {
+        console.log('appendReply called with parentId:', parentId, 'reply:', reply);
+        
+        // Use parent_id from reply object if available, otherwise use provided parentId
+        const actualParentId = reply.parent_id || parentId;
+        
+        let repliesContainer = document.getElementById(`replies-${actualParentId}`);
+        if (!repliesContainer) {
+          // Tạo container mới nếu chưa có
+          const commentItem = document.querySelector(`[data-id="${actualParentId}"]`);
+          if (!commentItem) {
+            console.error('Comment item not found for parentId:', actualParentId);
+            return;
+          }
+          
+          const commentContent = commentItem.querySelector('.comment-content');
+          if (!commentContent) {
+            console.error('Comment content not found for parentId:', actualParentId);
+            return;
+          }
+
+          const newContainer = document.createElement('div');
+          newContainer.className = 'replies-list';
+          newContainer.id = `replies-${actualParentId}`;
+          newContainer.style.display = 'block';
+          
+          const formEl = commentItem.querySelector(`#reply-form-${actualParentId}`);
+          if (formEl) {
+            commentContent.insertBefore(newContainer, formEl);
+          } else {
+            commentContent.appendChild(newContainer);
+          }
+          
+          repliesContainer = newContainer;
+          console.log('Created new replies container for parentId:', actualParentId);
+        } else {
+          repliesContainer.style.display = 'block';
+          console.log('Using existing replies container for parentId:', actualParentId);
+        }
+
+        const replyName = (reply.user && reply.user.full_name) || reply.guest_name || 'Ẩn danh';
+        const replyIsAdmin = (reply.user && reply.user.role === 'admin') || (reply.user && reply.user.isAdmin);
+        const replyDate = reply.createdAt ? new Date(reply.createdAt).toLocaleString('vi-VN') : '';
+        const replyLikeCount = Number(reply.likes_count || reply.likes?.length || 0);
+        const replyIsLiked = reply.is_liked || false;
+        
+        // Sentiment data
+        const replySentiment = reply.sentiment || null;
+        const replyScore = (typeof reply.sentiment_score === 'number') ? reply.sentiment_score : null;
+        const replyAiLabel = reply.ai_label || null;
+        
+        let replySentimentText = '';
+        let replySentimentClass = '';
+        
+        if (replySentiment === 'positive') {
+          replySentimentText = 'Tích cực';
+          replySentimentClass = 'positive';
+        } else if (replySentiment === 'negative') {
+          replySentimentText = 'Tiêu cực';
+          replySentimentClass = 'negative';
+        } else if (replySentiment === 'neutral') {
+          replySentimentText = 'Trung tính';
+          replySentimentClass = 'neutral';
+        }
+        
+        let replyAiLabelText = '';
+        if (replyAiLabel === 'happy') replyAiLabelText = 'Khách hài lòng';
+        if (replyAiLabel === 'complain') replyAiLabelText = 'Khách phàn nàn';
+        if (replyAiLabel === 'urgent') replyAiLabelText = 'Cần hỗ trợ gấp';
+        
+        const replySentimentParts = [];
+        if (replySentimentText) replySentimentParts.push(`<span>${replySentimentText}</span>`);
+        if (replyScore !== null) replySentimentParts.push(`<span>• Điểm: ${replyScore.toFixed(2)}</span>`);
+        if (replyAiLabelText) replySentimentParts.push(`<span>• ${replyAiLabelText}</span>`);
+        
+        const replySentimentLine = replySentimentParts.length
+          ? `<div class="comment-sentiment ${replySentimentClass}">
+               <span>Cảm xúc AI:</span>
+               ${replySentimentParts.join('')}
+             </div>`
+          : '';
+        
+        const safeReplyName = AppUtils.escapeHtml(replyName);
+        const safeReplyComment = AppUtils.escapeHtml(reply.comment || '');
+        const safeReplyDate = AppUtils.escapeHtml(replyDate);
+
+        const replyHtml = `
+          <div class="reply-item" data-reply-id="${reply._id || ''}">
+            <div class="d-flex">
+              <div class="comment-avatar">
+                ${safeReplyName.charAt(0).toUpperCase()}
+              </div>
+              <div class="comment-content">
+                <div class="comment-header">
+                  <div>
+                    <div class="comment-author-badge">
+                      <span class="comment-author">
+                        ${replyIsAdmin ? 'Quản Trị Viên' : safeReplyName}
+                      </span>
+                      ${replyIsAdmin ? '<span class="admin-badge">QTV</span>' : ''}
+                    </div>
+                    <div class="comment-meta">${safeReplyDate}</div>
+                  </div>
+                </div>
+                <div class="comment-text" style="padding: 0.875rem 1rem; font-size: 0.9375rem;">${safeReplyComment}</div>
+                ${replySentimentLine}
+                <div class="comment-actions" style="margin-top: 0.75rem; padding-top: 0.75rem;">
+                  <button 
+                    class="comment-action-btn like-btn ${replyIsLiked ? 'liked' : ''}" 
+                    data-comment-id="${reply._id || ''}"
+                    title="Thả tim">
+                    <svg class="heart-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+                    </svg>
+                    <span class="like-count" data-count="${replyLikeCount}">${replyLikeCount > 0 ? replyLikeCount : ''}</span>
+                    <span>Thích</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+
+        const tmp = document.createElement('div');
+        tmp.innerHTML = replyHtml.trim();
+        const replyNode = tmp.firstChild;
+        repliesContainer.appendChild(replyNode);
+
+        // Bind like button for the new reply
+        const newLikeBtn = replyNode.querySelector('.like-btn');
+        if (newLikeBtn) {
+          bindLikeButton(newLikeBtn);
+        }
+      }
+
+      function bindReplyForm(form) {
+        // Remove existing listeners to avoid duplicates
+        const newForm = form.cloneNode(true);
+        form.parentNode.replaceChild(newForm, form);
+        
+        newForm.addEventListener('submit', async (e) => {
+          e.preventDefault();
+          const parentId = newForm.getAttribute('data-parent-id');
+          if (!parentId) {
+            console.error('No parent ID found in form');
+            return;
+          }
+
+          console.log('Submitting reply for parent:', parentId);
+
+          const formData = new FormData(newForm);
+          const comment = (formData.get('comment') || '').toString().trim();
+          
+          if (!comment) {
+            alert('Vui lòng nhập nội dung phản hồi.');
+            return;
+          }
+
+          const payload = {
+            comment: comment,
+            parent_id: parentId,
+            product_id: productId
+          };
+          // Backend sẽ tự động lấy tên từ user nếu đã đăng nhập, nếu chưa thì dùng "Người dùng ẩn danh"
+
+          console.log('Reply payload:', payload);
+
+          // Disable form while submitting
+          const submitBtn = newForm.querySelector('button[type="submit"]');
+          if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Đang gửi...';
+          }
+
+          try {
+            // Try WebSocket first if available
+            if (socket && socket.connected) {
+              console.log('Using WebSocket for reply');
+              socket.emit('comment:reply', payload, (response) => {
+                console.log('WebSocket reply response:', response);
+                
+                if (submitBtn) {
+                  submitBtn.disabled = false;
+                  submitBtn.textContent = 'Gửi';
+                }
+
+                if (response && response.ok && response.reply) {
+                  // Reply đã được thêm thành công (backend sẽ broadcast cho tất cả clients)
+                  newForm.reset();
+                  const formContainer = document.getElementById(`reply-form-${parentId}`);
+                  if (formContainer) formContainer.style.display = 'none';
+                  
+                  // Remove from localStorage
+                  const openForms = getOpenReplyForms();
+                  const index = openForms.indexOf(parentId);
+                  if (index > -1) {
+                    openForms.splice(index, 1);
+                    saveOpenReplyForms(openForms);
+                  }
+                  
+                  // Also append immediately for better UX
+                  console.log('Appending reply:', response.reply);
+                  appendReply(parentId, response.reply);
+                } else {
+                  // Fallback to HTTP if WebSocket fails
+                  console.log('WebSocket failed, falling back to HTTP');
+                  sendReplyViaHTTP(payload, parentId, newForm, submitBtn);
+                }
+              });
+
+              // Timeout fallback after 3 seconds
+              setTimeout(() => {
+                if (submitBtn && submitBtn.disabled && submitBtn.textContent === 'Đang gửi...') {
+                  console.warn('WebSocket timeout, falling back to HTTP');
+                  sendReplyViaHTTP(payload, parentId, newForm, submitBtn);
+                }
+              }, 3000);
+            } else {
+              // No WebSocket, use HTTP directly
+              console.log('No WebSocket, using HTTP for reply');
+              await sendReplyViaHTTP(payload, parentId, newForm, submitBtn);
+            }
+          } catch (err) {
+            console.error('Reply error:', err);
+            if (submitBtn) {
+              submitBtn.disabled = false;
+              submitBtn.textContent = 'Gửi';
+            }
+            alert('Có lỗi xảy ra, vui lòng thử lại.');
+          }
+        });
+      }
+
+      async function sendReplyViaHTTP(payload, parentId, form, submitBtn) {
+        try {
+          console.log('Sending reply via HTTP to:', `${apiUrl}/reply`);
+          const res = await fetch(`${apiUrl}/reply`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(payload)
+          });
+
+          console.log('HTTP reply response status:', res.status);
+
+          const data = await res.json().catch((err) => {
+            console.error('Failed to parse JSON response:', err);
+            return null;
+          });
+
+          console.log('HTTP reply response data:', data);
+
+          if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Gửi';
+          }
+
+          if (!res.ok || !data || !data.ok) {
+            const errorMsg = (data && data.message) || `HTTP ${res.status}: Gửi phản hồi thất bại, vui lòng thử lại.`;
+            console.error('Reply failed:', errorMsg);
+            alert(errorMsg);
+            return;
+          }
+
+          if (data.reply) {
+            console.log('Reply successful, appending:', data.reply);
+            form.reset();
+            
+            // Re-enable form after successful submission
+            if (submitBtn) {
+              submitBtn.disabled = false;
+              submitBtn.textContent = 'Gửi';
+              submitBtn.style.opacity = '1';
+              submitBtn.style.cursor = 'pointer';
+            }
+            const formContainer = document.getElementById(`reply-form-${parentId}`);
+            if (formContainer) formContainer.style.display = 'none';
+            
+            // Remove from localStorage
+            const openForms = getOpenReplyForms();
+            const index = openForms.indexOf(parentId);
+            if (index > -1) {
+              openForms.splice(index, 1);
+              saveOpenReplyForms(openForms);
+            }
+            
+            appendReply(parentId, data.reply);
+          } else {
+            console.warn('Reply successful but no reply data in response');
+          }
+        } catch (err) {
+          console.error('HTTP reply error:', err);
+          if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Gửi';
+          }
+          alert('Có lỗi kết nối: ' + err.message);
+        }
+      }
+
+      function initReplyForms() {
+        const replyForms = AppUtils.qsa('.reply-form');
+        replyForms.forEach(form => {
+          bindReplyForm(form);
+        });
+      }
+
+      // ===== LIKE FUNCTIONS =====
+      function updateLikeUI(commentId, likesCount, isLiked) {
+        // Update all like buttons for this comment (could be in main comment or reply)
+        const buttons = document.querySelectorAll(`.like-btn[data-comment-id="${commentId}"]`);
+        if (!buttons || buttons.length === 0) {
+          console.warn('No like button found for comment:', commentId);
+          return;
+        }
+
+        buttons.forEach(btn => {
+          const countEl = btn.querySelector('.like-count');
+          if (countEl) {
+            countEl.setAttribute('data-count', likesCount || 0);
+            countEl.textContent = likesCount > 0 ? likesCount : '';
+          }
+
+          if (isLiked) {
+            btn.classList.add('liked');
+          } else {
+            btn.classList.remove('liked');
+          }
+        });
+      }
+
+      function bindLikeButton(btn) {
+        // Remove existing listeners to avoid duplicates
+        const newBtn = btn.cloneNode(true);
+        btn.parentNode.replaceChild(newBtn, btn);
+        
+        let isProcessing = false;
+        let lastClickTime = 0;
+        const DEBOUNCE_MS = 500; // 500ms debounce
+        
+        newBtn.addEventListener('click', async (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          
+          // Debounce: prevent rapid clicks
+          const now = Date.now();
+          if (now - lastClickTime < DEBOUNCE_MS) {
+            return;
+          }
+          lastClickTime = now;
+          
+          // Prevent double-click
+          if (isProcessing) {
+            return;
+          }
+          
+          const commentId = newBtn.getAttribute('data-comment-id');
+          if (!commentId) {
+            console.error('No comment ID found');
+            return;
+          }
+
+          const isLiked = newBtn.classList.contains('liked');
+          const action = isLiked ? 'unlike' : 'like';
+          
+          console.log('Like button clicked:', { commentId, action, isLiked });
+
+          // Disable button and set processing state
+          isProcessing = true;
+          newBtn.disabled = true;
+          newBtn.style.opacity = '0.6';
+          newBtn.style.cursor = 'wait';
+
+          // Optimistic UI update
+          const currentCount = Number(newBtn.querySelector('.like-count')?.getAttribute('data-count') || 0);
+          const newCount = action === 'like' ? currentCount + 1 : Math.max(0, currentCount - 1);
+          updateLikeUI(commentId, newCount, !isLiked);
+
+          try {
+            // Try WebSocket first if available
+            if (socket && socket.connected) {
+              console.log('Using WebSocket for like');
+              socket.emit('comment:like', {
+                comment_id: commentId,
+                product_id: productId,
+                action: action
+              }, (response) => {
+                isProcessing = false;
+                newBtn.disabled = false;
+                newBtn.style.opacity = '1';
+                newBtn.style.cursor = 'pointer';
+                
+                console.log('WebSocket like response:', response);
+                if (response && response.ok) {
+                  const finalCount = Number(response.likes_count || 0);
+                  updateLikeUI(commentId, finalCount, response.is_liked);
+                } else {
+                  // Revert optimistic update on error
+                  updateLikeUI(commentId, currentCount, isLiked);
+                  // Fallback to HTTP
+                  sendLikeViaHTTP(commentId, action, newBtn, currentCount, isLiked);
+                }
+              });
+
+              // Timeout fallback after 3 seconds
+              setTimeout(() => {
+                if (isProcessing) {
+                  isProcessing = false;
+                  newBtn.disabled = false;
+                  newBtn.style.opacity = '1';
+                  newBtn.style.cursor = 'pointer';
+                  console.warn('WebSocket timeout, falling back to HTTP');
+                  sendLikeViaHTTP(commentId, action, newBtn, currentCount, isLiked);
+                }
+              }, 3000);
+            } else {
+              // No WebSocket, use HTTP directly
+              console.log('No WebSocket, using HTTP for like');
+              await sendLikeViaHTTP(commentId, action, newBtn, currentCount, isLiked);
+              isProcessing = false;
+              newBtn.disabled = false;
+              newBtn.style.opacity = '1';
+              newBtn.style.cursor = 'pointer';
+            }
+          } catch (err) {
+            isProcessing = false;
+            newBtn.disabled = false;
+            newBtn.style.opacity = '1';
+            newBtn.style.cursor = 'pointer';
+            // Revert optimistic update on error
+            updateLikeUI(commentId, currentCount, isLiked);
+            console.error('Like error:', err);
+          }
+        });
+      }
+
+      async function sendLikeViaHTTP(commentId, action, btn, originalCount, originalIsLiked) {
+        try {
+          const response = await fetch(`/api/product/${productId}/reviews/${commentId}/like`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ action }),
+            credentials: 'include'
+          });
+
+          const data = await response.json();
+          
+          if (response.ok && data.ok) {
+            const finalCount = Number(data.likes_count || 0);
+            updateLikeUI(commentId, finalCount, data.is_liked);
+          } else {
+            // Revert optimistic update on error
+            updateLikeUI(commentId, originalCount, originalIsLiked);
+            console.error('Like failed:', data.message || 'Có lỗi xảy ra');
+          }
+        } catch (err) {
+          console.error('HTTP like error:', err);
+          // Revert optimistic update on error
+          updateLikeUI(commentId, originalCount, originalIsLiked);
+        }
+      }
+
+      function initLikeButtons() {
+        const likeButtons = AppUtils.qsa('.like-btn');
+        likeButtons.forEach(btn => {
+          bindLikeButton(btn);
+        });
+      }
+
+
+      // ===== FILTER REVIEWS =====
+      function initToggleReviews() {
+        const toggleBtn = document.getElementById('toggleReviewsBtn');
+        const reviewsList = document.getElementById('reviewsList');
+        
+        if (!toggleBtn || !reviewsList) return;
+        
+        // Kiểm tra xem có nhiều comments không để thêm scroll
+        const commentItems = reviewsList.querySelectorAll('.comment-item');
+        if (commentItems.length > 5) {
+          reviewsList.classList.add('has-scroll');
+        }
+        
+        toggleBtn.addEventListener('click', () => {
+          const isExpanded = toggleBtn.getAttribute('aria-expanded') === 'true';
+          
+          if (isExpanded) {
+            // Thu gọn
+            reviewsList.classList.add('collapsed');
+            reviewsList.classList.remove('expanded');
+            toggleBtn.setAttribute('aria-expanded', 'false');
+            toggleBtn.querySelector('.toggle-text').textContent = 'Mở rộng bình luận';
+          } else {
+            // Mở rộng
+            reviewsList.classList.remove('collapsed');
+            reviewsList.classList.add('expanded');
+            toggleBtn.setAttribute('aria-expanded', 'true');
+            toggleBtn.querySelector('.toggle-text').textContent = 'Thu gọn bình luận';
+          }
+        });
+      }
+
+      function initReviewFilter() {
+        const filterButtons = document.querySelectorAll('.filter-btn');
+        const reviewItems = document.querySelectorAll('.comment-item');
+
+        filterButtons.forEach(btn => {
+          btn.addEventListener('click', () => {
+            // Update active state
+            filterButtons.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+
+            const filter = btn.getAttribute('data-filter');
+
+            reviewItems.forEach(item => {
+              const hasRating = item.getAttribute('data-has-rating') === 'true';
+              const hasComment = item.getAttribute('data-has-comment') === 'true';
+
+              let show = false;
+
+              switch (filter) {
+                case 'all':
+                  show = true;
+                  break;
+                case 'comments-only':
+                  show = hasComment && !hasRating;
+                  break;
+                case 'with-rating-comment':
+                  show = hasRating && hasComment;
+                  break;
+                default:
+                  show = true;
+              }
+
+              item.style.display = show ? 'block' : 'none';
+            });
+          });
+        });
+      }
 
           if (!isLoggedIn) {
             // guest click sao -> báo đăng nhập
@@ -1726,50 +3582,95 @@
 
           form.addEventListener('submit', async (e) => {
             e.preventDefault();
+            current = val;
+            if (hiddenInput) hiddenInput.value = String(val);
+            paint(current);
+          });
+        });
+      }
+
+      // ===== SUBMIT FORM REVIEW =====
+      function initReviewForm() {
+        const form = document.getElementById('reviewForm');
+        if (!form) return;
+
+        let isSubmitting = false;
+        let lastSubmitTime = 0;
+        const DEBOUNCE_MS = 1000; // 1 second debounce for form submission
+
+        form.addEventListener('submit', async (e) => {
+          e.preventDefault();
+          
+          // Debounce: prevent rapid submissions
+          const now = Date.now();
+          if (now - lastSubmitTime < DEBOUNCE_MS) {
+            return;
+          }
+          lastSubmitTime = now;
+          
+          // Prevent double submission
+          if (isSubmitting) {
+            return;
+          }
+          
+          if (ratingMessage) {
+            ratingMessage.textContent = '';
+            ratingMessage.style.color = '';
+          }
+          
+          // Get form elements
+          const submitBtn = form.querySelector('button[type="submit"]');
+          
+          // Disable form and set submitting state
+          isSubmitting = true;
+          if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Đang gửi...';
+            submitBtn.style.opacity = '0.6';
+            submitBtn.style.cursor = 'wait';
+          }
+
+          const commentInput = document.getElementById('reviewComment');
+          const comment = commentInput ? (commentInput.value || '').trim() : '';
+
+          if (!comment) {
+            // Re-enable form on validation error
+            isSubmitting = false;
+            if (submitBtn) {
+              submitBtn.disabled = false;
+              submitBtn.textContent = 'Gửi đánh giá';
+              submitBtn.style.opacity = '1';
+              submitBtn.style.cursor = 'pointer';
+            }
+            
             if (ratingMessage) {
               ratingMessage.textContent = '';
               ratingMessage.style.color = '';
             }
 
-            const formData = new FormData(form);
-            const payload = {
-              comment: (formData.get('comment') || '').toString().trim()
-            };
-
-            if (!payload.comment) {
-              if (ratingMessage) {
-                ratingMessage.textContent = 'Vui lòng nhập nội dung bình luận.';
-                ratingMessage.style.color = '#dc2626';
-              }
-              return;
+          // Backend sẽ tự động lấy tên từ user nếu đã đăng nhập, nếu chưa thì dùng "Người dùng ẩn danh"
+          // Rating là optional - có thể chỉ đánh sao hoặc chỉ bình luận hoặc cả hai
+          let ratingVal = null;
+          if (isLoggedIn) {
+            const ratingInput = document.getElementById('reviewRating');
+            ratingVal = ratingInput ? Number(ratingInput.value || 0) : 0;
+            // Chỉ thêm rating nếu có giá trị hợp lệ (1-5)
+            if (!ratingVal || ratingVal < 1 || ratingVal > 5) {
+              ratingVal = null;
             }
 
-            if (!isLoggedIn) {
-              payload.guest_name  = (formData.get('guest_name')  || '').toString().trim();
-              payload.guest_email = (formData.get('guest_email') || '').toString().trim();
-              if (!payload.guest_name) {
-                if (ratingMessage) {
-                  ratingMessage.textContent = 'Vui lòng nhập tên hiển thị.';
-                  ratingMessage.style.color = '#dc2626';
-                }
-                return;
-              }
-            } else {
-              const ratingVal = Number(formData.get('rating') || 0);
-              if (ratingVal) {
-                payload.rating = ratingVal;
-              }
-            }
-
-            try {
-              const res = await fetch(apiUrl, {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json'
-                  // 'Authorization': 'Bearer ' + (localStorage.getItem('token') || '')
-                },
-                body: JSON.stringify(payload)
-              });
+          try {
+            const res = await fetch(apiUrl, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({
+                comment: comment,
+                rating: ratingVal
+              }),
+              credentials: 'include'
+            });
 
               const data = await res.json().catch(() => null);
 
@@ -1781,64 +3682,166 @@
                 }
                 return;
               }
+              
+              // Re-enable form on error
+              isSubmitting = false;
+              if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Gửi đánh giá';
+                submitBtn.style.opacity = '1';
+                submitBtn.style.cursor = 'pointer';
+              }
+              return;
+            }
 
               // Thêm review mới (nếu socket đã emit thì vẫn OK, nhưng ta thêm luôn để chắc)
               if (data.review) {
                 prependReview(data.review);
               }
 
-              // Cập nhật lại rating trung bình + count + sao
-              if (data.rating) {
-                const avg = Number(data.rating.average || 0);
-                const cnt = Number(data.rating.count || 0);
+            // Cập nhật lại rating trung bình + count + sao
+            if (data.rating) {
+              // Hỗ trợ cả 2 format: average/count và averageRating/countRating
+              const avg = Number(data.rating.average || data.rating.averageRating || 0);
+              const cnt = Number(data.rating.count || data.rating.countRating || 0);
 
-                if (ratingAvgEl)   ratingAvgEl.textContent   = avg.toFixed(1);
-                if (ratingCountEl) ratingCountEl.textContent = cnt;
-                repaintAverageStars(avg);
+              // Cập nhật phần reviews section
+              if (ratingAvgEl)   ratingAvgEl.textContent   = avg.toFixed(1);
+              if (ratingCountEl) ratingCountEl.textContent = cnt;
+              repaintAverageStars(avg);
 
-                // Cập nhật bảng thống kê sentiment (nếu có)
-                if (data.rating.sentiment) {
-                  const s = data.rating.sentiment;
-                  const statsEl = document.getElementById('sentimentStats');
-                  if (statsEl) {
-                    statsEl.innerHTML = `
-                      <div>😊 Tích cực: <strong>${s.positive}</strong></div>
-                      <div>😐 Trung tính: <strong>${s.neutral}</strong></div>
-                      <div>😡 Tiêu cực: <strong>${s.negative}</strong></div>
-                      <div>⚪ Không xác định: <strong>${s.null}</strong></div>
-                    `;
-                  }
+              // Cập nhật phần product info (phần trên cùng)
+              updateProductInfoRating(avg, cnt);
+
+              // Cập nhật bảng thống kê sentiment (nếu có)
+              if (data.rating.sentiment) {
+                const s = data.rating.sentiment;
+                const statsEl = document.getElementById('sentimentStats');
+                if (statsEl) {
+                  statsEl.innerHTML = `
+                    <div>😊 Tích cực: <strong>${s.positive || 0}</strong></div>
+                    <div>😐 Trung tính: <strong>${s.neutral || 0}</strong></div>
+                    <div>😡 Tiêu cực: <strong>${s.negative || 0}</strong></div>
+                    <div>⚪ Không xác định: <strong>${s.null || 0}</strong></div>
+                  `;
                 }
               }
 
-              // Reset form + sao
-              form.reset();
-              const hiddenRating = document.getElementById('reviewRating');
-              if (hiddenRating) hiddenRating.value = '';
-              const stars = AppUtils.qsa('#ratingStars .rate-star');
-              stars.forEach(st => st.classList.remove('filled'));
+            // Reset form + sao
+            form.reset();
+            
+            // Re-enable form after successful submission
+            isSubmitting = false;
+            if (submitBtn) {
+              submitBtn.disabled = false;
+              submitBtn.textContent = 'Gửi đánh giá';
+              submitBtn.style.opacity = '1';
+              submitBtn.style.cursor = 'pointer';
+            }
+            const hiddenRating = document.getElementById('reviewRating');
+            if (hiddenRating) hiddenRating.value = '';
+            const stars = AppUtils.qsa('#ratingStars .rate-star');
+            stars.forEach(st => st.classList.remove('filled'));
 
               if (ratingMessage) {
                 ratingMessage.textContent = 'Gửi đánh giá thành công!';
                 ratingMessage.style.color = '#16a34a';
               }
 
-            } catch (err) {
-              console.error('Submit review error:', err);
-              if (ratingMessage) {
-                ratingMessage.textContent = 'Có lỗi kết nối, vui lòng thử lại.';
-                ratingMessage.style.color = '#dc2626';
+          } catch (err) {
+            console.error('Submit review error:', err);
+            
+            // Re-enable form on error
+            isSubmitting = false;
+            const errorSubmitBtn = form.querySelector('button[type="submit"]');
+            
+            if (errorSubmitBtn) {
+              errorSubmitBtn.disabled = false;
+              errorSubmitBtn.textContent = 'Gửi đánh giá';
+              errorSubmitBtn.style.opacity = '1';
+              errorSubmitBtn.style.cursor = 'pointer';
+            }
+            
+            if (ratingMessage) {
+              ratingMessage.textContent = 'Có lỗi kết nối, vui lòng thử lại.';
+              ratingMessage.style.color = '#dc2626';
+            }
+          }
+        });
+      }
+
+      // ===== SOCKET.IO: join room & lắng nghe review mới =====
+      function initSocketReviews() {
+        if (!socket || !productId) return;
+        try {
+          // backend: socket.join(`product:${productId}`)
+          socket.emit('join-product-room', productId);
+
+          socket.on('review:new', (review) => {
+            if (!review || !review._id) return;
+            prependReview(review);
+            // Rating sẽ được cập nhật qua event 'rating:updated' riêng
+          });
+
+          // Lắng nghe cập nhật rating từ WebSocket (khi có review mới)
+          socket.on('rating:updated', (ratingData) => {
+            if (!ratingData) return;
+            const avg = Number(ratingData.average || ratingData.averageRating || 0);
+            const cnt = Number(ratingData.count || ratingData.countRating || 0);
+            
+            console.log('Rating updated via WebSocket:', { avg, cnt });
+            
+            // Cập nhật phần reviews section
+            if (ratingAvgEl) ratingAvgEl.textContent = avg.toFixed(1);
+            if (ratingCountEl) ratingCountEl.textContent = cnt;
+            repaintAverageStars(avg);
+            
+            // Cập nhật phần product info (phần trên cùng)
+            updateProductInfoRating(avg, cnt);
+            
+            // Cập nhật sentiment stats nếu có
+            if (ratingData.sentiment) {
+              const s = ratingData.sentiment;
+              const statsEl = document.getElementById('sentimentStats');
+              if (statsEl) {
+                statsEl.innerHTML = `
+                  <div>😊 Tích cực: <strong>${s.positive || 0}</strong></div>
+                  <div>😐 Trung tính: <strong>${s.neutral || 0}</strong></div>
+                  <div>😡 Tiêu cực: <strong>${s.negative || 0}</strong></div>
+                  <div>⚪ Không xác định: <strong>${s.null || 0}</strong></div>
+                `;
               }
             }
           });
+
+          socket.on('reply:new', (reply) => {
+            if (!reply || !reply._id || !reply.parent_id) return;
+            appendReply(reply.parent_id, reply);
+          });
+
+          // Listen for like updates
+          socket.on('comment:like-updated', (data) => {
+            if (!data || !data.comment_id) return;
+            updateLikeUI(data.comment_id, data.likes_count, data.is_liked);
+          });
         }
 
-        // ===== SOCKET.IO: join room & lắng nghe review mới =====
-        function initSocketReviews() {
-          if (!socket || !productId) return;
-          try {
-            // backend: socket.join(`product:${productId}`)
-            socket.emit('join-product-room', productId);
+      document.addEventListener('DOMContentLoaded', () => {
+        initRatingStars();
+        initReviewForm();
+        initReplyForms();
+        initLikeButtons();
+        initReviewFilter();
+        initSocketReviews();
+        initToggleReviews();
+        
+        // Restore open reply forms from localStorage
+        setTimeout(() => {
+          restoreOpenReplyForms();
+        }, 100);
+      });
+    })();
+  </script>
 
             socket.on('review:new', (review) => {
               if (!review || !review._id) return;

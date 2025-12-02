@@ -27,9 +27,14 @@ class ReviewRepository {
 
         const pid = new mongoose.Types.ObjectId(productId);
 
-        //  B1: Aggregate rating
+        //  B1: Aggregate rating - CHỈ tính những review có rating (rating != null và rating > 0)
         const ratingAgg = await Review.aggregate([
-            { $match: { product: pid, rating: { $ne: null } } },
+            { 
+                $match: { 
+                    product: pid, 
+                    rating: { $ne: null, $exists: true, $gt: 0, $lte: 5 }
+                } 
+            },
             {
                 $group: {
                     _id: "$product",
@@ -61,20 +66,72 @@ class ReviewRepository {
             }
         ]);
 
-        const sentimentStats = { positive: 0, neutral: 0, negative: 0 };
+        const sentimentStats = { positive: 0, neutral: 0, negative: 0, null: 0 };
 
         sentimentAgg.forEach(item => {
-            sentimentStats[item._id] = item.count;
+            const key = item._id === null ? 'null' : item._id;
+            if (sentimentStats.hasOwnProperty(key)) {
+                sentimentStats[key] = item.count;
+            }
         });
 
         return {
-            averageRating: ratingAgg.length ? ratingAgg[0].avg : 0,
-            countRating: ratingAgg.length ? ratingAgg[0].count : 0,
+            average: ratingAgg.length ? Number((ratingAgg[0].avg || 0).toFixed(1)) : 0,
+            count: ratingAgg.length ? ratingAgg[0].count : 0,
+            averageRating: ratingAgg.length ? Number((ratingAgg[0].avg || 0).toFixed(1)) : 0, // Backward compatibility
+            countRating: ratingAgg.length ? ratingAgg[0].count : 0, // Backward compatibility
             sentiment: sentimentStats,
             sentimentScoreAvg:
                 sentimentScoreAgg.length ? sentimentScoreAgg[0].avgScore : 0
         };
     }
+    async toggleLike(reviewId, userId, guestIdentifier) {
+        const review = await Review.findById(reviewId);
+        if (!review) {
+            throw new Error("Review not found");
+        }
+
+        if (userId) {
+            // Logged-in user
+            const likes = review.likes || [];
+            const userObjectId = new mongoose.Types.ObjectId(userId);
+            const isLiked = likes.some(likeId => likeId.toString() === userId.toString());
+
+            if (isLiked) {
+                // Unlike: remove user from likes array
+                review.likes = likes.filter(likeId => likeId.toString() !== userId.toString());
+            } else {
+                // Like: add user to likes array
+                review.likes.push(userObjectId);
+            }
+        } else if (guestIdentifier) {
+            // Guest user (using IP or session ID)
+            const guestLikes = review.guest_likes || [];
+            const isLiked = guestLikes.includes(guestIdentifier);
+
+            if (isLiked) {
+                // Unlike: remove guest identifier from guest_likes array
+                review.guest_likes = guestLikes.filter(id => id !== guestIdentifier);
+            } else {
+                // Like: add guest identifier to guest_likes array
+                review.guest_likes.push(guestIdentifier);
+            }
+        } else {
+            throw new Error("Invalid like request");
+        }
+
+        await review.save();
+        const totalLikes = (review.likes?.length || 0) + (review.guest_likes?.length || 0);
+        const isLikedNow = userId 
+            ? (review.likes || []).some(likeId => likeId.toString() === userId.toString())
+            : (review.guest_likes || []).includes(guestIdentifier);
+
+        return {
+            likes_count: totalLikes,
+            is_liked: isLikedNow
+        };
+    }
+
     _emptyStats() {
         return {
             averageRating: 0,

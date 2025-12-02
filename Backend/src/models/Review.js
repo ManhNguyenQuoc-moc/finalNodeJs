@@ -11,8 +11,8 @@ const reviewSchema = new mongoose.Schema(
     guest_name: { type: String, default: null },
     guest_email: { type: String, default: null },
 
-    // Nội dung
-    comment: { type: String, required: true },
+    // Nội dung (optional nếu có rating hoặc images)
+    comment: { type: String, required: false, default: '' },
 
     // Rating chỉ dành cho user
     rating: {
@@ -41,7 +41,32 @@ const reviewSchema = new mongoose.Schema(
       type: String,
       enum: ["happy", "complain", "urgent"],
       default: "complain"
-    }
+    },
+
+    // REPLY (parent review)
+    parent_id: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Review",
+      default: null
+    },
+
+    // LIKES (array of user IDs who liked this review)
+    likes: [{
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User"
+    }],
+    
+    // GUEST LIKES (array of IP addresses or session IDs for guests)
+    guest_likes: [{
+      type: String
+    }],
+
+    // IMAGES (array of image URLs for review - only for logged-in users)
+    images: [{
+      url: { type: String, required: true },
+      public_id: { type: String, default: null },
+      is_primary: { type: Boolean, default: false }
+    }]
   },
   { timestamps: true }
 );
@@ -54,6 +79,10 @@ reviewSchema.pre("save", function (next) {
   if (!this.user && this.rating) {
     return next(new Error("Only logged-in users can give rating stars"));
   }
+  if (!this.user && this.images && this.images.length > 0) {
+    return next(new Error("Only logged-in users can upload images"));
+  }
+  // Không yêu cầu rating khi có images - user có thể chỉ upload ảnh hoặc chỉ đánh sao hoặc cả hai
   next();
 });
 

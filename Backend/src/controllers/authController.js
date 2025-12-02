@@ -1,7 +1,7 @@
 const authService = require("../services/authService");
 const { mergeCartItems } = require("../services/cart.service");
 const { Cart } = require("../models");
-
+const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:3000";
 async function attachGuestCartToUser(req, userId) {
   const sid = req.cookies?.sid;        // an toàn hơn: có thể undefined
   if (!sid) return;                    // không có sid thì coi như không có guest cart
@@ -167,22 +167,119 @@ class authController {
   async googleLogin(req, res) {
     try {
       const user = req.user;
+      if (!user) {
+        return res.redirect(`${FRONTEND_URL}/login?error=google_no_user`);
+      }
 
-      // Sau khi login bằng Google thành công -> cấp accessToken + refreshToken
       const result = await authService.socialLogin(user);
-      res.json(result);
+
+      const userId = result.user.id || result.user._id;
+      const accessToken = result.tokens?.accessToken;
+      const refreshToken = result.tokens?.refreshToken;
+
+      await attachGuestCartToUser(req, userId);
+
+      const cookieOptions = {
+        httpOnly: true,
+        sameSite: "lax",
+        maxAge: 24 * 60 * 60 * 1000,
+      };
+
+      res.cookie("uid", userId, cookieOptions);
+
+      if (result.tokens?.accessToken) {
+        res.cookie("access_token", result.tokens.accessToken, cookieOptions);
+      }
+      if (result.tokens?.refreshToken) {
+        res.cookie("refresh_token", result.tokens.refreshToken, {
+          ...cookieOptions,
+          maxAge: 7 * 24 * 60 * 60 * 1000,
+        });
+      }
+
+      if (accessToken) {
+        res.cookie("accessToken", accessToken, {
+          httpOnly: true,
+          sameSite: "lax",
+          path: "/",
+        });
+      }
+      if (refreshToken) {
+        res.cookie("refreshToken", refreshToken, {
+          httpOnly: true,
+          sameSite: "lax",
+          path: "/",
+        });
+      }
+
+      const role = user.role || result.user.role;
+      if (role === "admin") {
+        return res.redirect(`${FRONTEND_URL}/admin`);
+      }
+
+      return res.redirect(`${FRONTEND_URL}/home`);
     } catch (err) {
-      res.status(400).json({ message: err.message });
+      console.error("Google login error:", err);
+      return res.redirect(
+        `${FRONTEND_URL}/login?error=google_login_failed`
+      );
     }
   }
 
   async facebookLogin(req, res) {
     try {
       const user = req.user;
-      const result = await authService.socialLogin(user); // giống Google
-      res.json(result);
+      if (!user) {
+        return res.redirect("/login?error=facebook_no_user");
+      }
+
+      const result = await authService.socialLogin(user);
+
+      const userId = result.user.id || result.user._id;
+      const accessToken = result.tokens?.accessToken;
+      const refreshToken = result.tokens?.refreshToken;
+
+      // 1) merge cart guest -> user
+      await attachGuestCartToUser(req, userId);
+
+      // 2) set cookie giống google/login
+      const cookieOptions = {
+        httpOnly: true,
+        sameSite: "lax",
+        maxAge: 24 * 60 * 60 * 1000,
+      };
+
+      res.cookie("uid", userId, cookieOptions);
+
+      if (result.tokens?.accessToken) {
+        res.cookie("access_token", result.tokens.accessToken, cookieOptions);
+      }
+      if (result.tokens?.refreshToken) {
+        res.cookie("refresh_token", result.tokens.refreshToken, {
+          ...cookieOptions,
+          maxAge: 7 * 24 * 60 * 60 * 1000,
+        });
+      }
+
+      res.cookie("accessToken", accessToken, {
+        httpOnly: true,
+        sameSite: "lax",
+      });
+      if (refreshToken) {
+        res.cookie("refreshToken", refreshToken, {
+          httpOnly: true,
+          sameSite: "lax",
+        });
+      }
+
+      const role = user.role || result.user.role;
+      if (role === "admin") {
+        return res.redirect("http://localhost:3000/admin");
+      }
+      return res.redirect("http://localhost:3000/home");
     } catch (err) {
-      res.status(400).json({ message: err.message });
+      console.error("Facebook login error:", err);
+      return res.redirect("/login?error=facebook_login_failed");
     }
   }
   async forgotPassword(req, res) {

@@ -27,7 +27,15 @@ const PORT = process.env.PORT || 5000;
   io.on("connection", (socket) => {
     console.log("Socket connected:", socket.id);
 
+    // Join product room (support both event names for compatibility)
     socket.on("product:join", ({ productId }) => {
+      if (!productId) return;
+      const room = `product:${productId}`;
+      socket.join(room);
+      console.log(`Socket ${socket.id} joined ${room}`);
+    });
+
+    socket.on("join-product-room", (productId) => {
       if (!productId) return;
       const room = `product:${productId}`;
       socket.join(room);

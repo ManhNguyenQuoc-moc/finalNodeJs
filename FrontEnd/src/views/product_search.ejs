@@ -14,67 +14,777 @@
   <%- include('partials/header', { headerType: 'header' }) %>
 
   <main>
-    <div class="mb-4 pb-lg-3"></div>
+    <style>
+      /* Search Hero Section - Modern Design */
+      .search-hero {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+        padding: 4rem 0 3rem;
+        margin-bottom: 0;
+        position: relative;
+        overflow: hidden;
+      }
 
-    <section class="shop-main container">
-      <div class="d-flex justify-content-between mb-4 pb-md-2">
-        <p style="font-size: 1.2rem;">Có <%= quantity %> kết quả phù hợp với: <%= keyword %></p>
+      .search-hero::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -20%;
+        width: 600px;
+        height: 600px;
+        background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+        border-radius: 50%;
+        animation: float 6s ease-in-out infinite;
+      }
+
+      .search-hero::after {
+        content: '';
+        position: absolute;
+        bottom: -30%;
+        left: -10%;
+        width: 500px;
+        height: 500px;
+        background: radial-gradient(circle, rgba(255, 255, 255, 0.08) 0%, transparent 70%);
+        border-radius: 50%;
+        animation: float 8s ease-in-out infinite reverse;
+      }
+
+      @keyframes float {
+        0%, 100% { transform: translateY(0) rotate(0deg); }
+        50% { transform: translateY(-20px) rotate(5deg); }
+      }
+
+      .search-hero-content {
+        max-width: 900px;
+        margin: 0 auto;
+        text-align: center;
+        color: #fff;
+        position: relative;
+        z-index: 1;
+      }
+
+      .search-hero h1 {
+        font-size: 3rem;
+        font-weight: 800;
+        margin-bottom: 1.5rem;
+        text-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        letter-spacing: -0.02em;
+        animation: fadeInUp 0.6s ease-out;
+      }
+
+      .search-hero .search-keyword {
+        background: rgba(255, 255, 255, 0.25);
+        padding: 0.75rem 2rem;
+        border-radius: 50px;
+        display: inline-block;
+        font-weight: 600;
+        font-size: 1.1rem;
+        backdrop-filter: blur(20px);
+        border: 2px solid rgba(255, 255, 255, 0.4);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        animation: fadeInUp 0.8s ease-out;
+        transition: all 0.3s ease;
+      }
+
+      .search-hero .search-keyword:hover {
+        background: rgba(255, 255, 255, 0.35);
+        transform: scale(1.05);
+        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+      }
+
+      @keyframes fadeInUp {
+        from {
+          opacity: 0;
+          transform: translateY(20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      /* Search Input Section */
+      .search-input-section {
+        background: transparent;
+        padding: 2rem 0 1.5rem;
+        position: relative;
+      }
+
+      .search-input-wrapper {
+        max-width: 800px;
+        margin: 0 auto;
+        position: relative;
+        padding: 0 1rem;
+      }
+
+      .search-input-container {
+        position: relative;
+        display: flex;
+        align-items: center;
+        background: #ffffff;
+        border: 2px solid #e2e8f0;
+        border-radius: 50px;
+        padding: 0.65rem 1.5rem;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+      }
+
+      .search-input-container:focus-within {
+        border-color: #667eea;
+        box-shadow: 0 4px 16px rgba(102, 126, 234, 0.25), 0 0 0 4px rgba(102, 126, 234, 0.1);
+        transform: translateY(-1px);
+      }
+
+      .search-input-container input {
+        flex: 1;
+        border: none;
+        outline: none;
+        font-size: 0.95rem;
+        padding: 0.5rem 1rem;
+        background: transparent;
+        color: #1e293b;
+        font-weight: 500;
+      }
+
+      .search-input-container input::placeholder {
+        color: #94a3b8;
+        font-weight: 400;
+      }
+
+      .search-input-container button {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border: none;
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        color: #fff;
+        box-shadow: 0 2px 8px rgba(102, 126, 234, 0.25);
+        position: relative;
+        overflow: hidden;
+      }
+
+      .search-input-container button::before {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 0;
+        height: 0;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.3);
+        transform: translate(-50%, -50%);
+        transition: width 0.3s, height 0.3s;
+      }
+
+      .search-input-container button:hover::before {
+        width: 100%;
+        height: 100%;
+      }
+
+      .search-input-container button:hover {
+        transform: scale(1.1) rotate(8deg);
+        box-shadow: 0 4px 16px rgba(102, 126, 234, 0.4);
+      }
+
+      .search-input-container button:active {
+        transform: scale(1.05) rotate(5deg);
+      }
+
+      .search-input-container button svg {
+        position: relative;
+        z-index: 1;
+        width: 18px;
+        height: 18px;
+        stroke-width: 2.5;
+      }
+
+
+      /* Results Header */
+      .search-results-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2.5rem;
+        padding: 1.5rem 2rem;
+        background: #ffffff;
+        border-radius: 16px;
+        border: 1px solid #e2e8f0;
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+        position: relative;
+      }
+
+      .search-results-count {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+        font-size: 1rem;
+        font-weight: 600;
+        color: #334155;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        line-height: 1.5;
+      }
+
+      .search-results-count .count-number {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        font-size: 1.5rem;
+        font-weight: 700;
+        display: inline-block;
+      }
+
+      /* Empty State */
+      .search-empty-state {
+        text-align: center;
+        padding: 5rem 2rem;
+        background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+        border-radius: 24px;
+        border: 2px dashed #cbd5e1;
+        margin: 3rem 0;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .search-empty-state::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -20%;
+        width: 300px;
+        height: 300px;
+        background: radial-gradient(circle, rgba(102, 126, 234, 0.05) 0%, transparent 70%);
+        border-radius: 50%;
+      }
+
+      .search-empty-icon {
+        font-size: 6rem;
+        margin-bottom: 2rem;
+        opacity: 0.6;
+        animation: bounce 2s ease-in-out infinite;
+      }
+
+      @keyframes bounce {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-10px); }
+      }
+
+      .search-empty-state h3 {
+        font-size: 2rem;
+        font-weight: 800;
+        color: #1e293b;
+        margin-bottom: 1rem;
+      }
+
+      .search-empty-state p {
+        font-size: 1.15rem;
+        color: #64748b;
+        margin-bottom: 2.5rem;
+        line-height: 1.6;
+      }
+
+      .search-suggestions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+        justify-content: center;
+        margin-top: 2rem;
+      }
+
+      .search-suggestion-tag {
+        padding: 0.75rem 1.75rem;
+        background: #fff;
+        border: 2px solid #e2e8f0;
+        border-radius: 50px;
+        color: #475569;
+        text-decoration: none;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+      }
+
+      .search-suggestion-tag:hover {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: #fff;
+        border-color: transparent;
+        transform: translateY(-3px) scale(1.05);
+        box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+      }
+
+      /* Product Cards */
+      .product-card {
+        background: #ffffff;
+        border: 1px solid #f1f5f9;
+        border-radius: 20px;
+        overflow: hidden;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        position: relative;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .product-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12);
+        border-color: #e2e8f0;
+      }
+
+      .product-card .pc__img-wrapper {
+        position: relative;
+        overflow: hidden;
+        background: #f8fafc;
+        border-radius: 20px 20px 0 0;
+      }
+
+      .product-card .pc__img-wrapper img {
+        transition: transform 0.5s ease;
+      }
+
+      .product-card:hover .pc__img-wrapper img.pc__img {
+        transform: scale(1.05);
+      }
+
+      .product-card .pc__img-wrapper img.pc__img-second {
+        opacity: 0;
+        position: absolute;
+        top: 0;
+        left: 0;
+      }
+
+      .product-card:hover .pc__img-wrapper img.pc__img {
+        opacity: 0;
+      }
+
+      .product-card:hover .pc__img-wrapper img.pc__img-second {
+        opacity: 1;
+      }
+
+      .product-card .pc__info {
+        padding: 1.25rem;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .product-card .pc__category {
+        font-size: 0.75rem;
+        color: #94a3b8;
+        text-transform: uppercase;
+        letter-spacing: 0.8px;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+      }
+
+      .product-card .pc__title {
+        margin: 0 0 0.75rem 0;
+        font-size: 1rem;
+        font-weight: 600;
+        line-height: 1.4;
+      }
+
+      .product-card .pc__title a {
+        color: #1e293b;
+        text-decoration: none;
+        transition: color 0.3s ease;
+      }
+
+      .product-card .pc__title a:hover {
+        color: #667eea;
+      }
+
+      .rating-stars {
+        display: flex;
+        align-items: center;
+        gap: 0.2rem;
+        margin: 0.5rem 0;
+        flex-wrap: wrap;
+      }
+
+      .rating-stars .star {
+        color: #fbbf24;
+        font-size: 1rem;
+        line-height: 1;
+      }
+
+      .rating-stars .star.empty {
+        color: #e2e8f0;
+      }
+
+      .rating-text {
+        font-size: 0.8rem;
+        color: #64748b;
+        margin-left: 0.5rem;
+        font-weight: 500;
+        line-height: 1.4;
+      }
+
+      .product-card__price {
+        margin-top: auto;
+        padding-top: 1rem;
+      }
+
+      .product-card__price .money {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: #667eea;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      }
+
+      .product-brand {
+        font-size: 0.8rem;
+        color: #94a3b8;
+        margin-top: 0.75rem;
+        padding-top: 0.75rem;
+        border-top: 1px solid #f1f5f9;
+      }
+
+      .product-brand strong {
+        color: #475569;
+        font-weight: 600;
+      }
+
+      .custom-swatch-container {
+        padding: 0.75rem 1.25rem 0;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+      }
+
+      .custom-swatch-color {
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        border: 2px solid #ffffff;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+        transition: all 0.3s ease;
+        cursor: pointer;
+      }
+
+      .custom-swatch-color:hover {
+        transform: scale(1.15);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      }
+
+      .custom-swatch-color.swatch_active {
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+      }
+
+      .product-card .anim_appear-bottom {
+        background: rgba(255, 255, 255, 0.98);
+        backdrop-filter: blur(10px);
+        padding: 1rem 1.25rem;
+        border-top: 1px solid #f1f5f9;
+        border-radius: 0 0 20px 20px;
+        opacity: 0;
+        transform: translateY(10px);
+        transition: all 0.3s ease;
+      }
+
+      .product-card:hover .anim_appear-bottom {
+        opacity: 1;
+        transform: translateY(0);
+      }
+
+      /* Products Grid */
+      .products-grid {
+        animation: fadeIn 0.6s ease-out;
+      }
+
+      @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+      }
+
+      /* Pagination Styles */
+      .search-pagination-wrapper {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 2rem 0;
+      }
+
+      .pagination-modern {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        list-style: none;
+        padding: 0;
+        margin: 0;
+      }
+
+      .pagination-item {
+        display: flex;
+        align-items: center;
+      }
+
+      .pagination-link {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        padding: 0.75rem 1.25rem;
+        min-width: 44px;
+        height: 44px;
+        background: #ffffff;
+        border: 2px solid #e2e8f0;
+        border-radius: 12px;
+        color: #475569;
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 0.95rem;
+        transition: all 0.3s ease;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+      }
+
+      .pagination-link:hover:not(.pagination-disabled) {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: #ffffff;
+        border-color: transparent;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 16px rgba(102, 126, 234, 0.3);
+      }
+
+      .pagination-link.pagination-active {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: #ffffff;
+        border-color: transparent;
+        box-shadow: 0 4px 16px rgba(102, 126, 234, 0.3);
+        cursor: default;
+      }
+
+      .pagination-link.pagination-disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        background: #f1f5f9;
+        color: #94a3b8;
+      }
+
+      .pagination-prev,
+      .pagination-next {
+        padding: 0.75rem 1.5rem;
+      }
+
+      .pagination-ellipsis {
+        padding: 0.75rem 0.5rem;
+        color: #94a3b8;
+        font-weight: 600;
+      }
+
+      .pagination-link svg {
+        width: 16px;
+        height: 16px;
+        stroke-width: 2.5;
+      }
+
+      /* Responsive */
+      @media (max-width: 768px) {
+        .search-hero h1 {
+          font-size: 2rem;
+        }
+        .search-hero .search-keyword {
+          font-size: 0.95rem;
+          padding: 0.6rem 1.5rem;
+        }
+        .search-results-header {
+          padding: 1.5rem;
+        }
+        .pagination-link {
+          padding: 0.6rem 1rem;
+          min-width: 40px;
+          height: 40px;
+          font-size: 0.875rem;
+        }
+        .pagination-prev,
+        .pagination-next {
+          padding: 0.6rem 1rem;
+        }
+        .pagination-prev span,
+        .pagination-next span {
+          display: none;
+        }
+      }
+    </style>
+
+    <!-- Search Hero Section -->
+    <section class="search-hero">
+      <div class="container">
+        <div class="search-hero-content">
+          <h1>🔍 Kết quả tìm kiếm</h1>
+          <div>
+            <span class="search-keyword">
+              "<%= (q || keyword || '').trim() || 'Tất cả sản phẩm' %>"
+            </span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Search Input Section -->
+    <section class="search-input-section">
+      <div class="container">
+        <div class="search-input-wrapper">
+          <form method="GET" action="/search" class="search-input-container">
+            <input 
+              type="text" 
+              name="q" 
+              placeholder="Tìm kiếm sản phẩm..." 
+              value="<%= (q || keyword || '').trim() %>"
+              autocomplete="off">
+            <button type="submit" aria-label="Tìm kiếm">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="11" cy="11" r="8"></circle>
+                <path d="m21 21-4.35-4.35"></path>
+              </svg>
+            </button>
+          </form>
+        </div>
+      </div>
+    </section>
+
+    <section class="shop-main container" style="margin-top: 2rem;">
+      <% 
+        const productsList = Array.isArray(products) ? products : [];
+      %>
+      <!-- Results Header -->
+      <div class="search-results-header">
+        <div class="search-results-count">
+          Tìm thấy <span class="count-number"><%= quantity || total || (productsList ? productsList.length : 0) %></span> sản phẩm
+          <% if (totalPages && totalPages > 1) { %>
+            <span style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 0.875rem; font-weight: 400; color: #64748b; margin-left: 0.5rem;">
+              (Trang <%= currentPage || 1 %>/<%= totalPages %>)
+            </span>
+          <% } %>
+        </div>
       </div>
 
+      <!-- Products Grid -->
+      <% if (!productsList || productsList.length === 0) { %>
+        <div class="search-empty-state">
+          <div class="search-empty-icon">🔍</div>
+          <h3>Không tìm thấy sản phẩm nào</h3>
+          <p>Rất tiếc, chúng tôi không tìm thấy sản phẩm nào phù hợp với từ khóa "<strong><%= (q || keyword || '').trim() %></strong>"</p>
+          <div class="search-suggestions">
+            <span style="color: #64748b; font-weight: 600; margin-right: 1rem;">Gợi ý:</span>
+            <a href="/search?q=áo" class="search-suggestion-tag">Áo</a>
+            <a href="/search?q=quần" class="search-suggestion-tag">Quần</a>
+            <a href="/search?q=giày" class="search-suggestion-tag">Giày</a>
+            <a href="/search?q=phụ kiện" class="search-suggestion-tag">Phụ kiện</a>
+          </div>
+        </div>
+      <% } else { %>
       <div class="products-grid row row-cols-2 row-cols-md-3 row-cols-lg-4" id="products-grid">
-        <% products.forEach(function(product) { %>
-          <div class="col-6 col-md-4 col-lg-3">
-            <div class="product-card product-card_style3 mb-3 mb-md-4 mb-xxl-5">
+        <% productsList.forEach(function(product) { 
+          const avgRating = Number(product.avg_rating || 0);
+          const ratingCount = Number(product.rating_count || 0);
+          const commentCount = Number(product.comment_count || 0);
+          const roundedRating = Math.round(avgRating);
+          const productId = product._id || product.id;
+          const productName = product.name || 'Sản phẩm';
+          const brandName = product.brand?.name || '';
+          const categoryName = product.category?.name || '';
+          
+          // Build rating stars HTML
+          let starsHtml = '';
+          for (let i = 1; i <= 5; i++) {
+            if (i <= roundedRating) {
+              starsHtml += '<span class="star">★</span>';
+            } else {
+              starsHtml += '<span class="star empty">★</span>';
+            }
+          }
+        %>
+          <div class="col-6 col-md-4 col-lg-3 mb-4">
+            <div class="product-card">
               <div class="pc__img-wrapper">
-                <a href="/product_detail/<%= product.id %>">
+                <a href="/product_detail/<%= productId %>">
                   <img loading="lazy"
-                       src="<%= product.colors.length > 0 ? product.colors[0].imageUrls[0] : '/mixishop/images/default.png' %>"
+                       src="<%= product.colors && product.colors.length > 0 && product.colors[0].imageUrls && product.colors[0].imageUrls.length > 0 ? product.colors[0].imageUrls[0] : '/mixishop/images/default.png' %>"
                        width="258" height="313"
-                       alt="<%= product.name %>" class="pc__img">
+                       alt="<%= productName %>" class="pc__img">
                   <img loading="lazy"
-                       src="<%= product.colors.length > 0 && product.colors[0].imageUrls.length > 1 ? product.colors[0].imageUrls[1] : (product.colors.length > 0 && product.colors[0].imageUrls.length > 0 ? product.colors[0].imageUrls[0] : '/mixishop/images/default.png') %>"
+                       src="<%= product.colors && product.colors.length > 0 && product.colors[0].imageUrls && product.colors[0].imageUrls.length > 1 ? product.colors[0].imageUrls[1] : (product.colors && product.colors.length > 0 && product.colors[0].imageUrls && product.colors[0].imageUrls.length > 0 ? product.colors[0].imageUrls[0] : '/mixishop/images/default.png') %>"
                        width="258" height="313"
-                       alt="<%= product.name %>" class="pc__img pc__img-second">
-                  <img class="category-banner__frame"
-                       src="<%= product.productStatus.statusName === 'Bán chạy' ? '/mixishop/images/frame_banchay.png' : (product.productStatus.statusName === 'Trending' ? '/mixishop/images/frame_trending.png' : '/mixishop/images/frame_new.png') %>"
-                       alt="Status Frame">
+                       alt="<%= productName %>" class="pc__img pc__img-second">
+                  <% if (product.productStatus && product.productStatus.statusName) { %>
+                    <img class="category-banner__frame position-absolute top-0 start-0"
+                         style="width: 100%; height: 100%; object-fit: contain; pointer-events: none;"
+                         src="<%= product.productStatus.statusName === 'Bán chạy' ? '/mixishop/images/frame_banchay.png' : (product.productStatus.statusName === 'Trending' ? '/mixishop/images/frame_trending.png' : '/mixishop/images/frame_new.png') %>"
+                         alt="Status Frame">
+                  <% } %>
                 </a>
               </div>
 
-              <div class="d-flex align-items-center mt-1 custom-swatch-container">
-                <% product.colors.forEach(function(productColor) { %>
-                  <a href="#"
-                     class="swatch-color custom-swatch-color"
-                     style="background-image: url('<%= productColor.imageUrls.length > 0 ? productColor.imageUrls[0] : '' %>'); background-size: cover;"
-                     data-images="<%= productColor.imageUrls.length > 0 ? productColor.imageUrls[0] : '' %><%= productColor.imageUrls.length > 1 ? ',' + productColor.imageUrls[1] : '' %><%= productColor.imageUrls.length > 2 ? ',' + productColor.imageUrls[2] : '' %>"
-                     onclick="changeColor(this); return false;"
-                     title="<%= productColor.color %>"></a>
-                <% }) %>
-              </div>
+              <% if (product.colors && product.colors.length > 0) { %>
+                <div class="custom-swatch-container">
+                  <% product.colors.slice(0, 6).forEach(function(productColor, index) { %>
+                    <a href="#"
+                       class="swatch-color custom-swatch-color <%= index === 0 ? 'swatch_active' : '' %>"
+                       style="background-image: url('<%= productColor.imageUrls && productColor.imageUrls.length > 0 ? productColor.imageUrls[0] : '' %>'); background-size: cover; background-color: #f5f5f5;"
+                       data-images="<%= productColor.imageUrls && productColor.imageUrls.length > 0 ? productColor.imageUrls[0] : '' %><%= productColor.imageUrls && productColor.imageUrls.length > 1 ? ',' + productColor.imageUrls[1] : '' %><%= productColor.imageUrls && productColor.imageUrls.length > 2 ? ',' + productColor.imageUrls[2] : '' %>"
+                       onclick="changeColor(this); return false;"
+                       title="<%= productColor.color || 'Màu sắc' %>"></a>
+                  <% }) %>
+                </div>
+              <% } %>
 
-              <div class="pc__info position-relative">
-                <h3 class="pc__title"><a href="/product_detail/<%= product.id %>" ><%= product.name %></a></h3>
-                <div class="product-card__price d-flex align-items-center">
-                  <span class="money price text-secondary" style="color: blue;"><%= product.getFormattedPrice(product.price) %></span>
+              <div class="pc__info">
+                <% if (categoryName) { %>
+                  <p class="pc__category"><%= categoryName %></p>
+                <% } %>
+                
+                <h3 class="pc__title">
+                  <a href="/product_detail/<%= productId %>"><%= productName %></a>
+                </h3>
+                
+                <% if (ratingCount > 0 || commentCount > 0) { %>
+                  <div class="rating-stars">
+                    <% if (ratingCount > 0) { %>
+                      <%- starsHtml %>
+                    <% } %>
+                    <span class="rating-text">
+                      <% if (ratingCount > 0) { %>
+                        <%= ratingCount %> đánh giá
+                      <% } %>
+                      <% if (commentCount > 0) { %>
+                        <% if (ratingCount > 0) { %>, <% } %>
+                        <%= commentCount %> bình luận
+                      <% } %>
+                    </span>
+                  </div>
+                <% } %>
+
+                <div class="product-card__price">
+                  <span class="money price">
+                    <%= new Intl.NumberFormat('vi-VN').format(product.price || 0) %> đ
+                  </span>
                 </div>
 
-                <div class="anim_appear-bottom position-absolute bottom-0 start-0 d-none d-sm-flex align-items-center bg-body">
-                  <a href="/product_detail/<%= product.id %>"
-                     class="btn-icon btn-link btn-link_lg me-4 fw-medium"
-                     title="Thêm vào giỏ hàng">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-                      <use href="#icon_cart" />
-                    </svg>
-                    <span class="ms-2 small-text">Thêm giỏ hàng</span>
+                <% if (brandName) { %>
+                  <div class="product-brand">
+                    Thương hiệu: <strong><%= brandName %></strong>
+                  </div>
+                <% } %>
+
+                <div class="anim_appear-bottom d-flex align-items-center justify-content-between w-100">
+                  <a href="/product_detail/<%= productId %>"
+                     class="btn btn-sm btn-primary flex-fill me-2"
+                     style="border-radius: 12px; font-weight: 600; padding: 0.5rem 1rem;">
+                    Xem chi tiết
                   </a>
-
-                  <button class="btn-icon btn-link btn-link_lg me-4 fw-medium js-quick-view" data-bs-toggle="modal" data-bs-target="#quickView" title="Quick View">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><use href="#icon_view" /></svg>
-                    <span class="ms-2 small-text">Chi tiết</span>
-                  </button>
-
-                  <button class="pc__btn-wl bg-transparent border-0 js-add-wishlist" title="Thêm yêu thích">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><use href="#icon_heart" /></svg>
+                  <button class="btn btn-sm btn-outline-secondary js-add-wishlist" 
+                          style="border-radius: 12px; width: 40px; height: 40px; padding: 0; display: flex; align-items: center; justify-content: center;"
+                          title="Thêm yêu thích">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                    </svg>
                   </button>
                 </div>
               </div>
@@ -82,6 +792,105 @@
           </div>
         <% }) %>
       </div>
+
+      <!-- Pagination -->
+      <% if (totalPages && totalPages > 1) { %>
+        <div class="search-pagination-wrapper mt-5 mb-4">
+          <nav aria-label="Search pagination">
+            <ul class="pagination-modern">
+              <!-- Previous Button -->
+              <li class="pagination-item">
+                <% if (currentPage > 1) { %>
+                  <a href="/search?q=<%= encodeURIComponent(q || keyword || '') %>&page=<%= currentPage - 1 %>" 
+                     class="pagination-link pagination-prev">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M15 18l-6-6 6-6"/>
+                    </svg>
+                    <span>Trước</span>
+                  </a>
+                <% } else { %>
+                  <span class="pagination-link pagination-prev pagination-disabled">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M15 18l-6-6 6-6"/>
+                    </svg>
+                    <span>Trước</span>
+                  </span>
+                <% } %>
+              </li>
+
+              <!-- Page Numbers -->
+              <% 
+                const currentPageNum = currentPage || 1;
+                const totalPagesNum = totalPages || 1;
+                let startPage = Math.max(1, currentPageNum - 2);
+                let endPage = Math.min(totalPagesNum, currentPageNum + 2);
+                
+                // Adjust if near start
+                if (currentPageNum <= 3) {
+                  endPage = Math.min(5, totalPagesNum);
+                }
+                // Adjust if near end
+                if (currentPageNum >= totalPagesNum - 2) {
+                  startPage = Math.max(1, totalPagesNum - 4);
+                }
+              %>
+
+              <% if (startPage > 1) { %>
+                <li class="pagination-item">
+                  <a href="/search?q=<%= encodeURIComponent(q || keyword || '') %>&page=1" class="pagination-link">1</a>
+                </li>
+                <% if (startPage > 2) { %>
+                  <li class="pagination-item">
+                    <span class="pagination-ellipsis">...</span>
+                  </li>
+                <% } %>
+              <% } %>
+
+              <% for (let i = startPage; i <= endPage; i++) { %>
+                <li class="pagination-item">
+                  <% if (i === currentPageNum) { %>
+                    <span class="pagination-link pagination-active"><%= i %></span>
+                  <% } else { %>
+                    <a href="/search?q=<%= encodeURIComponent(q || keyword || '') %>&page=<%= i %>" class="pagination-link"><%= i %></a>
+                  <% } %>
+                </li>
+              <% } %>
+
+              <% if (endPage < totalPagesNum) { %>
+                <% if (endPage < totalPagesNum - 1) { %>
+                  <li class="pagination-item">
+                    <span class="pagination-ellipsis">...</span>
+                  </li>
+                <% } %>
+                <li class="pagination-item">
+                  <a href="/search?q=<%= encodeURIComponent(q || keyword || '') %>&page=<%= totalPagesNum %>" class="pagination-link"><%= totalPagesNum %></a>
+                </li>
+              <% } %>
+
+              <!-- Next Button -->
+              <li class="pagination-item">
+                <% if (currentPageNum < totalPagesNum) { %>
+                  <a href="/search?q=<%= encodeURIComponent(q || keyword || '') %>&page=<%= currentPageNum + 1 %>" 
+                     class="pagination-link pagination-next">
+                    <span>Tiếp</span>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M9 18l6-6-6-6"/>
+                    </svg>
+                  </a>
+                <% } else { %>
+                  <span class="pagination-link pagination-next pagination-disabled">
+                    <span>Tiếp</span>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M9 18l6-6-6-6"/>
+                    </svg>
+                  </span>
+                <% } %>
+              </li>
+            </ul>
+          </nav>
+        </div>
+      <% } %>
+      <% } %>
     </section>
   </main>
 
