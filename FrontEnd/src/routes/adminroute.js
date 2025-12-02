@@ -1,5 +1,3 @@
-
-
 const express = require("express");
 const multer = require("multer");
 const upload = multer({ storage: multer.memoryStorage() });
@@ -9,7 +7,8 @@ module.exports = function createAdminRouter({ BACKEND, proxy } = {}) {
 
   // ========== Fetch helpers (aligned with src/routes/pages.js) ==========
   function getSetCookie(resp) {
-    if (typeof resp.headers.getSetCookie === "function") return resp.headers.getSetCookie();
+    if (typeof resp.headers.getSetCookie === "function")
+      return resp.headers.getSetCookie();
     const one = resp.headers.get("set-cookie");
     return one ? [one] : [];
   }
@@ -22,15 +21,28 @@ module.exports = function createAdminRouter({ BACKEND, proxy } = {}) {
       throw new Error(`[${resp.status}] Redirected to ${loc}`);
     }
     if (!resp.ok) throw new Error(`[${resp.status}] ${body.slice(0, 1000)}`);
-    if (!ct.includes("application/json")) throw new Error(`[${resp.status}] Expected JSON but got ${ct}; body: ${body.slice(0, 200)}`);
+    if (!ct.includes("application/json"))
+      throw new Error(
+        `[${resp.status}] Expected JSON but got ${ct}; body: ${body.slice(
+          0,
+          200
+        )}`
+      );
     return JSON.parse(body || "{}");
   }
   async function fetchJSONPublic(url, init = {}) {
-    const headers = { "Content-Type": "application/json", ...(init.headers || {}) };
+    const headers = {
+      "Content-Type": "application/json",
+      ...(init.headers || {}),
+    };
     return fetchJSONRaw(url, { ...init, headers });
   }
   async function fetchJSONAuth(req, url, init = {}) {
-    const headers = { "Content-Type": "application/json", cookie: req?.headers?.cookie || "", ...(init.headers || {}) };
+    const headers = {
+      "Content-Type": "application/json",
+      cookie: req?.headers?.cookie || "",
+      ...(init.headers || {}),
+    };
     return fetchJSONRaw(url, { ...init, headers });
   }
   async function fetchUsers(req) {
@@ -63,8 +75,9 @@ module.exports = function createAdminRouter({ BACKEND, proxy } = {}) {
     try {
       if (!BACKEND) {
         // mock local
-        const i = USERS.findIndex(u => String(u._id) === String(id));
-        if (i === -1) return { ok: false, message: "Không tìm thấy user (mock)" };
+        const i = USERS.findIndex((u) => String(u._id) === String(id));
+        if (i === -1)
+          return { ok: false, message: "Không tìm thấy user (mock)" };
 
         USERS[i] = {
           ...USERS[i],
@@ -84,12 +97,14 @@ module.exports = function createAdminRouter({ BACKEND, proxy } = {}) {
         email: req.body.email,
         role: req.body.role,
         gender: req.body.gender,
-        birthday: req.body.birthday,  // BE tự parse
+        birthday: req.body.birthday, // BE tự parse
         phone: req.body.phone,
       };
 
       // xoá field undefined để tránh ghi đè lung tung
-      Object.keys(payload).forEach(k => payload[k] === undefined && delete payload[k]);
+      Object.keys(payload).forEach(
+        (k) => payload[k] === undefined && delete payload[k]
+      );
 
       const data = await fetchJSONAuth(req, url, {
         method: "PUT",
@@ -100,7 +115,11 @@ module.exports = function createAdminRouter({ BACKEND, proxy } = {}) {
         throw new Error(data?.message || "Cập nhật user thất bại");
       }
 
-      return { ok: true, message: "Cập nhật user thành công!", data: data.data };
+      return {
+        ok: true,
+        message: "Cập nhật user thành công!",
+        data: data.data,
+      };
     } catch (err) {
       console.error("Update USER failed:", err.message);
       return { ok: false, message: err.message || "Không thể cập nhật user" };
@@ -147,7 +166,8 @@ module.exports = function createAdminRouter({ BACKEND, proxy } = {}) {
     try {
       if (!BACKEND) {
         const i = PRODUCT_COLORS.findIndex((x) => x._id == id);
-        if (i === -1) return { ok: false, message: "Không tìm thấy màu (mock)" };
+        if (i === -1)
+          return { ok: false, message: "Không tìm thấy màu (mock)" };
 
         PRODUCT_COLORS[i] = {
           ...PRODUCT_COLORS[i],
@@ -243,7 +263,8 @@ module.exports = function createAdminRouter({ BACKEND, proxy } = {}) {
     try {
       if (!BACKEND) {
         const i = PRODUCT_SIZES.findIndex((x) => x._id == id);
-        if (i === -1) return { ok: false, message: "Không tìm thấy size (mock)" };
+        if (i === -1)
+          return { ok: false, message: "Không tìm thấy size (mock)" };
 
         PRODUCT_SIZES[i] = {
           ...PRODUCT_SIZES[i],
@@ -270,7 +291,11 @@ module.exports = function createAdminRouter({ BACKEND, proxy } = {}) {
         throw new Error(data?.message || "Cập nhật size thất bại");
       }
 
-      return { ok: true, message: "Cập nhật size thành công!", data: data.data };
+      return {
+        ok: true,
+        message: "Cập nhật size thành công!",
+        data: data.data,
+      };
     } catch (err) {
       console.error("Update SIZE failed:", err.message);
       return { ok: false, message: err.message || "Không thể cập nhật size" };
@@ -297,6 +322,12 @@ module.exports = function createAdminRouter({ BACKEND, proxy } = {}) {
       return { ok: false, message: err.message || "Không thể xoá size" };
     }
   }
+  // ========== Helpers (locals) ==========
+  let ADMIN_ACCOUNT = {
+    id: "admin1",
+    full_name: "Admin",
+    password: "admin123",
+  }; // demo
 
   router.use(async (req, res, next) => {
     // helper format tiền
@@ -330,38 +361,69 @@ module.exports = function createAdminRouter({ BACKEND, proxy } = {}) {
   // ========== Mock data (unchanged for fallback) ==========
   let BRANDS = [
     { _id: "b1", name: "A Brand", slug: "a-brand", createdAt: new Date() },
-    { _id: "b2", name: "B Brand", slug: "b-brand", createdAt: new Date() }
+    { _id: "b2", name: "B Brand", slug: "b-brand", createdAt: new Date() },
   ];
   let CATEGORIES = [
-    { _id: "c1", name: "Áo", slug: "ao", description: "Áo thời trang", createdAt: new Date() },
-    { _id: "c2", name: "Quần", slug: "quan", description: "Quần thời trang", createdAt: new Date() }
+    {
+      _id: "c1",
+      name: "Áo",
+      slug: "ao",
+      description: "Áo thời trang",
+      createdAt: new Date(),
+    },
+    {
+      _id: "c2",
+      name: "Quần",
+      slug: "quan",
+      description: "Quần thời trang",
+      createdAt: new Date(),
+    },
   ];
 
   let PRODUCTS = Array.from({ length: 12 }).map((_, i) => ({
-    _id: `p${i + 1}`, name: `Sản phẩm ${i + 1}`, slug: `san-pham-${i + 1}`,
-    brand: BRANDS[i % 2]._id, category: CATEGORIES[i % 2]._id,
-    productStatus: { statusName: (i % 3 === 0 ? 'Bán chạy' : i % 3 === 1 ? 'Trending' : 'New') },
-    short_description: `Mô tả ngắn ${i + 1}`, long_description: `Mô tả dài ${i + 1}`,
-    variants_count: 2 + (i % 3), price_min: 100000 * (i + 1), price_max: 150000 * (i + 1),
-    stock_total: 5 + (i % 10), cover: 'https://picsum.photos/seed/' + (i + 7) + '/80/80',
-    variants: [{ sku: `SKU-${i + 1}-S`, price: 150000 + i * 5000, stock_quantity: 10 + i }]
+    _id: `p${i + 1}`,
+    name: `Sản phẩm ${i + 1}`,
+    slug: `san-pham-${i + 1}`,
+    brand: BRANDS[i % 2]._id,
+    category: CATEGORIES[i % 2]._id,
+    productStatus: {
+      statusName: i % 3 === 0 ? "Bán chạy" : i % 3 === 1 ? "Trending" : "New",
+    },
+    short_description: `Mô tả ngắn ${i + 1}`,
+    long_description: `Mô tả dài ${i + 1}`,
+    variants_count: 2 + (i % 3),
+    price_min: 100000 * (i + 1),
+    price_max: 150000 * (i + 1),
+    stock_total: 5 + (i % 10),
+    cover: "https://picsum.photos/seed/" + (i + 7) + "/80/80",
+    variants: [
+      {
+        sku: `SKU-${i + 1}-S`,
+        price: 150000 + i * 5000,
+        stock_quantity: 10 + i,
+      },
+    ],
   }));
 
   // Try loading brands/categories from BACKEND if available (keeps Admin in sync)
   async function tryLoadBrands(req) {
     if (!BACKEND) return BRANDS;
     try {
-      const data = await fetchJSONAuth(req, `${BACKEND}/api/brand`).catch(() => []);
+      const data = await fetchJSONAuth(req, `${BACKEND}/api/brand`).catch(
+        () => []
+      );
       if (Array.isArray(data)) BRANDS = data; // flexible shape
-    } catch { }
+    } catch {}
     return BRANDS;
   }
   async function tryLoadCategories(req) {
     if (!BACKEND) return CATEGORIES;
     try {
-      const data = await fetchJSONAuth(req, `${BACKEND}/api/category`).catch(() => []);
+      const data = await fetchJSONAuth(req, `${BACKEND}/api/category`).catch(
+        () => []
+      );
       if (Array.isArray(data)) CATEGORIES = data;
-    } catch { }
+    } catch {}
     return CATEGORIES;
   }
   // ===== Helpers cho CATEGORY =====
@@ -405,7 +467,8 @@ module.exports = function createAdminRouter({ BACKEND, proxy } = {}) {
     try {
       if (!BACKEND) {
         const i = CATEGORIES.findIndex((x) => x._id == id);
-        if (i === -1) return { ok: false, message: "Không tìm thấy danh mục (mock)" };
+        if (i === -1)
+          return { ok: false, message: "Không tìm thấy danh mục (mock)" };
 
         CATEGORIES[i] = {
           ...CATEGORIES[i],
@@ -433,10 +496,17 @@ module.exports = function createAdminRouter({ BACKEND, proxy } = {}) {
         throw new Error(data?.message || "Cập nhật danh mục thất bại");
       }
 
-      return { ok: true, message: "Cập nhật danh mục thành công!", data: data.data };
+      return {
+        ok: true,
+        message: "Cập nhật danh mục thành công!",
+        data: data.data,
+      };
     } catch (err) {
       console.error("Update CATEGORY failed:", err.message);
-      return { ok: false, message: err.message || "Không thể cập nhật danh mục" };
+      return {
+        ok: false,
+        message: err.message || "Không thể cập nhật danh mục",
+      };
     }
   }
 
@@ -466,9 +536,12 @@ module.exports = function createAdminRouter({ BACKEND, proxy } = {}) {
   async function tryLoadSizes(req) {
     if (!BACKEND) return PRODUCT_SIZES;
     try {
-      const data = await fetchJSONAuth(req, `${BACKEND}/api/product/size`).catch(() => []);
+      const data = await fetchJSONAuth(
+        req,
+        `${BACKEND}/api/product/size`
+      ).catch(() => []);
       if (Array.isArray(data)) PRODUCT_SIZES = data;
-    } catch { }
+    } catch {}
     return PRODUCT_SIZES;
   }
 
@@ -476,9 +549,12 @@ module.exports = function createAdminRouter({ BACKEND, proxy } = {}) {
   async function tryLoadColors(req) {
     if (!BACKEND) return PRODUCT_COLORS;
     try {
-      const data = await fetchJSONAuth(req, `${BACKEND}/api/product/color`).catch(() => []);
+      const data = await fetchJSONAuth(
+        req,
+        `${BACKEND}/api/product/color`
+      ).catch(() => []);
       if (Array.isArray(data)) PRODUCT_COLORS = data;
-    } catch { }
+    } catch {}
     return PRODUCT_COLORS;
   }
   async function fetchDiscountCodes(req) {
@@ -500,7 +576,10 @@ module.exports = function createAdminRouter({ BACKEND, proxy } = {}) {
     try {
       // build query (page, limit, search nếu cần)
       const { page = 1, limit = 20 } = req.query || {};
-      const qs = new URLSearchParams({ page: String(page), limit: String(limit) }).toString();
+      const qs = new URLSearchParams({
+        page: String(page),
+        limit: String(limit),
+      }).toString();
       const url = `${BACKEND}/api/discount-code?${qs}`;
 
       const data = await fetchJSONAuth(req, url);
@@ -562,7 +641,7 @@ module.exports = function createAdminRouter({ BACKEND, proxy } = {}) {
         }
 
         const upper = String(code).toUpperCase();
-        const exist = DISCOUNTS.find(d => d.code === upper);
+        const exist = DISCOUNTS.find((d) => d.code === upper);
         if (exist) {
           return { ok: false, message: "Mã giảm giá đã tồn tại" };
         }
@@ -611,7 +690,7 @@ module.exports = function createAdminRouter({ BACKEND, proxy } = {}) {
   async function fetchGetDiscountCode(req, id) {
     // Fallback mock: tìm theo code = id
     if (!BACKEND) {
-      const item = DISCOUNTS.find(d => d.code === id);
+      const item = DISCOUNTS.find((d) => d.code === id);
       if (!item) throw new Error("Discount not found");
       return item;
     }
@@ -629,18 +708,21 @@ module.exports = function createAdminRouter({ BACKEND, proxy } = {}) {
     try {
       if (!BACKEND) {
         // mock: update theo code
-        const i = DISCOUNTS.findIndex(d => d.code === id);
+        const i = DISCOUNTS.findIndex((d) => d.code === id);
         if (i === -1) {
           return { ok: false, message: "Discount not found (mock)" };
         }
 
         DISCOUNTS[i] = {
           ...DISCOUNTS[i],
-          discount_value: Number(req.body.discount_value ?? DISCOUNTS[i].discount_value),
+          discount_value: Number(
+            req.body.discount_value ?? DISCOUNTS[i].discount_value
+          ),
           usage_limit: Number(req.body.usage_limit ?? DISCOUNTS[i].usage_limit),
-          is_active: req.body.is_active !== undefined
-            ? Boolean(req.body.is_active)
-            : DISCOUNTS[i].is_active,
+          is_active:
+            req.body.is_active !== undefined
+              ? Boolean(req.body.is_active)
+              : DISCOUNTS[i].is_active,
         };
 
         return { ok: true, message: "Cập nhật mã giảm giá (mock) thành công!" };
@@ -648,19 +730,24 @@ module.exports = function createAdminRouter({ BACKEND, proxy } = {}) {
 
       const url = `${BACKEND}/api/discount-code/${id}`;
       const payload = {
-        discount_value: req.body.discount_value !== undefined
-          ? Number(req.body.discount_value)
-          : undefined,
-        usage_limit: req.body.usage_limit !== undefined
-          ? Number(req.body.usage_limit)
-          : undefined,
-        is_active: req.body.is_active !== undefined
-          ? Boolean(req.body.is_active)
-          : undefined,
+        discount_value:
+          req.body.discount_value !== undefined
+            ? Number(req.body.discount_value)
+            : undefined,
+        usage_limit:
+          req.body.usage_limit !== undefined
+            ? Number(req.body.usage_limit)
+            : undefined,
+        is_active:
+          req.body.is_active !== undefined
+            ? Boolean(req.body.is_active)
+            : undefined,
       };
 
       // xoá các field undefined để tránh ghi đè bậy
-      Object.keys(payload).forEach(k => payload[k] === undefined && delete payload[k]);
+      Object.keys(payload).forEach(
+        (k) => payload[k] === undefined && delete payload[k]
+      );
 
       const data = await fetchJSONAuth(req, url, {
         method: "PUT",
@@ -678,7 +765,10 @@ module.exports = function createAdminRouter({ BACKEND, proxy } = {}) {
       };
     } catch (err) {
       console.error("Update DISCOUNT CODE failed:", err.message);
-      return { ok: false, message: err.message || "Không thể cập nhật mã giảm giá" };
+      return {
+        ok: false,
+        message: err.message || "Không thể cập nhật mã giảm giá",
+      };
     }
   }
 
@@ -686,7 +776,7 @@ module.exports = function createAdminRouter({ BACKEND, proxy } = {}) {
   async function fetchDeleteDiscountCode(req, id) {
     try {
       if (!BACKEND) {
-        DISCOUNTS = DISCOUNTS.filter(d => d.code !== id);
+        DISCOUNTS = DISCOUNTS.filter((d) => d.code !== id);
         return { ok: true, message: "Xoá mã giảm giá (mock) thành công!" };
       }
 
@@ -716,7 +806,7 @@ module.exports = function createAdminRouter({ BACKEND, proxy } = {}) {
         return { ok: true, message: "Tạo thương hiệu (mock) thành công!" };
       }
 
-      const url = `${BACKEND}/api/brand`;     // BE: router.post("/")
+      const url = `${BACKEND}/api/brand`; // BE: router.post("/")
       const payload = {
         name: req.body.name,
         slug: req.body.slug,
@@ -731,7 +821,11 @@ module.exports = function createAdminRouter({ BACKEND, proxy } = {}) {
         throw new Error(data?.message || "Tạo thương hiệu thất bại");
       }
 
-      return { ok: true, message: "Tạo thương hiệu thành công!", data: data.data };
+      return {
+        ok: true,
+        message: "Tạo thương hiệu thành công!",
+        data: data.data,
+      };
     } catch (err) {
       console.error("Create BRAND failed:", err.message);
       return { ok: false, message: err.message || "Không thể tạo thương hiệu" };
@@ -742,7 +836,8 @@ module.exports = function createAdminRouter({ BACKEND, proxy } = {}) {
     try {
       if (!BACKEND) {
         const i = BRANDS.findIndex((x) => x._id == id);
-        if (i === -1) return { ok: false, message: "Không tìm thấy thương hiệu (mock)" };
+        if (i === -1)
+          return { ok: false, message: "Không tìm thấy thương hiệu (mock)" };
 
         BRANDS[i] = {
           ...BRANDS[i],
@@ -768,10 +863,17 @@ module.exports = function createAdminRouter({ BACKEND, proxy } = {}) {
         throw new Error(data?.message || "Cập nhật thương hiệu thất bại");
       }
 
-      return { ok: true, message: "Cập nhật thương hiệu thành công!", data: data.data };
+      return {
+        ok: true,
+        message: "Cập nhật thương hiệu thành công!",
+        data: data.data,
+      };
     } catch (err) {
       console.error("Update BRAND failed:", err.message);
-      return { ok: false, message: err.message || "Không thể cập nhật thương hiệu" };
+      return {
+        ok: false,
+        message: err.message || "Không thể cập nhật thương hiệu",
+      };
     }
   }
 
@@ -796,7 +898,6 @@ module.exports = function createAdminRouter({ BACKEND, proxy } = {}) {
     }
   }
 
-
   // FE-style product fetch with cookie forwarding & strict JSON checks
   async function fetchProducts(req) {
     // If no BACKEND provided, keep the old mock/legacy flow
@@ -806,9 +907,20 @@ module.exports = function createAdminRouter({ BACKEND, proxy } = {}) {
       const url = `${BACKEND}/api/product`;
       const data = await fetchJSONAuth(req, url);
 
-      if (data && data.success && data.data && Array.isArray(data.data.products)) return data.data.products;
+      if (
+        data &&
+        data.success &&
+        data.data &&
+        Array.isArray(data.data.products)
+      )
+        return data.data.products;
       // 2) { ok: true, products: [...] }
-      if (data && (data.ok || data.status === "ok") && Array.isArray(data.products)) return data.products;
+      if (
+        data &&
+        (data.ok || data.status === "ok") &&
+        Array.isArray(data.products)
+      )
+        return data.products;
       // 3) Direct array
       if (Array.isArray(data)) return data;
       throw new Error("Unexpected products payload shape");
@@ -827,8 +939,13 @@ module.exports = function createAdminRouter({ BACKEND, proxy } = {}) {
 
       // ---- Text fields (giống Postman) ----
       const textKeys = [
-        "name", "slug", "brand", "category",
-        "short_description", "long_description", "statusName"
+        "name",
+        "slug",
+        "brand",
+        "category",
+        "short_description",
+        "long_description",
+        "statusName",
       ];
       for (const k of textKeys) {
         if (req.body[k] !== undefined) form.append(k, String(req.body[k]));
@@ -847,7 +964,9 @@ module.exports = function createAdminRouter({ BACKEND, proxy } = {}) {
         for (const f of req.files) {
           form.append(
             f.fieldname,
-            new Blob([f.buffer], { type: f.mimetype || "application/octet-stream" }),
+            new Blob([f.buffer], {
+              type: f.mimetype || "application/octet-stream",
+            }),
             f.originalname || "file"
           );
         }
@@ -863,11 +982,16 @@ module.exports = function createAdminRouter({ BACKEND, proxy } = {}) {
       });
 
       let data = {};
-      try { data = await resp.json(); } catch { }
+      try {
+        data = await resp.json();
+      } catch {}
 
       if (!resp.ok) {
         // BE thường trả { message: "Product already exists with this slug" }
-        return { ok: false, message: data?.message || `[${resp.status}] Create failed` };
+        return {
+          ok: false,
+          message: data?.message || `[${resp.status}] Create failed`,
+        };
       }
 
       // Thành công: BE trả object product (theo mẫu bạn gửi)
@@ -889,12 +1013,21 @@ module.exports = function createAdminRouter({ BACKEND, proxy } = {}) {
 
       // ---- Text fields giống Postman ----
       const textKeys = [
-        "name", "slug", "brand", "category",
-        "short_description", "long_description", "statusName",
-        "imagesToDelete" // quan trọng cho xoá ảnh product
+        "name",
+        "slug",
+        "brand",
+        "category",
+        "short_description",
+        "long_description",
+        "statusName",
+        "imagesToDelete", // quan trọng cho xoá ảnh product
       ];
       for (const k of textKeys) {
-        if (req.body[k] !== undefined && req.body[k] !== null && req.body[k] !== "") {
+        if (
+          req.body[k] !== undefined &&
+          req.body[k] !== null &&
+          req.body[k] !== ""
+        ) {
           form.append(k, String(req.body[k]));
         }
       }
@@ -910,7 +1043,9 @@ module.exports = function createAdminRouter({ BACKEND, proxy } = {}) {
         for (const f of req.files) {
           form.append(
             f.fieldname,
-            new Blob([f.buffer], { type: f.mimetype || "application/octet-stream" }),
+            new Blob([f.buffer], {
+              type: f.mimetype || "application/octet-stream",
+            }),
             f.originalname || "file"
           );
         }
@@ -924,20 +1059,28 @@ module.exports = function createAdminRouter({ BACKEND, proxy } = {}) {
       });
 
       let data = {};
-      try { data = await resp.json(); } catch { }
+      try {
+        data = await resp.json();
+      } catch {}
 
       if (!resp.ok) {
-        return { ok: false, message: data?.message || `[${resp.status}] Update failed` };
+        return {
+          ok: false,
+          message: data?.message || `[${resp.status}] Update failed`,
+        };
       }
 
       // tuỳ backend trả gì, mình chỉ cần message
       return {
         ok: true,
-        message: data?.message || `Cập nhật sản phẩm thành công!`
+        message: data?.message || `Cập nhật sản phẩm thành công!`,
       };
     } catch (err) {
       console.error("Update PRODUCT failed:", err.message);
-      return { ok: false, message: err.message || "Không thể cập nhật sản phẩm" };
+      return {
+        ok: false,
+        message: err.message || "Không thể cập nhật sản phẩm",
+      };
     }
   }
   // === Load VARIANTS (tồn kho) ===
@@ -1067,19 +1210,23 @@ module.exports = function createAdminRouter({ BACKEND, proxy } = {}) {
     }
   }
 
-
   async function fetchUpdateVariantStockAdmin(req, id) {
     try {
       // MOCK MODE
       if (!BACKEND) {
-        const i = PRODUCT_VARIANTS.findIndex((x) => String(x._id || x.sku) === String(id));
+        const i = PRODUCT_VARIANTS.findIndex(
+          (x) => String(x._id || x.sku) === String(id)
+        );
         if (i === -1) return { ok: false, message: "Variant not found (mock)" };
 
         const qty = Number(req.body.quantity || 0);
         const importPrice = Number(req.body.import_price || 0);
 
         if (!qty || !importPrice) {
-          return { ok: false, message: "quantity và import_price là bắt buộc (mock)" };
+          return {
+            ok: false,
+            message: "quantity và import_price là bắt buộc (mock)",
+          };
         }
 
         // Tăng tồn kho mock
@@ -1097,15 +1244,27 @@ module.exports = function createAdminRouter({ BACKEND, proxy } = {}) {
 
       const payload = {
         productVariantId: id, // lấy từ params
-        quantity: req.body.quantity !== undefined ? Number(req.body.quantity) : undefined,
-        import_price: req.body.import_price !== undefined ? Number(req.body.import_price) : undefined,
+        quantity:
+          req.body.quantity !== undefined
+            ? Number(req.body.quantity)
+            : undefined,
+        import_price:
+          req.body.import_price !== undefined
+            ? Number(req.body.import_price)
+            : undefined,
         note: req.body.note || "",
       };
 
       // xóa field undefined
-      Object.keys(payload).forEach((k) => payload[k] === undefined && delete payload[k]);
+      Object.keys(payload).forEach(
+        (k) => payload[k] === undefined && delete payload[k]
+      );
 
-      if (!payload.productVariantId || !payload.quantity || !payload.import_price) {
+      if (
+        !payload.productVariantId ||
+        !payload.quantity ||
+        !payload.import_price
+      ) {
         throw new Error("productVariantId, quantity, import_price là bắt buộc");
       }
 
@@ -1132,9 +1291,8 @@ module.exports = function createAdminRouter({ BACKEND, proxy } = {}) {
       if (!BACKEND) {
         await tryLoadVariants(req); // đảm bảo PRODUCT_VARIANTS đã được fill
         return (
-          PRODUCT_VARIANTS.find(
-            (x) => String(x._id || x.sku) === String(id)
-          ) || null
+          PRODUCT_VARIANTS.find((x) => String(x._id || x.sku) === String(id)) ||
+          null
         );
       }
 
@@ -1187,40 +1345,140 @@ module.exports = function createAdminRouter({ BACKEND, proxy } = {}) {
     }
   }
 
-  let PRODUCT_COLORS = [{ _id: "pc1", product: "p1", product_name: "Sản phẩm 1", color_name: "Đen", color_code: "#000000", createdAt: new Date() }];
-  let PRODUCT_SIZES = [{ _id: "ps1", product: "p1", product_name: "Sản phẩm 1", size_name: "M", size_order: 2, createdAt: new Date() }];
-  let PRODUCT_VARIANTS = [{ sku: "SKU-1-S", product: "p1", product_name: "Sản phẩm 1", color: "pc1", color_name: "Đen", size: "ps1", size_name: "M", price: 150000, stock_quantity: 10 }];
-
-  let USERS = Array.from({ length: 10 }).map((_, i) => ({
-    _id: `u${i + 1}`, full_name: `Người dùng ${i + 1}`, email: `user${i + 1}@example.com`,
-    role: i % 4 === 0 ? 'admin' : 'customer', is_verified: i % 3 === 0, loyalty_points: 10 * i,
-    createdAt: new Date(Date.now() - i * 86400000)
-  }));
-  let ADDRESSES = [{ _id: "ad1", user: "u1", address_line: "12 Nguyễn Huệ, Q1, HCM", is_default: true, createdAt: new Date() }];
-  let REVIEWS = [{ _id: "rv1", product: "p1", user: "u2", guest_name: null, guest_email: null, comment: "Quá xịn!", rating: 5, createdAt: new Date() }];
-  let WISHLISTS = [{ _id: "wl1", user: "u3", product_variant_sku: "SKU-1-S", createdAt: new Date() }];
-
-  let DISCOUNTS = [
-    { code: "ABCDE", discount_value: 10, usage_limit: 5, usage_count: 2, is_active: true, createdAt: new Date() },
-    { code: "SALE1", discount_value: 15, usage_limit: 3, usage_count: 1, is_active: true, createdAt: new Date() },
-    { code: "OFF50", discount_value: 50, usage_limit: 1, usage_count: 0, is_active: false, createdAt: new Date() }
+  let PRODUCT_COLORS = [
+    {
+      _id: "pc1",
+      product: "p1",
+      product_name: "Sản phẩm 1",
+      color_name: "Đen",
+      color_code: "#000000",
+      createdAt: new Date(),
+    },
+  ];
+  let PRODUCT_SIZES = [
+    {
+      _id: "ps1",
+      product: "p1",
+      product_name: "Sản phẩm 1",
+      size_name: "M",
+      size_order: 2,
+      createdAt: new Date(),
+    },
+  ];
+  let PRODUCT_VARIANTS = [
+    {
+      sku: "SKU-1-S",
+      product: "p1",
+      product_name: "Sản phẩm 1",
+      color: "pc1",
+      color_name: "Đen",
+      size: "ps1",
+      size_name: "M",
+      price: 150000,
+      stock_quantity: 10,
+    },
   ];
 
-  let ORDERS = Array.from({ length: 9 }).map((_, i) => ({
-    _id: `OD${1000 + i}`,
-    user: USERS[i % USERS.length],
-    createdAt: new Date(Date.now() - i * 3600 * 1000 * 12),
-    total_amount: 400000 + i * 50000,
-    final_amount: 380000 + i * 45000,
-    discount_code: i % 3 === 0 ? { code: "ABCDE" } : null,
-    current_status: ["pending", "confirmed", "shipping", "delivered", "cancelled"][i % 5],
-    status_history: [
-      { status: "pending", timestamp: new Date(Date.now() - (i * 3 + 2) * 3600000) },
-      { status: "confirmed", timestamp: new Date(Date.now() - (i * 3 + 1) * 3600000) }
-    ],
-    items: [{ product_variant_sku: `SKU-${i + 1}-S`, quantity: 1 + (i % 2), price_at_purchase: 190000 + i * 10000, name_snapshot: `Sản phẩm ${i + 1} - Size S` }],
-    address: { address_line: `Số ${i + 10} Đường ABC, Quận ${i + 1}` }
-  }));
+  // let USERS = Array.from({ length: 10 }).map((_, i) => ({
+  //   _id: `u${i + 1}`,
+  //   full_name: `Người dùng ${i + 1}`,
+  //   email: `user${i + 1}@example.com`,
+  //   role: i % 4 === 0 ? "admin" : "customer",
+  //   is_verified: i % 3 === 0,
+  //   loyalty_points: 10 * i,
+  //   createdAt: new Date(Date.now() - i * 86400000),
+  // }));
+  // let ADDRESSES = [
+  //   {
+  //     _id: "ad1",
+  //     user: "u1",
+  //     address_line: "12 Nguyễn Huệ, Q1, HCM",
+  //     is_default: true,
+  //     createdAt: new Date(),
+  //   },
+  // ];
+  // let REVIEWS = [
+  //   {
+  //     _id: "rv1",
+  //     product: "p1",
+  //     user: "u2",
+  //     guest_name: null,
+  //     guest_email: null,
+  //     comment: "Quá xịn!",
+  //     rating: 5,
+  //     createdAt: new Date(),
+  //   },
+  // ];
+  // let WISHLISTS = [
+  //   {
+  //     _id: "wl1",
+  //     user: "u3",
+  //     product_variant_sku: "SKU-1-S",
+  //     createdAt: new Date(),
+  //   },
+  // ];
+
+  // let DISCOUNTS = [
+  //   {
+  //     code: "ABCDE",
+  //     discount_value: 10,
+  //     usage_limit: 5,
+  //     usage_count: 2,
+  //     is_active: true,
+  //     createdAt: new Date(),
+  //   },
+  //   {
+  //     code: "SALE1",
+  //     discount_value: 15,
+  //     usage_limit: 3,
+  //     usage_count: 1,
+  //     is_active: true,
+  //     createdAt: new Date(),
+  //   },
+  //   {
+  //     code: "OFF50",
+  //     discount_value: 50,
+  //     usage_limit: 1,
+  //     usage_count: 0,
+  //     is_active: false,
+  //     createdAt: new Date(),
+  //   },
+  // ];
+
+  // let ORDERS = Array.from({ length: 9 }).map((_, i) => ({
+  //   _id: `OD${1000 + i}`,
+  //   user: USERS[i % USERS.length],
+  //   createdAt: new Date(Date.now() - i * 3600 * 1000 * 12),
+  //   total_amount: 400000 + i * 50000,
+  //   final_amount: 380000 + i * 45000,
+  //   discount_code: i % 3 === 0 ? { code: "ABCDE" } : null,
+  //   current_status: [
+  //     "pending",
+  //     "confirmed",
+  //     "shipping",
+  //     "delivered",
+  //     "cancelled",
+  //   ][i % 5],
+  //   status_history: [
+  //     {
+  //       status: "pending",
+  //       timestamp: new Date(Date.now() - (i * 3 + 2) * 3600000),
+  //     },
+  //     {
+  //       status: "confirmed",
+  //       timestamp: new Date(Date.now() - (i * 3 + 1) * 3600000),
+  //     },
+  //   ],
+  //   items: [
+  //     {
+  //       product_variant_sku: `SKU-${i + 1}-S`,
+  //       quantity: 1 + (i % 2),
+  //       price_at_purchase: 190000 + i * 10000,
+  //       name_snapshot: `Sản phẩm ${i + 1} - Size S`,
+  //     },
+  //   ],
+  //   address: { address_line: `Số ${i + 10} Đường ABC, Quận ${i + 1}` },
+  // }));
 
   // ========== Utils ==========
   function paginate(array, page = 1, pageSize = 10) {
@@ -1241,12 +1499,71 @@ module.exports = function createAdminRouter({ BACKEND, proxy } = {}) {
     const q = new URLSearchParams(req.query);
     q.delete("page");
 
-    const prefix = req.baseUrl || "";  // '/admin'
-    const path = req.path || "";     // '/products'
-    const url = prefix + path;      // '/admin/products'
+    const prefix = req.baseUrl || ""; // '/admin'
+    const path = req.path || ""; // '/products'
+    const url = prefix + path; // '/admin/products'
 
     return url + (q.toString() ? `?${q.toString()}&page=` : "?page=");
   }
+  // ===========CÁC HÀM HELPER CHO ORDER===============
+  // 1. Lấy danh sách đơn hàng
+  async function fetchOrders(req) {
+    if (!BACKEND) return { items: [], pagination: {} };
+
+    try {
+      const { page = 1, limit = 10, status } = req.query;
+      const qs = new URLSearchParams({
+        page: String(page),
+        limit: String(limit),
+      });
+      if (status) qs.set("status", status);
+
+      // Gọi API Backend: /api/admin-dashboard/orders
+      const url = `${BACKEND}/api/admin-dashboard/orders?${qs}`;
+      const data = await fetchJSONAuth(req, url);
+
+      return {
+        items: data.orders || [],
+        pagination: {
+          page: Number(data.page) || 1,
+          totalPages: data.totalPages || 1,
+          totalItems: data.total || 0,
+          pageSize: Number(limit),
+        },
+      };
+    } catch (e) {
+      console.error("Fetch orders failed:", e.message);
+      return { items: [], pagination: {} };
+    }
+  }
+
+  // 2. Lấy chi tiết đơn hàng
+  async function fetchOrderDetail(req, id) {
+    if (!BACKEND) return null;
+    try {
+      const url = `${BACKEND}/api/admin-dashboard/orders/${id}`;
+      const data = await fetchJSONAuth(req, url);
+      return data.order;
+    } catch (e) {
+      console.error("Fetch order detail failed:", e.message);
+      return null;
+    }
+  }
+
+  // 3. Cập nhật trạng thái đơn hàng
+  async function updateOrderStatus(req, id, status) {
+    if (!BACKEND) return;
+    try {
+      const url = `${BACKEND}/api/admin-dashboard/orders/${id}/status`;
+      await fetchJSONAuth(req, url, {
+        method: "PUT",
+        body: JSON.stringify({ status }),
+      });
+    } catch (e) {
+      console.error("Update order status failed:", e.message);
+    }
+  }
+
   // ========== DASHBOARD HELPERS ==========
 
   // Build query cho BE dashboard từ req.query
@@ -1282,16 +1599,27 @@ module.exports = function createAdminRouter({ BACKEND, proxy } = {}) {
 
     // Gọi song song 4 API
     const [kpisResp, rpResp, ocResp, tpResp] = await Promise.all([
-      fetchJSONAuth(req, `${BACKEND}/api/admin-dashboard/dashboard/simple/kpis?${qs}`),
-      fetchJSONAuth(req, `${BACKEND}/api/admin-dashboard/dashboard/simple/revenue-profit?${qs}`),
-      fetchJSONAuth(req, `${BACKEND}/api/admin-dashboard/dashboard/simple/orders-count?${qs}`),
-      fetchJSONAuth(req, `${BACKEND}/api/admin-dashboard/dashboard/simple/top-products?limit=10&${qs}`),
+      fetchJSONAuth(
+        req,
+        `${BACKEND}/api/admin-dashboard/dashboard/simple/kpis?${qs}`
+      ),
+      fetchJSONAuth(
+        req,
+        `${BACKEND}/api/admin-dashboard/dashboard/simple/revenue-profit?${qs}`
+      ),
+      fetchJSONAuth(
+        req,
+        `${BACKEND}/api/admin-dashboard/dashboard/simple/orders-count?${qs}`
+      ),
+      fetchJSONAuth(
+        req,
+        `${BACKEND}/api/admin-dashboard/dashboard/simple/top-products?limit=10&${qs}`
+      ),
     ]);
 
     // ====== KPIs ======
     // Chấp cả 2 dạng: { success, data:{...} } hoặc { kpis, compareToPrevious }
-    const kPayload =
-      (kpisResp && (kpisResp.data || kpisResp)) || {};
+    const kPayload = (kpisResp && (kpisResp.data || kpisResp)) || {};
 
     const k = kPayload.kpis || {};
     const cmp = kPayload.compareToPrevious || {};
@@ -1471,7 +1799,7 @@ module.exports = function createAdminRouter({ BACKEND, proxy } = {}) {
             end: req.query.end || "",
             mode: req.query.mode || "simple",
           },
-          advanced: null,   // mock chưa có
+          advanced: null, // mock chưa có
         });
       }
 
@@ -1527,10 +1855,22 @@ module.exports = function createAdminRouter({ BACKEND, proxy } = {}) {
     // Gọi song song 4 API
     const [summaryResp, customersResp, ordersResp, productCompareResp] =
       await Promise.all([
-        fetchJSONAuth(req, `${BACKEND}/api/admin-dashboard/dashboard/advanced/summary?${qs}`),
-        fetchJSONAuth(req, `${BACKEND}/api/admin-dashboard/dashboard/advanced/customers?${qs}`),
-        fetchJSONAuth(req, `${BACKEND}/api/admin-dashboard/dashboard/advanced/orders?${qs}`),
-        fetchJSONAuth(req, `${BACKEND}/api/admin-dashboard/dashboard/advanced/product-comparison?${qs}`)
+        fetchJSONAuth(
+          req,
+          `${BACKEND}/api/admin-dashboard/dashboard/advanced/summary?${qs}`
+        ),
+        fetchJSONAuth(
+          req,
+          `${BACKEND}/api/admin-dashboard/dashboard/advanced/customers?${qs}`
+        ),
+        fetchJSONAuth(
+          req,
+          `${BACKEND}/api/admin-dashboard/dashboard/advanced/orders?${qs}`
+        ),
+        fetchJSONAuth(
+          req,
+          `${BACKEND}/api/admin-dashboard/dashboard/advanced/product-comparison?${qs}`
+        ),
       ]);
 
     const summary = summaryResp?.data || {};
@@ -1544,10 +1884,10 @@ module.exports = function createAdminRouter({ BACKEND, proxy } = {}) {
     // 1) BIỂU ĐỒ CHÍNH: SO SÁNH ĐƠN – DOANH THU – LỢI NHUẬN
     // ==========================================
     const compare = {
-      labels: summaryData.map(d => d.label || d.timeKey),
-      orders: summaryData.map(d => d.ordersCount || 0),
-      revenue: summaryData.map(d => d.totalRevenue || 0),
-      profit: summaryData.map(d => d.totalProfit || 0),
+      labels: summaryData.map((d) => d.label || d.timeKey),
+      orders: summaryData.map((d) => d.ordersCount || 0),
+      revenue: summaryData.map((d) => d.totalRevenue || 0),
+      profit: summaryData.map((d) => d.totalProfit || 0),
     };
 
     // ==========================================
@@ -1555,8 +1895,8 @@ module.exports = function createAdminRouter({ BACKEND, proxy } = {}) {
     // ==========================================
     const yearly = productCompare.yearly || [];
     const productsCount = {
-      labels: yearly.map(d => d.label),
-      productsSold: yearly.map(d => d.totalProductsSold || 0),
+      labels: yearly.map((d) => d.label),
+      productsSold: yearly.map((d) => d.totalProductsSold || 0),
     };
 
     // ==========================================
@@ -1564,8 +1904,8 @@ module.exports = function createAdminRouter({ BACKEND, proxy } = {}) {
     // ==========================================
     const distribution = productCompare.distribution || [];
     const productDistribution = {
-      labels: distribution.map(d => d.label),
-      quantities: distribution.map(d => d.quantity),
+      labels: distribution.map((d) => d.label),
+      quantities: distribution.map((d) => d.quantity),
     };
     const customerSegments = customers.segments || {};
     const customerNewReturning = customers.newVsReturning || {};
@@ -1575,16 +1915,16 @@ module.exports = function createAdminRouter({ BACKEND, proxy } = {}) {
         compare,
         productsCount,
         productDistribution,
-        customerSegments,        // <--- thêm vào
-        customerNewReturning     // <--- thêm vào
+        customerSegments, // <--- thêm vào
+        customerNewReturning, // <--- thêm vào
       },
       customers,
       raw: {
         summary,
         customers,
         orders,
-        productCompare
-      }
+        productCompare,
+      },
     };
   }
 
@@ -1696,7 +2036,6 @@ module.exports = function createAdminRouter({ BACKEND, proxy } = {}) {
         filters: simple.filters,
         advanced: advanced || null, // <--- QUAN TRỌNG
       });
-
     } catch (err) {
       console.error("Render /admin dashboard failed:", err.message);
 
@@ -1869,14 +2208,19 @@ router.get("/products", async (req, res) => {
 
 
   router.get("/products/new", async (req, res) => {
-    await Promise.all([tryLoadBrands(req), tryLoadCategories(req), tryLoadColors(req), tryLoadSizes(req)]);
+    await Promise.all([
+      tryLoadBrands(req),
+      tryLoadCategories(req),
+      tryLoadColors(req),
+      tryLoadSizes(req),
+    ]);
     res.render("product_form", {
       title: "Thêm sản phẩm",
       pageHeading: "Thêm sản phẩm",
       brands: BRANDS,
       categories: CATEGORIES,
       productColors: PRODUCT_COLORS,
-      productSizes: PRODUCT_SIZES
+      productSizes: PRODUCT_SIZES,
     });
   });
 
@@ -1894,18 +2238,23 @@ router.get("/products", async (req, res) => {
     // Nếu có BACKEND thì lấy từ API
     if (BACKEND) {
       try {
-        const data = await fetchJSONAuth(req, `${BACKEND}/api/product/${req.params.id}`);
+        const data = await fetchJSONAuth(
+          req,
+          `${BACKEND}/api/product/${req.params.id}`
+        );
         console.log("Load product by id data:", data);
         // chấp nhận nhiều dạng payload phổ biến
         if (data?.success && data?.data?.product) product = data.data.product;
-        else if ((data?.ok || data?.status === "ok") && data?.product) product = data.product;
+        else if ((data?.ok || data?.status === "ok") && data?.product)
+          product = data.product;
         else if (data && (data._id || data.id || data.name)) product = data; // trả trực tiếp object
       } catch (e) {
         console.error("Load product by id failed:", e.message);
       }
     } else {
       // fallback mock khi không cấu hình BACKEND
-      product = PRODUCTS.find(x => String(x._id) === String(req.params.id)) || null;
+      product =
+        PRODUCTS.find((x) => String(x._id) === String(req.params.id)) || null;
     }
 
     if (!product) {
@@ -1923,25 +2272,27 @@ router.get("/products", async (req, res) => {
       product.brand = product.brand._id || product.brand.id || product.brand;
     }
     if (product.category && typeof product.category === "object") {
-      product.category = product.category._id || product.category.id || product.category;
+      product.category =
+        product.category._id || product.category.id || product.category;
     }
 
     // ---- Chuẩn hoá variants về shape form cần ----
-    const srcVariants =
-      Array.isArray(product?.variants) ? product.variants :
-        Array.isArray(product?.p?.variants) ? product.p.variants :
-          [];
+    const srcVariants = Array.isArray(product?.variants)
+      ? product.variants
+      : Array.isArray(product?.p?.variants)
+      ? product.p.variants
+      : [];
 
-    product.variants = (srcVariants || []).map(v => {
+    product.variants = (srcVariants || []).map((v) => {
       const images = Array.isArray(v?.images)
-        ? v.images.map(img => ({
-          url: img?.url || "",
-          public_id: img?.public_id || "",
-          is_primary: !!img?.is_primary,
-        }))
+        ? v.images.map((img) => ({
+            url: img?.url || "",
+            public_id: img?.public_id || "",
+            is_primary: !!img?.is_primary,
+          }))
         : [];
 
-      let primaryIndex = images.findIndex(i => i.is_primary);
+      let primaryIndex = images.findIndex((i) => i.is_primary);
       if (primaryIndex < 0) primaryIndex = 0;
 
       return {
@@ -1974,10 +2325,19 @@ router.get("/products", async (req, res) => {
 
   router.post("/products", upload.any(), async (req, res) => {
     console.log("[ADMIN IN] fields:", Object.keys(req.body));
-    console.log("[ADMIN IN] variants(raw):", typeof req.body.variants, String(req.body.variants).slice(0, 200));
-    console.log("[ADMIN IN] files:", (req.files || []).map(f => ({
-      fieldname: f.fieldname, name: f.originalname, size: f.size
-    })));
+    console.log(
+      "[ADMIN IN] variants(raw):",
+      typeof req.body.variants,
+      String(req.body.variants).slice(0, 200)
+    );
+    console.log(
+      "[ADMIN IN] files:",
+      (req.files || []).map((f) => ({
+        fieldname: f.fieldname,
+        name: f.originalname,
+        size: f.size,
+      }))
+    );
     const r = await fetchCreateProduct(req);
     const q = new URLSearchParams(r.ok ? { s: r.message } : { e: r.message });
     return res.redirect(`/admin/products?${q.toString()}`);
@@ -1985,39 +2345,44 @@ router.get("/products", async (req, res) => {
 
   router.post("/products/:id", upload.any(), async (req, res) => {
     console.log("[ADMIN UPDATE IN] fields:", Object.keys(req.body));
-    console.log("[ADMIN UPDATE IN] variants(raw):", typeof req.body.variants, String(req.body.variants || "").slice(0, 300));
-    console.log("[ADMIN UPDATE IN] files:", (req.files || []).map(f => ({
-      fieldname: f.fieldname, name: f.originalname, size: f.size
-    })));
+    console.log(
+      "[ADMIN UPDATE IN] variants(raw):",
+      typeof req.body.variants,
+      String(req.body.variants || "").slice(0, 300)
+    );
+    console.log(
+      "[ADMIN UPDATE IN] files:",
+      (req.files || []).map((f) => ({
+        fieldname: f.fieldname,
+        name: f.originalname,
+        size: f.size,
+      }))
+    );
 
     const r = await fetchUpdateProduct(req, req.params.id);
     const q = new URLSearchParams(r.ok ? { s: r.message } : { e: r.message });
     return res.redirect(`/admin/products?${q.toString()}`);
   });
-  router.post("/products/:id/delete", (req, res) => { PRODUCTS = PRODUCTS.filter(x => x._id !== req.params.id); res.redirect("/admin/products"); });
+  router.post("/products/:id/delete", (req, res) => {
+    PRODUCTS = PRODUCTS.filter((x) => x._id !== req.params.id);
+    res.redirect("/admin/products");
+  });
 
   router.get("/product-variants", async (req, res) => {
     const { items: rawItems, pagination } = await tryLoadVariants(req);
 
     let items = rawItems || [];
 
-    const {
-      q,
-      color,
-      price_min,
-      price_max,
-      stock_min,
-      stock_max,
-    } = req.query || {};
+    const { q, color, price_min, price_max, stock_min, stock_max } =
+      req.query || {};
 
     // Tìm theo SKU hoặc tên sản phẩm
     if (q) {
       const qLower = String(q).toLowerCase();
       items = items.filter((v) => {
         const sku = (v.sku || "").toLowerCase();
-        const productName = (v.product && v.product.name
-          ? v.product.name
-          : v.product_name || ""
+        const productName = (
+          v.product && v.product.name ? v.product.name : v.product_name || ""
         ).toLowerCase();
         return sku.includes(qLower) || productName.includes(qLower);
       });
@@ -2027,10 +2392,7 @@ router.get("/products", async (req, res) => {
     if (color) {
       const cLower = String(color).toLowerCase();
       items = items.filter((v) => {
-        const colorName =
-          (v.color && v.color.color_name) ||
-          v.color_name ||
-          "";
+        const colorName = (v.color && v.color.color_name) || v.color_name || "";
         return String(colorName).toLowerCase() === cLower;
       });
     }
@@ -2060,9 +2422,7 @@ router.get("/products", async (req, res) => {
       new Set(
         (rawItems || []).map((v) => {
           const colorName =
-            (v.color && v.color.color_name) ||
-            v.color_name ||
-            "";
+            (v.color && v.color.color_name) || v.color_name || "";
           return colorName || null;
         })
       )
@@ -2081,7 +2441,6 @@ router.get("/products", async (req, res) => {
       colorOptions,
     });
   });
-
 
   router.get("/product-variants/:id", async (req, res) => {
     const item = await fetchVariantByIdAdmin(req, req.params.id);
@@ -2119,18 +2478,37 @@ router.get("/products", async (req, res) => {
     });
   });
 
-  router.get("/product-colors/new", (req, res) => res.render("entity_form", {
-    title: "Thêm màu", pageHeading: "Thêm màu", item: null,
-    fields: ["product", "color_name", "color_code"], actionBase: "/admin/product-colors"
-  }));
-  router.get("/product-colors", async (req, res) => { const p = paginate(PRODUCT_COLORS, 1, 50); res.render("entity_index", { title: "Màu sắc", pageHeading: "Màu sắc", items: p.items, fields: ["product", "color_name", "color_code", "createdAt"], pagination: { ...p, baseUrl: "/admin/product-colors?page=" } }); });
+  router.get("/product-colors/new", (req, res) =>
+    res.render("entity_form", {
+      title: "Thêm màu",
+      pageHeading: "Thêm màu",
+      item: null,
+      fields: ["product", "color_name", "color_code"],
+      actionBase: "/admin/product-colors",
+    })
+  );
+  router.get("/product-colors", async (req, res) => {
+    const p = paginate(PRODUCT_COLORS, 1, 50);
+    res.render("entity_index", {
+      title: "Màu sắc",
+      pageHeading: "Màu sắc",
+      items: p.items,
+      fields: ["product", "color_name", "color_code", "createdAt"],
+      pagination: { ...p, baseUrl: "/admin/product-colors?page=" },
+    });
+  });
   router.get("/product-colors/:id", async (req, res) => {
     await tryLoadColors(req);
-    const item = PRODUCT_COLORS.find(x => String(x._id) == String(req.params.id));
+    const item = PRODUCT_COLORS.find(
+      (x) => String(x._id) == String(req.params.id)
+    );
     if (!item) return res.status(404).send("Not found");
     res.render("entity_form", {
-      title: "Sửa màu", pageHeading: "Sửa màu", item,
-      fields: ["product", "color_name", "color_code"], actionBase: "/admin/product-colors"
+      title: "Sửa màu",
+      pageHeading: "Sửa màu",
+      item,
+      fields: ["product", "color_name", "color_code"],
+      actionBase: "/admin/product-colors",
     });
   });
 
@@ -2156,24 +2534,36 @@ router.get("/products", async (req, res) => {
     await tryLoadSizes(req);
     const p = paginate(PRODUCT_SIZES, 1, 50);
     res.render("entity_index", {
-      title: "Kích cỡ", pageHeading: "Kích cỡ",
-      items: p.items, fields: ["product", "size_name", "size_order", "createdAt"],
-      pagination: { ...p, baseUrl: "/admin/product-sizes?page=" }
+      title: "Kích cỡ",
+      pageHeading: "Kích cỡ",
+      items: p.items,
+      fields: ["product", "size_name", "size_order", "createdAt"],
+      pagination: { ...p, baseUrl: "/admin/product-sizes?page=" },
     });
   });
 
-  router.get("/product-sizes/new", (req, res) => res.render("entity_form", {
-    title: "Thêm size", pageHeading: "Thêm size", item: null,
-    fields: ["product", "size_name", "size_order"], actionBase: "/admin/product-sizes"
-  }));
+  router.get("/product-sizes/new", (req, res) =>
+    res.render("entity_form", {
+      title: "Thêm size",
+      pageHeading: "Thêm size",
+      item: null,
+      fields: ["product", "size_name", "size_order"],
+      actionBase: "/admin/product-sizes",
+    })
+  );
 
   router.get("/product-sizes/:id", async (req, res) => {
     await tryLoadSizes(req);
-    const item = PRODUCT_SIZES.find(x => String(x._id) == String(req.params.id));
+    const item = PRODUCT_SIZES.find(
+      (x) => String(x._id) == String(req.params.id)
+    );
     if (!item) return res.status(404).send("Not found");
     res.render("entity_form", {
-      title: "Sửa size", pageHeading: "Sửa size", item,
-      fields: ["product", "size_name", "size_order"], actionBase: "/admin/product-sizes"
+      title: "Sửa size",
+      pageHeading: "Sửa size",
+      item,
+      fields: ["product", "size_name", "size_order"],
+      actionBase: "/admin/product-sizes",
     });
   });
 
@@ -2199,7 +2589,13 @@ router.get("/products", async (req, res) => {
   router.get("/brands", async (req, res) => {
     await tryLoadBrands(req);
     const p = paginate(BRANDS, 1, 100);
-    res.render("entity_index", { title: "Thương hiệu", pageHeading: "Thương hiệu", items: p.items, fields: ["name", "slug", "createdAt"], pagination: { ...p, baseUrl: "/admin/brands?page=" } });
+    res.render("entity_index", {
+      title: "Thương hiệu",
+      pageHeading: "Thương hiệu",
+      items: p.items,
+      fields: ["name", "slug", "createdAt"],
+      pagination: { ...p, baseUrl: "/admin/brands?page=" },
+    });
   });
   router.get("/brands/new", (req, res) =>
     res.render("entity_form", {
@@ -2244,11 +2640,16 @@ router.get("/products", async (req, res) => {
     res.redirect(`/admin/brands?${q.toString()}`);
   });
 
-
   router.get("/categories", async (req, res) => {
     await tryLoadCategories(req);
     const p = paginate(CATEGORIES, 1, 100);
-    res.render("entity_index", { title: "Danh mục", pageHeading: "Danh mục", items: p.items, fields: ["name", "slug", "description", "createdAt"], pagination: { ...p, baseUrl: "/admin/categories?page=" } });
+    res.render("entity_index", {
+      title: "Danh mục",
+      pageHeading: "Danh mục",
+      items: p.items,
+      fields: ["name", "slug", "description", "createdAt"],
+      pagination: { ...p, baseUrl: "/admin/categories?page=" },
+    });
   });
   router.get("/categories/new", (req, res) =>
     res.render("entity_form", {
@@ -2293,30 +2694,31 @@ router.get("/products", async (req, res) => {
     res.redirect(`/admin/categories?${q.toString()}`);
   });
 
-
   // ========== Orders ==========
-  router.get("/orders", (req, res) => {
-    const { page = 1 } = req.query;
-    const p = paginate(ORDERS, page, 10);
+  router.get("/orders", async (req, res) => {
+    // Gọi hàm fetch thật
+    const { items, pagination } = await fetchOrders(req);
     res.render("orders_index", {
       title: "Đơn hàng",
       pageHeading: "Đơn hàng",
-      items: p.items,
+      items,
       query: req.query,
-      pagination: { ...p, baseUrl: baseUrl(req) }
+      pagination: { ...pagination, baseUrl: baseUrl(req) },
     });
   });
-  router.get("/orders/:id", (req, res) => {
-    const order = ORDERS.find(o => o._id === req.params.id);
+
+  router.get("/orders/:id", async (req, res) => {
+    const order = await fetchOrderDetail(req, req.params.id);
     if (!order) return res.status(404).send("Không tìm thấy đơn");
-    res.render("order_detail", { title: `Đơn ${order._id}`, pageHeading: `Đơn #${order._id}`, order });
+    res.render("order_detail", {
+      title: `Đơn ${order._id}`,
+      pageHeading: `Đơn #${order._id}`,
+      order,
+    });
   });
-  router.post("/orders/:id/status", (req, res) => {
-    const order = ORDERS.find(o => o._id === req.params.id);
-    if (order && req.body.status) {
-      order.current_status = req.body.status;
-      order.status_history.push({ status: req.body.status, timestamp: new Date() });
-    }
+
+  router.post("/orders/:id/status", async (req, res) => {
+    await updateOrderStatus(req, req.params.id, req.body.status);
     res.redirect("/admin/orders/" + req.params.id);
   });
 
@@ -2350,7 +2752,13 @@ router.get("/products", async (req, res) => {
         title: "Sửa mã giảm giá",
         pageHeading: "Sửa mã giảm giá",
         item,
-        fields: ["code", "discount_value", "usage_limit", "usage_count", "is_active"],
+        fields: [
+          "code",
+          "discount_value",
+          "usage_limit",
+          "usage_count",
+          "is_active",
+        ],
         actionBase: "/admin/discounts",
       });
     } catch (err) {
@@ -2390,7 +2798,9 @@ router.get("/products", async (req, res) => {
     }
 
     // sort cho “đẹp”: user mới tạo lên trước
-    list.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+    list.sort(
+      (a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0)
+    );
 
     const p = paginate(list, page, pageSize);
 
@@ -2412,7 +2822,10 @@ router.get("/products", async (req, res) => {
       }
 
       const id = req.params.id;
-      const data = await fetchJSONAuth(req, `${BACKEND}/api/user/${id}/details`);
+      const data = await fetchJSONAuth(
+        req,
+        `${BACKEND}/api/user/${id}/details`
+      );
 
       const user = data.user;
       const addresses = data.addresses || [];
@@ -2443,12 +2856,15 @@ router.get("/products", async (req, res) => {
 
       if (!BACKEND) {
         // MOCK: lấy user từ mảng USERS
-        const user = USERS.find(u => String(u._id) === String(id));
-        if (!user) return res.status(404).send("Không tìm thấy người dùng (mock)");
+        const user = USERS.find((u) => String(u._id) === String(id));
+        if (!user)
+          return res.status(404).send("Không tìm thấy người dùng (mock)");
 
         // mock addresses & orders theo user
-        const addresses = ADDRESSES.filter(a => String(a.user) === String(user._id));
-        const orders = ORDERS.filter(o => {
+        const addresses = ADDRESSES.filter(
+          (a) => String(a.user) === String(user._id)
+        );
+        const orders = ORDERS.filter((o) => {
           // tuỳ bạn đang lưu user trong order thế nào
           const orderUserId = o.user && (o.user._id || o.user);
           return String(orderUserId) === String(user._id);
@@ -2466,7 +2882,10 @@ router.get("/products", async (req, res) => {
 
       // === BACKEND MODE ===
       // dùng luôn API details để có đủ user + addresses + orders
-      const data = await fetchJSONAuth(req, `${BACKEND}/api/user/${id}/details`);
+      const data = await fetchJSONAuth(
+        req,
+        `${BACKEND}/api/user/${id}/details`
+      );
 
       const user = data.user;
       const addresses = data.addresses || [];
@@ -2502,7 +2921,8 @@ router.get("/products", async (req, res) => {
       if (BACKEND) {
         const url = `${BACKEND}/api/user/${id}/ban`;
         const data = await fetchJSONAuth(req, url, { method: "PATCH" });
-        if (!data?.success) throw new Error(data?.message || "Không thể khóa người dùng");
+        if (!data?.success)
+          throw new Error(data?.message || "Không thể khóa người dùng");
       } else {
         // fallback mock
         const i = USERS.findIndex((u) => u._id === id);
@@ -2511,7 +2931,11 @@ router.get("/products", async (req, res) => {
       res.redirect("/admin/users?s=Đã khóa người dùng");
     } catch (err) {
       console.error("Ban user failed:", err.message);
-      res.redirect(`/admin/users?e=${encodeURIComponent(err.message || "Không thể khóa người dùng")}`);
+      res.redirect(
+        `/admin/users?e=${encodeURIComponent(
+          err.message || "Không thể khóa người dùng"
+        )}`
+      );
     }
   });
 
@@ -2522,7 +2946,8 @@ router.get("/products", async (req, res) => {
       if (BACKEND) {
         const url = `${BACKEND}/api/user/${id}/unban`;
         const data = await fetchJSONAuth(req, url, { method: "PATCH" });
-        if (!data?.success) throw new Error(data?.message || "Không thể mở khóa người dùng");
+        if (!data?.success)
+          throw new Error(data?.message || "Không thể mở khóa người dùng");
       } else {
         // fallback mock
         const i = USERS.findIndex((u) => u._id === id);
@@ -2531,7 +2956,11 @@ router.get("/products", async (req, res) => {
       res.redirect("/admin/users?s=Đã mở khóa người dùng");
     } catch (err) {
       console.error("Unban user failed:", err.message);
-      res.redirect(`/admin/users?e=${encodeURIComponent(err.message || "Không thể mở khóa người dùng")}`);
+      res.redirect(
+        `/admin/users?e=${encodeURIComponent(
+          err.message || "Không thể mở khóa người dùng"
+        )}`
+      );
     }
   });
 
@@ -2542,14 +2971,19 @@ router.get("/products", async (req, res) => {
       if (BACKEND) {
         const url = `${BACKEND}/api/user/${id}`;
         const data = await fetchJSONAuth(req, url, { method: "DELETE" });
-        if (!data?.success) throw new Error(data?.message || "Xoá user thất bại");
+        if (!data?.success)
+          throw new Error(data?.message || "Xoá user thất bại");
       } else {
         USERS = USERS.filter((x) => x._id !== id);
       }
       res.redirect("/admin/users?s=Đã xóa người dùng");
     } catch (err) {
       console.error("Delete user failed:", err.message);
-      res.redirect(`/admin/users?e=${encodeURIComponent(err.message || "Không thể xóa người dùng")}`);
+      res.redirect(
+        `/admin/users?e=${encodeURIComponent(
+          err.message || "Không thể xóa người dùng"
+        )}`
+      );
     }
   });
   router.post("/users/:id/addresses", async (req, res) => {
@@ -2561,32 +2995,194 @@ router.get("/products", async (req, res) => {
 
   // ========== Generic helpers: Addresses / Reviews / Wishlists ==========
   function renderEntityIndex(res, title, items, fields) {
-    res.render("entity_index", { title, pageHeading: title, items, fields, pagination: { itemsCount: items.length } });
+    res.render("entity_index", {
+      title,
+      pageHeading: title,
+      items,
+      fields,
+      pagination: { itemsCount: items.length },
+    });
   }
   function renderEntityForm(res, title, item, fields, actionBase) {
-    res.render("entity_form", { title, pageHeading: title, item, fields, actionBase });
+    res.render("entity_form", {
+      title,
+      pageHeading: title,
+      item,
+      fields,
+      actionBase,
+    });
   }
 
-  router.get("/addresses", (req, res) => renderEntityIndex(res, "Địa chỉ", ADDRESSES, ["user", "address_line", "is_default", "createdAt"]));
-  router.get("/addresses/new", (req, res) => renderEntityForm(res, "Thêm địa chỉ", null, ["user", "address_line", "is_default"], "/admin/addresses"));
-  router.get("/addresses/:id", (req, res) => { const item = ADDRESSES.find(x => x._id == req.params.id); if (!item) return res.status(404).send("Not found"); renderEntityForm(res, "Sửa địa chỉ", item, ["user", "address_line", "is_default"], "/admin/addresses"); });
-  router.post("/addresses", (req, res) => { ADDRESSES.unshift({ _id: "ad" + Date.now(), user: req.body.user, address_line: req.body.address_line, is_default: Boolean(req.body.is_default), createdAt: new Date() }); res.redirect("/admin/addresses"); });
-  router.post("/addresses/:id", (req, res) => { const i = ADDRESSES.findIndex(x => x._id == req.params.id); if (i > -1) { ADDRESSES[i] = { ...ADDRESSES[i], user: req.body.user, address_line: req.body.address_line, is_default: Boolean(req.body.is_default) } } res.redirect("/admin/addresses"); });
-  router.post("/addresses/:id/delete", (req, res) => { ADDRESSES = ADDRESSES.filter(x => x._id != req.params.id); res.redirect("/admin/addresses"); });
+  router.get("/addresses", (req, res) =>
+    renderEntityIndex(res, "Địa chỉ", ADDRESSES, [
+      "user",
+      "address_line",
+      "is_default",
+      "createdAt",
+    ])
+  );
+  router.get("/addresses/new", (req, res) =>
+    renderEntityForm(
+      res,
+      "Thêm địa chỉ",
+      null,
+      ["user", "address_line", "is_default"],
+      "/admin/addresses"
+    )
+  );
+  router.get("/addresses/:id", (req, res) => {
+    const item = ADDRESSES.find((x) => x._id == req.params.id);
+    if (!item) return res.status(404).send("Not found");
+    renderEntityForm(
+      res,
+      "Sửa địa chỉ",
+      item,
+      ["user", "address_line", "is_default"],
+      "/admin/addresses"
+    );
+  });
+  router.post("/addresses", (req, res) => {
+    ADDRESSES.unshift({
+      _id: "ad" + Date.now(),
+      user: req.body.user,
+      address_line: req.body.address_line,
+      is_default: Boolean(req.body.is_default),
+      createdAt: new Date(),
+    });
+    res.redirect("/admin/addresses");
+  });
+  router.post("/addresses/:id", (req, res) => {
+    const i = ADDRESSES.findIndex((x) => x._id == req.params.id);
+    if (i > -1) {
+      ADDRESSES[i] = {
+        ...ADDRESSES[i],
+        user: req.body.user,
+        address_line: req.body.address_line,
+        is_default: Boolean(req.body.is_default),
+      };
+    }
+    res.redirect("/admin/addresses");
+  });
+  router.post("/addresses/:id/delete", (req, res) => {
+    ADDRESSES = ADDRESSES.filter((x) => x._id != req.params.id);
+    res.redirect("/admin/addresses");
+  });
 
-  router.get("/reviews", (req, res) => renderEntityIndex(res, "Đánh giá", REVIEWS, ["product", "user", "guest_name", "guest_email", "rating", "comment", "createdAt"]))
-  router.get("/reviews/new", (req, res) => renderEntityForm(res, "Thêm đánh giá", null, ["product", "user", "guest_name", "guest_email", "rating", "comment"], "/admin/reviews"));
-  router.get("/reviews/:id", (req, res) => { const item = REVIEWS.find(x => x._id == req.params.id); if (!item) return res.status(404).send("Not found"); renderEntityForm(res, "Sửa đánh giá", item, ["product", "user", "guest_name", "guest_email", "rating", "comment"], "/admin/reviews"); });
-  router.post("/reviews", (req, res) => { REVIEWS.unshift({ _id: "rv" + Date.now(), product: req.body.product, user: req.body.user, guest_name: req.body.guest_name || null, guest_email: req.body.guest_email || null, comment: req.body.comment, rating: Number(req.body.rating || 0), createdAt: new Date() }); res.redirect("/admin/reviews"); });
-  router.post("/reviews/:id", (req, res) => { const i = REVIEWS.findIndex(x => x._id == req.params.id); if (i > -1) { REVIEWS[i] = { ...REVIEWS[i], product: req.body.product, user: req.body.user, guest_name: req.body.guest_name, guest_email: req.body.guest_email, comment: req.body.comment, rating: Number(req.body.rating || 0) } } res.redirect("/admin/reviews"); });
-  router.post("/reviews/:id/delete", (req, res) => { REVIEWS = REVIEWS.filter(x => x._id != req.params.id); res.redirect("/admin/reviews"); });
+  router.get("/reviews", (req, res) =>
+    renderEntityIndex(res, "Đánh giá", REVIEWS, [
+      "product",
+      "user",
+      "guest_name",
+      "guest_email",
+      "rating",
+      "comment",
+      "createdAt",
+    ])
+  );
+  router.get("/reviews/new", (req, res) =>
+    renderEntityForm(
+      res,
+      "Thêm đánh giá",
+      null,
+      ["product", "user", "guest_name", "guest_email", "rating", "comment"],
+      "/admin/reviews"
+    )
+  );
+  router.get("/reviews/:id", (req, res) => {
+    const item = REVIEWS.find((x) => x._id == req.params.id);
+    if (!item) return res.status(404).send("Not found");
+    renderEntityForm(
+      res,
+      "Sửa đánh giá",
+      item,
+      ["product", "user", "guest_name", "guest_email", "rating", "comment"],
+      "/admin/reviews"
+    );
+  });
+  router.post("/reviews", (req, res) => {
+    REVIEWS.unshift({
+      _id: "rv" + Date.now(),
+      product: req.body.product,
+      user: req.body.user,
+      guest_name: req.body.guest_name || null,
+      guest_email: req.body.guest_email || null,
+      comment: req.body.comment,
+      rating: Number(req.body.rating || 0),
+      createdAt: new Date(),
+    });
+    res.redirect("/admin/reviews");
+  });
+  router.post("/reviews/:id", (req, res) => {
+    const i = REVIEWS.findIndex((x) => x._id == req.params.id);
+    if (i > -1) {
+      REVIEWS[i] = {
+        ...REVIEWS[i],
+        product: req.body.product,
+        user: req.body.user,
+        guest_name: req.body.guest_name,
+        guest_email: req.body.guest_email,
+        comment: req.body.comment,
+        rating: Number(req.body.rating || 0),
+      };
+    }
+    res.redirect("/admin/reviews");
+  });
+  router.post("/reviews/:id/delete", (req, res) => {
+    REVIEWS = REVIEWS.filter((x) => x._id != req.params.id);
+    res.redirect("/admin/reviews");
+  });
 
-  router.get("/wishlists", (req, res) => renderEntityIndex(res, "Wishlist", WISHLISTS, ["user", "product_variant_sku", "createdAt"]))
-  router.get("/wishlists/new", (req, res) => renderEntityForm(res, "Thêm wishlist", null, ["user", "product_variant_sku"], "/admin/wishlists"));
-  router.get("/wishlists/:id", (req, res) => { const item = WISHLISTS.find(x => x._id == req.params.id); if (!item) return res.status(404).send("Not found"); renderEntityForm(res, "Sửa wishlist", item, ["user", "product_variant_sku"], "/admin/wishlists"); });
-  router.post("/wishlists", (req, res) => { WISHLISTS.unshift({ _id: "wl" + Date.now(), user: req.body.user, product_variant_sku: req.body.product_variant_sku, createdAt: new Date() }); res.redirect("/admin/wishlists"); });
-  router.post("/wishlists/:id", (req, res) => { const i = WISHLISTS.findIndex(x => x._id == req.params.id); if (i > -1) { WISHLISTS[i] = { ...WISHLISTS[i], user: req.body.user, product_variant_sku: req.body.product_variant_sku } } res.redirect("/admin/wishlists"); });
-  router.post("/wishlists/:id/delete", (req, res) => { WISHLISTS = WISHLISTS.filter(x => x._id != req.params.id); res.redirect("/admin/wishlists"); });
+  router.get("/wishlists", (req, res) =>
+    renderEntityIndex(res, "Wishlist", WISHLISTS, [
+      "user",
+      "product_variant_sku",
+      "createdAt",
+    ])
+  );
+  router.get("/wishlists/new", (req, res) =>
+    renderEntityForm(
+      res,
+      "Thêm wishlist",
+      null,
+      ["user", "product_variant_sku"],
+      "/admin/wishlists"
+    )
+  );
+  router.get("/wishlists/:id", (req, res) => {
+    const item = WISHLISTS.find((x) => x._id == req.params.id);
+    if (!item) return res.status(404).send("Not found");
+    renderEntityForm(
+      res,
+      "Sửa wishlist",
+      item,
+      ["user", "product_variant_sku"],
+      "/admin/wishlists"
+    );
+  });
+  router.post("/wishlists", (req, res) => {
+    WISHLISTS.unshift({
+      _id: "wl" + Date.now(),
+      user: req.body.user,
+      product_variant_sku: req.body.product_variant_sku,
+      createdAt: new Date(),
+    });
+    res.redirect("/admin/wishlists");
+  });
+  router.post("/wishlists/:id", (req, res) => {
+    const i = WISHLISTS.findIndex((x) => x._id == req.params.id);
+    if (i > -1) {
+      WISHLISTS[i] = {
+        ...WISHLISTS[i],
+        user: req.body.user,
+        product_variant_sku: req.body.product_variant_sku,
+      };
+    }
+    res.redirect("/admin/wishlists");
+  });
+  router.post("/wishlists/:id/delete", (req, res) => {
+    WISHLISTS = WISHLISTS.filter((x) => x._id != req.params.id);
+    res.redirect("/admin/wishlists");
+  });
 
   // ========== Account: đổi mật khẩu & đăng xuất ==========
   router.get("/account/password", (req, res) => {
@@ -2594,7 +3190,7 @@ router.get("/products", async (req, res) => {
       title: "Đổi mật khẩu",
       pageHeading: "Đổi mật khẩu",
       errorMsg: null,
-      successMsg: null
+      successMsg: null,
     });
   });
 
@@ -2603,19 +3199,39 @@ router.get("/products", async (req, res) => {
     const viewBase = { title: "Đổi mật khẩu", pageHeading: "Đổi mật khẩu" };
 
     if (!current_password || !new_password || !confirm_password) {
-      return res.render("account_password", { ...viewBase, errorMsg: "Vui lòng nhập đủ thông tin.", successMsg: null });
+      return res.render("account_password", {
+        ...viewBase,
+        errorMsg: "Vui lòng nhập đủ thông tin.",
+        successMsg: null,
+      });
     }
     if (current_password !== ADMIN_ACCOUNT.password) {
-      return res.render("account_password", { ...viewBase, errorMsg: "Mật khẩu hiện tại không đúng.", successMsg: null });
+      return res.render("account_password", {
+        ...viewBase,
+        errorMsg: "Mật khẩu hiện tại không đúng.",
+        successMsg: null,
+      });
     }
     if (new_password !== confirm_password) {
-      return res.render("account_password", { ...viewBase, errorMsg: "Xác nhận mật khẩu không khớp.", successMsg: null });
+      return res.render("account_password", {
+        ...viewBase,
+        errorMsg: "Xác nhận mật khẩu không khớp.",
+        successMsg: null,
+      });
     }
     if (new_password.length < 6) {
-      return res.render("account_password", { ...viewBase, errorMsg: "Mật khẩu mới tối thiểu 6 ký tự.", successMsg: null });
+      return res.render("account_password", {
+        ...viewBase,
+        errorMsg: "Mật khẩu mới tối thiểu 6 ký tự.",
+        successMsg: null,
+      });
     }
     ADMIN_ACCOUNT.password = new_password;
-    return res.render("account_password", { ...viewBase, errorMsg: null, successMsg: "Đổi mật khẩu thành công." });
+    return res.render("account_password", {
+      ...viewBase,
+      errorMsg: null,
+      successMsg: "Đổi mật khẩu thành công.",
+    });
   });
   // Lấy accessToken từ cookie của request
   function getAccessTokenFromCookie(req) {
@@ -2667,7 +3283,10 @@ router.get("/products", async (req, res) => {
   }
   router.get("/me", async (req, res) => {
     const adminUser = await fetchAdminProfile(req);
-    if (!adminUser) return res.status(401).json({ success: false, message: "Unauthenticated" });
+    if (!adminUser)
+      return res
+        .status(401)
+        .json({ success: false, message: "Unauthenticated" });
     res.json({ success: true, user: adminUser });
   });
   router.post("/logout", (req, res) => {

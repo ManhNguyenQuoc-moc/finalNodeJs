@@ -11,7 +11,8 @@ module.exports = function createPagesRouter({ BACKEND, proxy }) {
       const s = new URLSearchParams(u.search);
       Object.entries(params || {}).forEach(([k, v]) => {
         if (v === null || v === undefined) return;
-        if (v === "") s.delete(k); else s.set(k, v);
+        if (v === "") s.delete(k);
+        else s.set(k, v);
       });
       u.search = s.toString();
       return u.pathname + (u.search ? `?${u.search}` : "");
@@ -22,7 +23,8 @@ module.exports = function createPagesRouter({ BACKEND, proxy }) {
     }
   }
   function getSetCookie(resp) {
-    if (typeof resp.headers.getSetCookie === "function") return resp.headers.getSetCookie();
+    if (typeof resp.headers.getSetCookie === "function")
+      return resp.headers.getSetCookie();
     const one = resp.headers.get("set-cookie");
     return one ? [one] : [];
   }
@@ -40,11 +42,20 @@ module.exports = function createPagesRouter({ BACKEND, proxy }) {
       throw new Error(`[${resp.status}] Redirected to ${loc}`);
     }
     if (!resp.ok) throw new Error(`[${resp.status}] ${body.slice(0, 1000)}`);
-    if (!ct.includes("application/json")) throw new Error(`[${resp.status}] Expected JSON but got ${ct}; body: ${body.slice(0, 200)}`);
+    if (!ct.includes("application/json"))
+      throw new Error(
+        `[${resp.status}] Expected JSON but got ${ct}; body: ${body.slice(
+          0,
+          200
+        )}`
+      );
     return JSON.parse(body || "{}");
   }
   async function fetchJSONPublic(url, init = {}) {
-    const headers = { "Content-Type": "application/json", ...(init.headers || {}) };
+    const headers = {
+      "Content-Type": "application/json",
+      ...(init.headers || {}),
+    };
     return fetchJSONRaw(url, { ...init, headers });
   }
   async function fetchJSONAuth(req, url, init = {}) {
@@ -57,7 +68,7 @@ module.exports = function createPagesRouter({ BACKEND, proxy }) {
     };
 
     if (token && !headers.Authorization) {
-      headers.Authorization = `Bearer ${token}`;  // 👈 thêm auth header
+      headers.Authorization = `Bearer ${token}`; // 👈 thêm auth header
     }
 
     return fetchJSONRaw(url, { ...init, headers });
@@ -67,8 +78,12 @@ module.exports = function createPagesRouter({ BACKEND, proxy }) {
     Object.entries(bodyObj || {}).forEach(([k, v]) => form.append(k, v));
     const resp = await fetch(url, {
       method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded", cookie: req.headers.cookie || "" },
-      body: form, redirect: "manual",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+        cookie: req.headers.cookie || "",
+      },
+      body: form,
+      redirect: "manual",
     });
     const setCookie = getSetCookie(resp);
     if (setCookie?.length) res.set("set-cookie", setCookie);
@@ -77,7 +92,10 @@ module.exports = function createPagesRouter({ BACKEND, proxy }) {
   async function loadBrands(req) {
     try {
       const r = await fetch(`${BACKEND}/api/brand`, {
-        headers: { "Content-Type": "application/json", cookie: req.headers.cookie || "" },
+        headers: {
+          "Content-Type": "application/json",
+          cookie: req.headers.cookie || "",
+        },
         redirect: "manual",
       });
       if (!r.ok) return [];
@@ -85,30 +103,58 @@ module.exports = function createPagesRouter({ BACKEND, proxy }) {
       const t = await r.text();
       if (!ct.includes("application/json")) return [];
       return JSON.parse(t || "[]");
-    } catch { return []; }
+    } catch {
+      return [];
+    }
   }
 
   // ====== EJS defaults ======
   router.use((req, res, next) => {
     const orig = res.render.bind(res);
     res.render = (view, locals = {}, cb) => {
-      const defProducts = { content: [], totalPages: 1, number: 0, hasPrevious: false, hasNext: false };
-      const formatPrice = (n) => new Intl.NumberFormat("vi-VN").format(Number(n || 0)) + " đ";
+      const defProducts = {
+        content: [],
+        totalPages: 1,
+        number: 0,
+        hasPrevious: false,
+        hasNext: false,
+      };
+      const formatPrice = (n) =>
+        new Intl.NumberFormat("vi-VN").format(Number(n || 0)) + " đ";
       const merged = {
-        title: "", error: null, success: null,
-        activeAccountTab: "", status: "",
-        brands: [], products: defProducts,
-        productSizes: [], allImages: [], thumbImages: [],
-        sort: "", color: "", price_range: "", brand: "", rating: "", q: "",
+        title: "",
+        error: null,
+        success: null,
+        activeAccountTab: "",
+        status: "",
+        brands: [],
+        products: defProducts,
+        productSizes: [],
+        allImages: [],
+        thumbImages: [],
+        sort: "",
+        color: "",
+        price_range: "",
+        brand: "",
+        rating: "",
+        q: "",
         formatPrice,
         ...locals,
         products: locals.products || defProducts,
-        brands: Array.isArray(locals.brands) ? locals.brands : (locals.brands ? [locals.brands] : []),
+        brands: Array.isArray(locals.brands)
+          ? locals.brands
+          : locals.brands
+          ? [locals.brands]
+          : [],
         activeAccountTab: locals.activeAccountTab ?? "",
         status: locals.status ?? "",
-        productSizes: Array.isArray(locals.productSizes) ? locals.productSizes : [],
+        productSizes: Array.isArray(locals.productSizes)
+          ? locals.productSizes
+          : [],
         allImages: Array.isArray(locals.allImages) ? locals.allImages : [],
-        thumbImages: Array.isArray(locals.thumbImages) ? locals.thumbImages : [],
+        thumbImages: Array.isArray(locals.thumbImages)
+          ? locals.thumbImages
+          : [],
       };
       return orig(view, merged, cb);
     };
@@ -118,9 +164,18 @@ module.exports = function createPagesRouter({ BACKEND, proxy }) {
   // ====== Common header: categories + minicart + user ======
   router.use(async (req, res, next) => {
     try {
-      const catJson = await fetchJSONPublic(`${BACKEND}/api/page/categories`).catch(() => ({ ok: false, categories: [] }));
-      res.locals.categories = (catJson.ok && Array.isArray(catJson.categories)) ? catJson.categories : [];
-      const miniJson = await fetchJSONAuth(req, `${BACKEND}/api/page/minicart`).catch(() => ({ ok: false }));
+      const catJson = await fetchJSONPublic(
+        `${BACKEND}/api/page/categories`
+      ).catch(() => ({ ok: false, categories: [] }));
+      res.locals.categories =
+        catJson.ok && Array.isArray(catJson.categories)
+          ? catJson.categories
+          : [];
+      const miniJson = await fetchJSONAuth(
+        req,
+        `${BACKEND}/api/page/minicart`
+      ).catch(() => ({ ok: false }));
+
       if (miniJson.ok) {
         res.locals.carts = miniJson.carts || [];
         res.locals.cartCount = miniJson.cartCount || 0;
@@ -128,24 +183,57 @@ module.exports = function createPagesRouter({ BACKEND, proxy }) {
         res.locals.formattedTotal = miniJson.formattedTotal || "0 đ";
         res.locals.user = miniJson.user || null;
         res.locals.loggedInUser = !!miniJson.user;
+        res.locals.currentUser = res.locals.user;
+
+        // --- THÔNG TIN GIẢM GIÁ (COUPON) ---
+        res.locals.appliedCoupon = miniJson.applied_coupon || "";
+        res.locals.discountAmount = miniJson.discount_amount || 0;
+        res.locals.formattedDiscount = miniJson.formattedDiscount || "0 đ";
+
+        // --- [MỚI] THÔNG TIN ĐIỂM THƯỞNG ---
+        res.locals.pointsUsed = miniJson.points_used || 0; // Số điểm đang dùng
+        res.locals.pointDiscount = miniJson.point_discount || 0; // Số tiền giảm được
+        res.locals.formattedPointDiscount =
+          miniJson.formattedPointDiscount || "0 đ";
+        // -----------------------------------
+
+        // Tổng tiền cuối cùng
+        res.locals.formattedFinalTotal =
+          miniJson.formattedFinalTotal || miniJson.formattedTotal;
       } else {
-        res.locals.carts = []; res.locals.cartCount = 0; res.locals.total = 0; res.locals.formattedTotal = "0 đ"; res.locals.user = null; res.locals.loggedInUser = false;
+        // Reset về mặc định nếu lỗi
+        res.locals.carts = [];
+        res.locals.cartCount = 0;
+        res.locals.total = 0;
+        res.locals.formattedTotal = "0 đ";
+        res.locals.user = null;
+        res.locals.loggedInUser = false;
+        res.locals.currentUser = null;
+
+        res.locals.appliedCoupon = "";
+        res.locals.discountAmount = 0;
+        res.locals.pointsUsed = 0;
+        res.locals.pointDiscount = 0;
       }
     } catch {
-      res.locals.categories = []; res.locals.carts = []; res.locals.cartCount = 0; res.locals.total = 0; res.locals.formattedTotal = "0 đ"; res.locals.user = null; res.locals.loggedInUser = false;
+      // ... (Catch lỗi giữ nguyên) ...
     }
     next();
   });
 
   // ====== PAGES ======
   router.get(["/", "/home"], async (req, res) => {
-    const data = await fetchJSONPublic(`${BACKEND}/api/page/home`).catch(() => ({ ok: true, latest: [], trending: [], popular: [], products: [] }));
+    const data = await fetchJSONPublic(`${BACKEND}/api/page/home`).catch(
+      () => ({ ok: true, latest: [], trending: [], popular: [], products: [] })
+    );
     res.render("home", { title: "Trang chủ", ...data });
   });
 
   router.get("/category/alls", async (req, res) => {
     const params = new URLSearchParams(req.query).toString();
-    const data = await fetchJSONPublic(`${BACKEND}/api/page/category/alls?${params}`).catch(() => ({ ok: true, products: [] }));
+    const data = await fetchJSONPublic(
+      `${BACKEND}/api/page/category/alls?${params}`
+    ).catch(() => ({ ok: true, products: [] }));
     const brands = await loadBrands(req);
     const list = Array.isArray(data.products) ? data.products : [];
     const pageNo = Math.max(parseInt(req.query.pageNo || "1", 10), 1);
@@ -154,16 +242,28 @@ module.exports = function createPagesRouter({ BACKEND, proxy }) {
       selectedCategoryId: "alls",
       selectedCategoryName: "Tất cả",
       brands,
-      sort: req.query.sort || "", color: req.query.color || "", price_range: req.query.price_range || "",
-      brand: req.query.brand || "", rating: req.query.rating || "", q: req.query.q || "",
-      products: { content: list, totalPages: 1, number: pageNo - 1, hasPrevious: pageNo > 1, hasNext: false },
+      sort: req.query.sort || "",
+      color: req.query.color || "",
+      price_range: req.query.price_range || "",
+      brand: req.query.brand || "",
+      rating: req.query.rating || "",
+      q: req.query.q || "",
+      products: {
+        content: list,
+        totalPages: 1,
+        number: pageNo - 1,
+        hasPrevious: pageNo > 1,
+        hasNext: false,
+      },
     });
   });
 
   router.get("/category/:id", async (req, res) => {
     const params = new URLSearchParams(req.query).toString();
     try {
-      const data = await fetchJSONPublic(`${BACKEND}/api/page/category/${req.params.id}?${params}`);
+      const data = await fetchJSONPublic(
+        `${BACKEND}/api/page/category/${req.params.id}?${params}`
+      );
       const brands = await loadBrands(req);
       const list = Array.isArray(data.products) ? data.products : [];
       const pageNo = Math.max(parseInt(req.query.pageNo || "1", 10), 1);
@@ -172,9 +272,19 @@ module.exports = function createPagesRouter({ BACKEND, proxy }) {
         selectedCategoryId: data.category?._id || req.params.id,
         selectedCategoryName: data.category?.name || "Danh mục",
         brands,
-        sort: req.query.sort || "", color: req.query.color || "", price_range: req.query.price_range || "",
-        brand: req.query.brand || "", rating: req.query.rating || "", q: req.query.q || "",
-        products: { content: list, totalPages: 1, number: pageNo - 1, hasPrevious: pageNo > 1, hasNext: false },
+        sort: req.query.sort || "",
+        color: req.query.color || "",
+        price_range: req.query.price_range || "",
+        brand: req.query.brand || "",
+        rating: req.query.rating || "",
+        q: req.query.q || "",
+        products: {
+          content: list,
+          totalPages: 1,
+          number: pageNo - 1,
+          hasPrevious: pageNo > 1,
+          hasNext: false,
+        },
       });
     } catch {
       return res.redirect("/category/alls");
@@ -193,14 +303,23 @@ module.exports = function createPagesRouter({ BACKEND, proxy }) {
     res.render("contact", { title: "Liên hệ" });
   });
 
+  router.get("/search", async (req, res) => {
+    const params = new URLSearchParams(req.query).toString();
+    const data = await fetchJSONPublic(
+      `${BACKEND}/api/page/search?${params}`
+    ).catch(() => ({ ok: true, products: [], q: "" }));
+    res.render("product_search", { title: "Tìm kiếm", ...data });
+  });
+
   // PRODUCT DETAIL (giữ nguyên logic build allImages/productSizes/variantMatrix)
   router.get("/product_detail/:id", async (req, res) => {
     try {
       const r = await fetch(`${BACKEND}/api/page/product/${req.params.id}`, {
         headers: { "Content-Type": "application/json" },
-        redirect: "manual"
+        redirect: "manual",
       });
-      if (r.status === 404) return res.status(404).send("Sản phẩm không tồn tại");
+      if (r.status === 404)
+        return res.status(404).send("Sản phẩm không tồn tại");
       const ct = r.headers.get("content-type") || "";
       const text = await r.text();
       console.log("Product detail fetch response:", text);
@@ -222,8 +341,9 @@ module.exports = function createPagesRouter({ BACKEND, proxy }) {
             imgs.push(typeof im === "string" ? im : im?.url);
 
       const uniq = Array.from(new Set(imgs.filter(Boolean)));
-      const allImages = (uniq.length ? uniq : ["/images/default.png"]);
-      while (allImages.length > 0 && allImages.length < 3) allImages.push(allImages[0]);
+      const allImages = uniq.length ? uniq : ["/images/default.png"];
+      while (allImages.length > 0 && allImages.length < 3)
+        allImages.push(allImages[0]);
       const thumbImages = allImages.slice(0, Math.min(6, allImages.length));
 
       const seen = new Set();
@@ -236,8 +356,11 @@ module.exports = function createPagesRouter({ BACKEND, proxy }) {
           size_id: id,
           name: v?.size?.size_name || "Size",
           sku: v?.sku || "DEFAULT",
-          price: typeof v?.price === "number" ? v.price : (product.display_price || product.price),
-          stock: v?.stock_quantity ?? null
+          price:
+            typeof v?.price === "number"
+              ? v.price
+              : product.display_price || product.price,
+          stock: v?.stock_quantity ?? null,
         });
       }
 
@@ -252,7 +375,7 @@ module.exports = function createPagesRouter({ BACKEND, proxy }) {
 
       // truyền thêm variants vào EJS (và giữ nguyên toàn bộ data khác như reviews, loggedInUser...)
       res.render("product_detail", {
-        ...data,                         // reviews, likerId, loggedInUser, v.v...
+        ...data, // reviews, likerId, loggedInUser, v.v...
         title: product?.name || "Chi tiết sản phẩm",
         product,
         variants,
@@ -267,45 +390,73 @@ module.exports = function createPagesRouter({ BACKEND, proxy }) {
     }
   });
 
-
   // CART pages
   router.get("/cart", async (req, res) => {
-    const data = await fetchJSONAuth(req, `${BACKEND}/api/page/minicart`).catch(() => ({ ok: true, carts: [] }));
-    const isEmpty = !Array.isArray(data.carts) || data.carts.length === 0;
-    res.render("cart", { title: "Giỏ hàng", isEmpty, ...data });
-  });
-  router.get("/shop-cart", async (req, res) => {
-    const data = await fetchJSONAuth(req, `${BACKEND}/api/page/minicart`).catch(() => ({ ok: true, carts: [] }));
-    const isEmpty = !Array.isArray(data.carts) || data.carts.length === 0;
-    res.render("shop_cart", { title: "Giỏ hàng", isEmpty, ...data });
-  });
-  router.get("/shop-cart/checkout", async (req, res) => {
     const data = await fetchJSONAuth(req, `${BACKEND}/api/page/minicart`).catch(
       () => ({ ok: true, carts: [] })
     );
     const isEmpty = !Array.isArray(data.carts) || data.carts.length === 0;
+    res.render("cart", { title: "Giỏ hàng", isEmpty, ...data });
+  });
+  router.get("/shop-cart", async (req, res) => {
+    const data = await fetchJSONAuth(req, `${BACKEND}/api/page/minicart`).catch(
+      () => ({ ok: true, carts: [] })
+    );
+    const isEmpty = !Array.isArray(data.carts) || data.carts.length === 0;
+    res.render("shop_cart", { title: "Giỏ hàng", isEmpty, ...data });
+  });
+  router.get("/shop-cart/checkout", async (req, res) => {
+    // 1. Lấy dữ liệu giỏ hàng (Đặt tên biến là cartData cho khớp)
+    const cartData = await fetchJSONAuth(
+      req,
+      `${BACKEND}/api/page/minicart`
+    ).catch((err) => ({ ok: true, carts: [] }));
 
+    const isEmpty =
+      !Array.isArray(cartData.carts) || cartData.carts.length === 0;
+
+    // 2. Lấy địa chỉ để Auto-fill
     let latestAddress = null;
 
-    if (data.loggedInUser) {
+    // Kiểm tra user từ biến cartData
+    if (cartData.user) {
       try {
         const addrData = await fetchJSONAuth(req, `${BACKEND}/api/address`);
-
-        if (addrData && addrData.ok && Array.isArray(addrData.addresses)) {
+        if (
+          addrData &&
+          addrData.ok &&
+          Array.isArray(addrData.addresses) &&
+          addrData.addresses.length > 0
+        ) {
           latestAddress =
             addrData.addresses.find((a) => a.is_default) ||
             addrData.addresses[0];
         }
       } catch (e) {
-        console.error("Lỗi lấy địa chỉ user:", e.message);
+        console.error("Lỗi lấy địa chỉ:", e.message);
       }
     }
 
+    // 3. Render giao diện
     res.render("shop_checkout", {
       title: "Thanh toán",
       isEmpty,
       latestAddress,
-      ...data,
+
+      // --- TRUYỀN DỮ LIỆU XUỐNG VIEW ---
+      carts: cartData.carts || [],
+      user: cartData.user, // Thông tin user
+
+      // Thông tin tiền tệ & mã (Lấy từ cartData)
+      formattedTotal: cartData.formattedTotal, // Tổng gốc
+      formattedDiscount: cartData.formattedDiscount, // Tiền giảm (chuỗi)
+      formattedFinalTotal: cartData.formattedFinalTotal, // Thành tiền
+      discountAmount: cartData.discount_amount, // Số tiền giảm (số)
+      appliedCoupon: cartData.applied_coupon, // Mã đang dùng
+      // ------------------------------------------
+      pointsUsed: cartData.points_used, // <--- Thêm dòng này
+      pointDiscount: cartData.point_discount, // <--- Thêm dòng này
+      formattedPointDiscount: cartData.formattedPointDiscount, // <--- Thêm dòng này
     });
   });
 
@@ -431,25 +582,50 @@ module.exports = function createPagesRouter({ BACKEND, proxy }) {
 
   // AUTH pages & actions
   router.get("/login-register", async (req, res) => {
-    const data = await fetchJSONAuth(req, `${BACKEND}/api/page/minicart`).catch(() => ({}));
+    const data = await fetchJSONAuth(req, `${BACKEND}/api/page/minicart`).catch(
+      () => ({})
+    );
     if (data.loggedInUser) return res.redirect("/my-account");
-    res.render("login_register", { title: "Đăng nhập & Đăng ký", error: null, success: null, ...data });
+    res.render("login_register", {
+      title: "Đăng nhập & Đăng ký",
+      error: null,
+      success: null,
+      ...data,
+    });
   });
   router.get("/login", async (req, res) => {
-    const data = await fetchJSONAuth(req, `${BACKEND}/api/page/minicart`).catch(() => ({}));
+    const data = await fetchJSONAuth(req, `${BACKEND}/api/page/minicart`).catch(
+      () => ({})
+    );
     if (data.loggedInUser) return res.redirect("/my-account");
-    res.render("login_register", { title: "Đăng nhập & Đăng ký", error: null, success: null, activeTab: "login", ...data });
+    res.render("login_register", {
+      title: "Đăng nhập & Đăng ký",
+      error: null,
+      success: null,
+      activeTab: "login",
+      ...data,
+    });
   });
   router.get("/register", async (req, res) => {
-    const data = await fetchJSONAuth(req, `${BACKEND}/api/page/minicart`).catch(() => ({}));
+    const data = await fetchJSONAuth(req, `${BACKEND}/api/page/minicart`).catch(
+      () => ({})
+    );
     if (data.loggedInUser) return res.redirect("/my-account");
-    res.render("login_register", { title: "Đăng nhập & Đăng ký", error: null, success: null, activeTab: "register", ...data });
+    res.render("login_register", {
+      title: "Đăng nhập & Đăng ký",
+      error: null,
+      success: null,
+      activeTab: "register",
+      ...data,
+    });
   });
   // ====== FORGOT PASSWORD & RESET PASSWORD ======
 
   // Quên mật khẩu - form nhập email
   router.get("/forgot-password", async (req, res) => {
-    const data = await fetchJSONAuth(req, `${BACKEND}/api/page/minicart`).catch(() => ({}));
+    const data = await fetchJSONAuth(req, `${BACKEND}/api/page/minicart`).catch(
+      () => ({})
+    );
     res.render("auth_forgot_password", {
       title: "Quên mật khẩu",
       error: null,
@@ -462,7 +638,10 @@ module.exports = function createPagesRouter({ BACKEND, proxy }) {
   // Xử lý submit quên mật khẩu -> gọi BE /api/auth/forgot-password
   router.post("/forgot-password", async (req, res) => {
     const { email } = req.body;
-    const dataMini = await fetchJSONAuth(req, `${BACKEND}/api/page/minicart`).catch(() => ({}));
+    const dataMini = await fetchJSONAuth(
+      req,
+      `${BACKEND}/api/page/minicart`
+    ).catch(() => ({}));
 
     if (!email) {
       return res.render("auth_forgot_password", {
@@ -486,7 +665,8 @@ module.exports = function createPagesRouter({ BACKEND, proxy }) {
       if (!resp.ok) {
         return res.render("auth_forgot_password", {
           title: "Quên mật khẩu",
-          error: (data && data.message) || "Không thể gửi email đặt lại mật khẩu.",
+          error:
+            (data && data.message) || "Không thể gửi email đặt lại mật khẩu.",
           success: null,
           email,
           ...dataMini,
@@ -496,9 +676,10 @@ module.exports = function createPagesRouter({ BACKEND, proxy }) {
       return res.render("auth_forgot_password", {
         title: "Quên mật khẩu",
         error: null,
-        success: data && data.message
-          ? data.message
-          : "Nếu email tồn tại, chúng tôi đã gửi link đặt lại mật khẩu.",
+        success:
+          data && data.message
+            ? data.message
+            : "Nếu email tồn tại, chúng tôi đã gửi link đặt lại mật khẩu.",
         email,
         ...dataMini,
       });
@@ -521,7 +702,10 @@ module.exports = function createPagesRouter({ BACKEND, proxy }) {
       return res.status(400).send("Token không hợp lệ.");
     }
 
-    const dataMini = await fetchJSONAuth(req, `${BACKEND}/api/page/minicart`).catch(() => ({}));
+    const dataMini = await fetchJSONAuth(
+      req,
+      `${BACKEND}/api/page/minicart`
+    ).catch(() => ({}));
 
     return res.render("auth_reset_password", {
       title: "Đặt lại mật khẩu",
@@ -539,7 +723,10 @@ module.exports = function createPagesRouter({ BACKEND, proxy }) {
   // Xử lý submit reset password -> gọi BE /api/auth/reset-password
   router.post("/reset-password", async (req, res) => {
     const { token, password, confirm_password } = req.body;
-    const dataMini = await fetchJSONAuth(req, `${BACKEND}/api/page/minicart`).catch(() => ({}));
+    const dataMini = await fetchJSONAuth(
+      req,
+      `${BACKEND}/api/page/minicart`
+    ).catch(() => ({}));
 
     if (!token) {
       return res.status(400).send("Token không hợp lệ.");
@@ -596,7 +783,10 @@ module.exports = function createPagesRouter({ BACKEND, proxy }) {
         error: null,
         formError: null,
         done: true,
-        message: data && data.message ? data.message : "Mật khẩu đã được đặt lại thành công.",
+        message:
+          data && data.message
+            ? data.message
+            : "Mật khẩu đã được đặt lại thành công.",
         ...dataMini,
       });
     } catch (err) {
@@ -615,7 +805,10 @@ module.exports = function createPagesRouter({ BACKEND, proxy }) {
   router.get("/my-account", (_req, res) => res.redirect("/account/profile"));
   router.get("/account/profile", async (req, res) => {
     console.log("FE /account/profile COOKIE từ browser:", req.headers.cookie);
-    const data = await fetchJSONAuth(req, `${BACKEND}/api/user/account/profile`).catch(() => null);
+    const data = await fetchJSONAuth(
+      req,
+      `${BACKEND}/api/user/account/profile`
+    ).catch(() => null);
 
     if (!data || !data.success || !data.user) {
       return res.redirect("/login");
@@ -624,13 +817,16 @@ module.exports = function createPagesRouter({ BACKEND, proxy }) {
     res.render("account_profile", {
       title: "Tài khoản",
       activeAccountTab: "profile",
-      user: data.user,   // <<< QUAN TRỌNG!!!
+      user: data.user, // <<< QUAN TRỌNG!!!
       error: null,
-      success: null
+      success: null,
     });
   });
   router.post("/account/profile/update", async (req, res) => {
-    const profile = await fetchJSONAuth(req, `${BACKEND}/api/user/account/profile`).catch(() => null);
+    const profile = await fetchJSONAuth(
+      req,
+      `${BACKEND}/api/user/account/profile`
+    ).catch(() => null);
     const currentUser = profile?.user || null;
 
     if (!profile || !profile.success) {
@@ -642,7 +838,7 @@ module.exports = function createPagesRouter({ BACKEND, proxy }) {
         full_name: req.body.full_name,
         phone: req.body.phone,
         gender: req.body.gender,
-        birthday: req.body.birthday || null
+        birthday: req.body.birthday || null,
       };
 
       const token = getAccessTokenFromCookie(req);
@@ -658,7 +854,7 @@ module.exports = function createPagesRouter({ BACKEND, proxy }) {
       const resp = await fetch(`${BACKEND}/api/user/account/profile`, {
         method: "PUT",
         headers,
-        body: JSON.stringify(payload)
+        body: JSON.stringify(payload),
       });
 
       const data = await resp.json().catch(() => null);
@@ -669,17 +865,16 @@ module.exports = function createPagesRouter({ BACKEND, proxy }) {
         title: "Tài khoản",
         activeAccountTab: "profile",
         user: newUser,
-        error: resp.ok ? null : (data?.message || "Cập nhật thất bại."),
-        success: resp.ok ? (data?.message || "Cập nhật thành công.") : null
+        error: resp.ok ? null : data?.message || "Cập nhật thất bại.",
+        success: resp.ok ? data?.message || "Cập nhật thành công." : null,
       });
-
     } catch (e) {
       return res.render("account_profile", {
         title: "Tài khoản",
         activeAccountTab: "profile",
         user: currentUser,
         error: "Có lỗi xảy ra.",
-        success: null
+        success: null,
       });
     }
   });
@@ -687,7 +882,10 @@ module.exports = function createPagesRouter({ BACKEND, proxy }) {
     const { current_password, new_password, confirm_password } = req.body;
 
     // lấy lại dữ liệu profile để render
-    const profile = await fetchJSONAuth(req, `${BACKEND}/api/page/account/profile`).catch(() => null);
+    const profile = await fetchJSONAuth(
+      req,
+      `${BACKEND}/api/page/account/profile`
+    ).catch(() => null);
     if (!profile || profile.redirectToLogin) return res.redirect("/login");
 
     // validate đơn giản ở FE server
@@ -740,7 +938,8 @@ module.exports = function createPagesRouter({ BACKEND, proxy }) {
         title: "Tài khoản",
         activeAccountTab: "profile",
         error: null,
-        success: data && data.message ? data.message : "Đổi mật khẩu thành công.",
+        success:
+          data && data.message ? data.message : "Đổi mật khẩu thành công.",
         ...profile,
       });
     } catch (e) {
@@ -756,7 +955,10 @@ module.exports = function createPagesRouter({ BACKEND, proxy }) {
   });
 
   router.get("/account/addresses", async (req, res) => {
-    const data = await fetchJSONAuth(req, `${BACKEND}/api/user/account/addresses`).catch(() => null);
+    const data = await fetchJSONAuth(
+      req,
+      `${BACKEND}/api/user/account/addresses`
+    ).catch(() => null);
 
     if (!data || !data.success) return res.redirect("/login");
 
@@ -765,7 +967,7 @@ module.exports = function createPagesRouter({ BACKEND, proxy }) {
       activeAccountTab: "addresses",
       addresses: data.addresses || [],
       error: null,
-      success: null
+      success: null,
     });
   });
   router.post("/account/addresses/add", async (req, res) => {
@@ -815,7 +1017,7 @@ module.exports = function createPagesRouter({ BACKEND, proxy }) {
         title: "Địa chỉ",
         activeAccountTab: "addresses",
         addresses: list?.addresses || [],
-        error: resp.ok ? null : (data?.message || "Không thể thêm địa chỉ"),
+        error: resp.ok ? null : data?.message || "Không thể thêm địa chỉ",
         success: resp.ok ? "Thêm địa chỉ thành công" : null,
       });
     } catch (err) {
@@ -845,20 +1047,23 @@ module.exports = function createPagesRouter({ BACKEND, proxy }) {
 
       const headers = {
         "Content-Type": "application/json",
-        "Cookie": req.headers.cookie || "",
+        Cookie: req.headers.cookie || "",
       };
       if (token) {
         headers.Authorization = `Bearer ${token}`;
       }
 
-      const resp = await fetch(`${BACKEND}/api/user/account/addresses/${addressId}`, {
-        method: "PUT",
-        headers,
-        body: JSON.stringify({
-          address_line,
-          is_default: is_default === "on",
-        }),
-      });
+      const resp = await fetch(
+        `${BACKEND}/api/user/account/addresses/${addressId}`,
+        {
+          method: "PUT",
+          headers,
+          body: JSON.stringify({
+            address_line,
+            is_default: is_default === "on",
+          }),
+        }
+      );
 
       const data = await resp.json().catch(() => null);
       const list = await fetchJSONAuth(
@@ -870,7 +1075,7 @@ module.exports = function createPagesRouter({ BACKEND, proxy }) {
         title: "Địa chỉ",
         activeAccountTab: "addresses",
         addresses: list?.addresses || [],
-        error: resp.ok ? null : (data?.message || "Cập nhật thất bại"),
+        error: resp.ok ? null : data?.message || "Cập nhật thất bại",
         success: resp.ok ? "Cập nhật địa chỉ thành công" : null,
       });
     } catch (err) {
@@ -897,16 +1102,19 @@ module.exports = function createPagesRouter({ BACKEND, proxy }) {
 
       const headers = {
         "Content-Type": "application/json",
-        "Cookie": req.headers.cookie || "",
+        Cookie: req.headers.cookie || "",
       };
       if (token) {
         headers.Authorization = `Bearer ${token}`;
       }
 
-      const resp = await fetch(`${BACKEND}/api/user/account/addresses/${addressId}`, {
-        method: "DELETE",
-        headers,
-      });
+      const resp = await fetch(
+        `${BACKEND}/api/user/account/addresses/${addressId}`,
+        {
+          method: "DELETE",
+          headers,
+        }
+      );
 
       const data = await resp.json().catch(() => null);
       const list = await fetchJSONAuth(
@@ -918,7 +1126,7 @@ module.exports = function createPagesRouter({ BACKEND, proxy }) {
         title: "Địa chỉ",
         activeAccountTab: "addresses",
         addresses: list?.addresses || [],
-        error: resp.ok ? null : (data?.message || "Xóa địa chỉ thất bại"),
+        error: resp.ok ? null : data?.message || "Xóa địa chỉ thất bại",
         success: resp.ok ? "Xóa địa chỉ thành công" : null,
       });
     } catch (err) {
@@ -938,31 +1146,86 @@ module.exports = function createPagesRouter({ BACKEND, proxy }) {
   });
 
   router.get("/account-orders", async (req, res) => {
-    const data = await fetchJSONAuth(req, `${BACKEND}/api/page/account/orders`).catch(() => null);
+    const data = await fetchJSONAuth(
+      req,
+      `${BACKEND}/api/page/account/orders`
+    ).catch(() => null);
     if (!data || data.redirectToLogin) return res.redirect("/login");
-    res.render("account_orders", { title: "Đơn hàng", activeAccountTab: "orders", status: req.query.status || "all", ...data });
+    res.render("account_orders", {
+      title: "Đơn hàng",
+      activeAccountTab: "orders",
+      status: req.query.status || "all",
+      ...data,
+    });
   });
   router.get("/orders/:id/details", async (req, res) => {
-    const data = await fetchJSONAuth(req, `${BACKEND}/api/page/orders/${req.params.id}/details`).catch(() => null);
+    const data = await fetchJSONAuth(
+      req,
+      `${BACKEND}/api/page/orders/${req.params.id}/details`
+    ).catch(() => null);
     if (!data || data.redirectToLogin) return res.redirect("/login");
-    res.render("order_detail", { title: "Chi tiết đơn", activeAccountTab: "orders", ...data });
+    res.render("order_detail", {
+      title: "Chi tiết đơn",
+      activeAccountTab: "orders",
+      ...data,
+    });
   });
   router.get("/account/orders", async (req, res) => {
     const params = new URLSearchParams(req.query).toString();
-    const data = await fetchJSONAuth(req, `${BACKEND}/api/page/account/orders/filter?${params}`).catch(() => null);
+    const data = await fetchJSONAuth(
+      req,
+      `${BACKEND}/api/page/account/orders/filter?${params}`
+    ).catch(() => null);
     if (!data || data.redirectToLogin) return res.redirect("/login");
-    res.render("account_orders", { title: "Đơn hàng", activeAccountTab: "orders", status: req.query.status || "all", ...data });
+    res.render("account_orders", {
+      title: "Đơn hàng",
+      activeAccountTab: "orders",
+      status: req.query.status || "all",
+      ...data,
+    });
   });
   router.get("/account/vouchers", async (req, res) => {
-    const data = await fetchJSONAuth(req, `${BACKEND}/api/page/account/vouchers`).catch(() => null);
+    const data = await fetchJSONAuth(
+      req,
+      `${BACKEND}/api/page/account/vouchers`
+    ).catch(() => null);
     if (!data || data.redirectToLogin) return res.redirect("/login");
-    res.render("account_vouchers", { title: "Mã giảm giá", activeAccountTab: "vouchers", ...data });
+    res.render("account_vouchers", {
+      title: "Mã giảm giá",
+      activeAccountTab: "vouchers",
+      ...data,
+    });
   });
   router.get("/account/points", async (req, res) => {
-    const data = await fetchJSONAuth(req, `${BACKEND}/api/page/account/points`).catch(() => null);
+    const data = await fetchJSONAuth(
+      req,
+      `${BACKEND}/api/page/account/points`
+    ).catch(() => null);
     if (!data || data.redirectToLogin) return res.redirect("/login");
-    res.render("account_points", { title: "Điểm thưởng", activeAccountTab: "points", ...data });
+    res.render("account_points", {
+      title: "Điểm thưởng",
+      activeAccountTab: "points",
+      ...data,
+    });
   });
+  router.post("/cart/toggle-points", async (req, res) => {
+    try {
+      // Gọi: /api/cart/toggle-points
+      const resp = await fetch(`${BACKEND}/api/cart/toggle-points`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          cookie: req.headers.cookie || "",
+        },
+        body: JSON.stringify(req.body),
+      });
+      const data = await resp.json().catch(() => ({}));
+      res.status(resp.status).json(data);
+    } catch (e) {
+      res.status(500).json({ ok: false, message: "Lỗi kết nối Backend" });
+    }
+  });
+
   function decodeJwtPayload(token) {
     if (!token) return null;
     const parts = token.split(".");
@@ -991,7 +1254,9 @@ module.exports = function createPagesRouter({ BACKEND, proxy }) {
       });
 
       let data = null;
-      try { data = await resp.json(); } catch { }
+      try {
+        data = await resp.json();
+      } catch {}
 
       if (resp.ok && data) {
         // 👇 LƯU TOKEN VÀO COOKIE
@@ -1028,7 +1293,10 @@ module.exports = function createPagesRouter({ BACKEND, proxy }) {
         }
         return res.redirect("/home");
       }
-      const mini = await fetchJSONAuth(req, `${BACKEND}/api/page/minicart`).catch(() => ({}));
+      const mini = await fetchJSONAuth(
+        req,
+        `${BACKEND}/api/page/minicart`
+      ).catch(() => ({}));
       return res.status(resp.status || 401).render("login_register", {
         title: "Đăng nhập & Đăng ký",
         error: (data && data.message) || "Email hoặc mật khẩu không đúng!",
@@ -1037,7 +1305,10 @@ module.exports = function createPagesRouter({ BACKEND, proxy }) {
         ...mini,
       });
     } catch {
-      const mini = await fetchJSONAuth(req, `${BACKEND}/api/page/minicart`).catch(() => ({}));
+      const mini = await fetchJSONAuth(
+        req,
+        `${BACKEND}/api/page/minicart`
+      ).catch(() => ({}));
       return res.status(500).render("login_register", {
         title: "Đăng nhập & Đăng ký",
         error: "Có lỗi khi đăng nhập. Vui lòng thử lại.",
@@ -1064,7 +1335,9 @@ module.exports = function createPagesRouter({ BACKEND, proxy }) {
       });
 
       let data = null;
-      try { data = await resp.json(); } catch { }
+      try {
+        data = await resp.json();
+      } catch {}
 
       if (resp.ok && data) {
         // 👇 LƯU TOKEN VÀO COOKIE
@@ -1083,7 +1356,9 @@ module.exports = function createPagesRouter({ BACKEND, proxy }) {
           });
         }
 
-        return res.status(200).json({ ok: true, redirect: "/my-account", ...data });
+        return res
+          .status(200)
+          .json({ ok: true, redirect: "/my-account", ...data });
       }
 
       return res.status(resp.status || 401).json({
@@ -1095,7 +1370,6 @@ module.exports = function createPagesRouter({ BACKEND, proxy }) {
     }
   });
 
-
   router.post("/register", async (req, res) => {
     try {
       const resp = await fetch(`${BACKEND}/api/auth/register`, {
@@ -1105,8 +1379,8 @@ module.exports = function createPagesRouter({ BACKEND, proxy }) {
           cookie: req.headers.cookie || "",
         },
         body: JSON.stringify({
-          email: req.body.register_email,   // map vào email
-          full_name: req.body.register_name,    // map vào full_name
+          email: req.body.register_email, // map vào email
+          full_name: req.body.register_name, // map vào full_name
           address_line: req.body.register_address, // map vào address_line
         }),
         redirect: "manual",
@@ -1116,17 +1390,25 @@ module.exports = function createPagesRouter({ BACKEND, proxy }) {
 
       // Backend register trả 201 khi thành công
       if (resp.status === 201 && data) {
-        const mini = await fetchJSONAuth(req, `${BACKEND}/api/page/minicart`).catch(() => ({}));
+        const mini = await fetchJSONAuth(
+          req,
+          `${BACKEND}/api/page/minicart`
+        ).catch(() => ({}));
         return res.status(200).render("login_register", {
           title: "Đăng nhập & Đăng ký",
           error: null,
-          success: data.message || "Đăng ký thành công. Vui lòng kiểm tra email để xác thực.",
+          success:
+            data.message ||
+            "Đăng ký thành công. Vui lòng kiểm tra email để xác thực.",
           activeTab: "login", // sau khi đăng ký xong cho user về tab login
           ...mini,
         });
       }
 
-      const mini = await fetchJSONAuth(req, `${BACKEND}/api/page/minicart`).catch(() => ({}));
+      const mini = await fetchJSONAuth(
+        req,
+        `${BACKEND}/api/page/minicart`
+      ).catch(() => ({}));
       return res.status(400).render("login_register", {
         title: "Đăng nhập & Đăng ký",
         error: (data && data.message) || "Đăng ký thất bại",
@@ -1135,7 +1417,10 @@ module.exports = function createPagesRouter({ BACKEND, proxy }) {
         ...mini,
       });
     } catch {
-      const mini = await fetchJSONAuth(req, `${BACKEND}/api/page/minicart`).catch(() => ({}));
+      const mini = await fetchJSONAuth(
+        req,
+        `${BACKEND}/api/page/minicart`
+      ).catch(() => ({}));
       return res.status(500).render("login_register", {
         title: "Đăng nhập & Đăng ký",
         error: "Có lỗi khi đăng ký. Vui lòng thử lại.",
@@ -1148,10 +1433,10 @@ module.exports = function createPagesRouter({ BACKEND, proxy }) {
   router.get("/logout", async (req, res) => {
     try {
       const resp = await fetch(`${BACKEND}/api/auth/logout`, {
-        method: "POST",    // nên dùng POST logout
+        method: "POST", // nên dùng POST logout
         headers: {
-          cookie: req.headers.cookie || ""
-        }
+          cookie: req.headers.cookie || "",
+        },
       });
       console.log(resp);
       const setCookie = getSetCookie(resp);
@@ -1179,12 +1464,15 @@ module.exports = function createPagesRouter({ BACKEND, proxy }) {
 
     try {
       // gọi BE verify
-      const data = await fetchJSONPublic(`${BACKEND}/api/auth/verify?${params}`);
+      const data = await fetchJSONPublic(
+        `${BACKEND}/api/auth/verify?${params}`
+      );
 
       success = true;
-      message = data.message || "Email đã được xác thực. Vui lòng tạo mật khẩu.";
+      message =
+        data.message || "Email đã được xác thực. Vui lòng tạo mật khẩu.";
       full_name = data.full_name || "";
-      userId = data.userId;   // BE verifyEmail đang trả userId như bạn chụp
+      userId = data.userId; // BE verifyEmail đang trả userId như bạn chụp
     } catch (err) {
       console.error("Verify-account FE error:", err.message || err);
       success = false;
@@ -1264,7 +1552,8 @@ module.exports = function createPagesRouter({ BACKEND, proxy }) {
       return res.render("auth_set_password", {
         title: "Hoàn tất đăng ký",
         success: true,
-        message: (data && data.message) || "Mật khẩu đã được thiết lập thành công.",
+        message:
+          (data && data.message) || "Mật khẩu đã được thiết lập thành công.",
         full_name: data && data.full_name ? data.full_name : "",
         userId: null,
         loginUrl,
@@ -1351,13 +1640,19 @@ module.exports = function createPagesRouter({ BACKEND, proxy }) {
 
       // ✅ AJAX: forward luôn JSON backend trả về
       let data = null;
-      try { data = await resp.json(); } catch { data = null; }
+      try {
+        data = await resp.json();
+      } catch {
+        data = null;
+      }
 
       if (data) {
         return res.status(resp.status).json(data);
       }
 
-      return res.status(500).json({ ok: false, message: "Invalid backend response" });
+      return res
+        .status(500)
+        .json({ ok: false, message: "Invalid backend response" });
     } catch (err) {
       console.error("Add-to-cart error:", err);
 
@@ -1376,29 +1671,92 @@ module.exports = function createPagesRouter({ BACKEND, proxy }) {
   router.post("/cart/update/:idx", async (req, res) => {
     const idx = req.params.idx;
     try {
-      const form = new URLSearchParams({ quantity: String(req.body.quantity || 1) });
-      await fetch(`${BACKEND}/cart/update/${idx}`, { method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded", cookie: req.headers.cookie || "" }, body: form });
-      const mini = await fetch(`${BACKEND}/api/page/minicart`, { headers: { "Content-Type": "application/json", cookie: req.headers.cookie || "" } });
+      const form = new URLSearchParams({
+        quantity: String(req.body.quantity || 1),
+      });
+      await fetch(`${BACKEND}/api/cart/update/${idx}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+          cookie: req.headers.cookie || "",
+        },
+        body: form,
+      });
+      const mini = await fetch(`${BACKEND}/api/page/minicart`, {
+        headers: {
+          "Content-Type": "application/json",
+          cookie: req.headers.cookie || "",
+        },
+      });
       const miniJson = await mini.json();
       const items = Array.isArray(miniJson.carts) ? miniJson.carts : [];
-      const it = items[idx]; const lineTotal = it ? Number(it.price_at_time || 0) * Number(it.quantity || 0) : 0;
-      return res.json({ ok: true, lineTotal, totals: { total: Number(miniJson.total || 0) } });
-    } catch { return res.status(500).json({ ok: false, message: "Update failed" }); }
+      const it = items[idx];
+      const lineTotal = it
+        ? Number(it.price_at_time || 0) * Number(it.quantity || 0)
+        : 0;
+      return res.json({
+        ok: true,
+        lineTotal,
+        totals: { total: Number(miniJson.total || 0) },
+      });
+    } catch {
+      return res.status(500).json({ ok: false, message: "Update failed" });
+    }
   });
   router.post("/cart/remove/:idx", async (req, res) => {
     const idx = req.params.idx;
     try {
-      await fetch(`${BACKEND}/cart/remove/${idx}`, { method: "POST", headers: { "Content-Type": "application/json", cookie: req.headers.cookie || "" } });
-      const mini = await fetch(`${BACKEND}/api/page/minicart`, { headers: { "Content-Type": "application/json", cookie: req.headers.cookie || "" } });
+      await fetch(`${BACKEND}/cart/remove/${idx}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          cookie: req.headers.cookie || "",
+        },
+      });
+      const mini = await fetch(`${BACKEND}/api/page/minicart`, {
+        headers: {
+          "Content-Type": "application/json",
+          cookie: req.headers.cookie || "",
+        },
+      });
       const miniJson = await mini.json();
-      return res.json({ ok: true, totals: { total: Number(miniJson.total || 0) } });
-    } catch { return res.status(500).json({ ok: false, message: "Remove failed" }); }
+      return res.json({
+        ok: true,
+        totals: { total: Number(miniJson.total || 0) },
+      });
+    } catch {
+      return res.status(500).json({ ok: false, message: "Remove failed" });
+    }
+  });
+
+  router.post("/cart/apply-coupon", async (req, res) => {
+    try {
+      // Gọi: /api/cart/apply-coupon
+      const resp = await fetch(`${BACKEND}/api/cart/apply-coupon`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          cookie: req.headers.cookie || "",
+        },
+        body: JSON.stringify(req.body),
+      });
+      const data = await resp.json().catch(() => ({}));
+      res.status(resp.status).json(data);
+    } catch (e) {
+      res.status(500).json({ ok: false, message: "Lỗi kết nối Backend" });
+    }
   });
 
   // submit checkout -> proxy thẳng Backend
-  router.post("/shop-cart/submit", proxy(BACKEND, { proxyReqPathResolver: () => "/shop-cart/submit" }));
+  router.post(
+    "/shop-cart/submit",
+    proxy(BACKEND, { proxyReqPathResolver: () => "/shop-cart/submit" })
+  );
   // Tất cả /api/* khác → proxy tới Backend
-  router.use("/api", proxy(BACKEND, { proxyReqPathResolver: (req) => `/api${req.url}` }));
+  router.use(
+    "/api",
+    proxy(BACKEND, { proxyReqPathResolver: (req) => `/api${req.url}` })
+  );
 
   return router;
 };

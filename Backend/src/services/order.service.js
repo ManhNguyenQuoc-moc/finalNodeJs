@@ -1,6 +1,6 @@
 // Backend/src/services/order.service.js
 const mongoose = require("mongoose");
-const bcrypt = require("bcryptjs"); // Cần chạy: npm install bcryptjs
+const bcrypt = require("bcryptjs");
 const {
   Order,
   User,
@@ -9,16 +9,16 @@ const {
   Cart,
   DiscountCode,
 } = require("../models");
-const sendEmail = require("../utils/email"); // File cấu hình nodemailer của bạn
+const sendEmail = require("../utils/email");
 const {
   getOrderConfirmEmailHtml,
-} = require("../utils/emailCofirmOrderTemplate"); // File template vừa tạo ở trên
+} = require("../utils/emailCofirmOrderTemplate");
 
 class OrderService {
   async placeOrder({
     userId,
-    customerInfo, // { name, email, phone }
-    shippingAddress, // { city, district, ward, detail }
+    customerInfo,
+    shippingAddress,
     cartItems,
     discountCode,
     cartId,
@@ -33,15 +33,12 @@ class OrderService {
       let tempPassword = "";
 
       if (!finalUserId) {
-        // Kiểm tra email khách có trong hệ thống chưa
         let user = await User.findOne({ email: customerInfo.email }).session(
           session
         );
-
         if (!user) {
-          // Tạo tài khoản mới cho khách
           isNewAccount = true;
-          tempPassword = Math.random().toString(36).slice(-8); // Mật khẩu ngẫu nhiên
+          tempPassword = Math.random().toString(36).slice(-8);
           const hash = await bcrypt.hash(tempPassword, 10);
 
           user = new User({
@@ -58,10 +55,14 @@ class OrderService {
         finalUserId = user._id;
       }
 
-      // --- 2. XỬ LÝ ĐỊA CHỈ (ADDRESS) ---
+      // --- 2. XỬ LÝ ĐỊA CHỈ ---
       const fullAddressString = `${shippingAddress.detail}, ${shippingAddress.ward}, ${shippingAddress.district}, ${shippingAddress.city}`;
 
-      // [LOGIC MỚI] Kiểm tra xem địa chỉ này đã tồn tại chưa
+      await Address.updateMany(
+        { user: finalUserId },
+        { is_default: false }
+      ).session(session);
+
       let addressNode = await Address.findOne({
         user: finalUserId,
         city: shippingAddress.city,
@@ -71,13 +72,10 @@ class OrderService {
       }).session(session);
 
       if (addressNode) {
-        // NẾU ĐÃ CÓ: Cập nhật lại là mặc định (để lần sau ưu tiên lấy nó)
-        // (Optional: Nếu muốn reset các cái khác không phải mặc định thì cần logic phức tạp hơn,
-        // nhưng ở đây ta chỉ cần đảm bảo cái này được đánh dấu true)
         addressNode.is_default = true;
+        addressNode.address_line = fullAddressString;
         await addressNode.save({ session });
       } else {
-        // NẾU CHƯA CÓ: Tạo mới
         addressNode = new Address({
           user: finalUserId,
           city: shippingAddress.city,
@@ -89,8 +87,6 @@ class OrderService {
         });
         await addressNode.save({ session });
       }
-
-      // Lưu ý: Lúc này biến addressNode chứa địa chỉ (cũ hoặc mới), ta dùng ID của nó
       const addressId = addressNode._id;
 
       // --- 3. XỬ LÝ KHO & TÍNH TIỀN ---
@@ -98,18 +94,14 @@ class OrderService {
       const orderItems = [];
 
       for (const item of cartItems) {
-        // Lấy Variant từ DB để check giá và kho
         const variant = await ProductVariant.findOne({
           sku: item.variant_sku,
         }).session(session);
-
         if (!variant)
-          throw new Error(`Sản phẩm mã ${item.variant_sku} không tồn tại.`);
-        if (variant.stock_quantity < item.quantity) {
+          throw new Error(`Sản phẩm ${item.variant_sku} không tồn tại.`);
+        if (variant.stock_quantity < item.quantity)
           throw new Error(`Sản phẩm ${item.name_snapshot} đã hết hàng.`);
-        }
 
-        // Trừ tồn kho
         variant.stock_quantity -= item.quantity;
         await variant.save({ session });
 
@@ -120,33 +112,75 @@ class OrderService {
           product_variant_sku: item.variant_sku,
           quantity: item.quantity,
           price_at_purchase: price,
-          // Lưu snapshot tên để hiển thị email/lịch sử cho đẹp
-          product_name_snapshot: item.name_snapshot,
+          product_name_snapshot:
+            item.name_snapshot || variant.product.name || "Sản phẩm",
           variant_snapshot: `${item.color_name_snapshot || ""} / ${
             item.size_name_snapshot || ""
           }`,
         });
       }
 
-      // --- 4. MÃ GIẢM GIÁ ---
+      // --- 4. MÃ GIẢM GIÁ & ĐIỂM THƯỞNG (FIX LỖI CARTDOC) ---
       let finalAmount = totalAmount;
       let discountId = null;
-      if (discountCode) {
-        const codeRecord = await DiscountCode.findOne({
-          code: discountCode,
-          is_active: true,
-        }).session(session);
-        if (codeRecord && codeRecord.usage_count < codeRecord.usage_limit) {
-          finalAmount -= codeRecord.discount_value;
-          if (finalAmount < 0) finalAmount = 0;
+      let appliedCode = null;
+      let pointsUsed = 0;
 
-          codeRecord.usage_count += 1;
-          await codeRecord.save({ session });
-          discountId = codeRecord._id;
+      // Tìm Cart để lấy thông tin mã và điểm
+      const cartDoc = await Cart.findById(cartId).session(session);
+
+      if (cartDoc) {
+        // A. Xử lý Mã giảm giá
+        appliedCode = cartDoc.applied_coupon;
+        if (appliedCode) {
+          const codeRecord = await DiscountCode.findOne({
+            code: appliedCode,
+            is_active: true,
+          }).session(session);
+
+          if (
+            codeRecord &&
+            (!codeRecord.usage_limit ||
+              codeRecord.usage_count < codeRecord.usage_limit)
+          ) {
+            const discountVal = Math.floor(
+              (totalAmount * codeRecord.discount_value) / 100
+            );
+            finalAmount = totalAmount - discountVal;
+            if (finalAmount < 0) finalAmount = 0;
+
+            codeRecord.usage_count += 1;
+            await codeRecord.save({ session });
+
+            discountId = codeRecord._id;
+          }
+        }
+
+        // B. Xử lý Điểm thưởng (Loyalty Points)
+        if (cartDoc.used_points > 0) {
+          const user = await User.findById(finalUserId).session(session);
+          const currentPoints = user.loyalty_points || 0;
+
+          // Tính lại điểm cần thiết (tránh trường hợp hack request)
+          const maxPointsNeeded = Math.ceil(finalAmount / 1000);
+          pointsUsed = Math.min(currentPoints, maxPointsNeeded);
+
+          if (pointsUsed > 0) {
+            const pointDiscount = pointsUsed * 1000;
+            finalAmount -= pointDiscount;
+            if (finalAmount < 0) finalAmount = 0;
+
+            // Trừ điểm thật của user
+            user.loyalty_points -= pointsUsed;
+            await user.save({ session });
+          }
         }
       }
 
-      // --- 5. TẠO ORDER ---
+      // --- 5. TÍNH ĐIỂM TÍCH LŨY MỚI ---
+      const pointsEarned = Math.floor(finalAmount / 10000);
+
+      // --- 6. TẠO ORDER ---
       const newOrder = new Order({
         user: finalUserId,
         address: addressId,
@@ -156,36 +190,31 @@ class OrderService {
         final_amount: finalAmount,
         current_status: "pending",
         status_history: [{ status: "pending", timestamp: new Date() }],
-        loyalty_points_earned: Math.floor(finalAmount / 100000), // 100k = 1 điểm
+        loyalty_points_earned: pointsEarned,
+        loyalty_points_used: pointsUsed, // Lưu số điểm đã dùng
       });
 
       await newOrder.save({ session });
 
-      // --- 6. CẬP NHẬT ĐIỂM CHO USER ---
+      // --- 7. CỘNG ĐIỂM TÍCH LŨY CHO USER ---
       await User.findByIdAndUpdate(finalUserId, {
-        $inc: { loyalty_points: newOrder.loyalty_points_earned },
+        $inc: { loyalty_points: pointsEarned },
       }).session(session);
 
-      // --- 7. XÓA GIỎ HÀNG ---
+      // --- 8. XÓA GIỎ HÀNG ---
       if (cartId) {
         await Cart.findByIdAndDelete(cartId).session(session);
       } else {
-        // Fallback: Nếu không có cartId thì tìm theo user_id (như cũ)
-        await Cart.findOneAndUpdate(
-          { user_id: finalUserId },
-          { items: [] }
-        ).session(session);
+        await Cart.findOneAndDelete({ user_id: finalUserId }).session(session);
       }
 
-      // === COMMIT TRANSACTION ===
+      // === COMMIT ===
       await session.commitTransaction();
       session.endSession();
 
-      // --- 8. GỬI EMAIL (Sau khi commit thành công) ---
+      // --- 9. GỬI EMAIL ---
       try {
         const emailSubject = `Xác nhận đơn hàng #${newOrder._id} - MixiShop`;
-
-        // Lấy HTML từ file template
         const emailContent = getOrderConfirmEmailHtml({
           name: customerInfo.name,
           orderId: newOrder._id,
@@ -196,19 +225,13 @@ class OrderService {
           finalAmount: newOrder.final_amount,
           address: fullAddressString,
         });
-
         await sendEmail(customerInfo.email, emailSubject, emailContent);
-        console.log(`Email xác nhận đã gửi tới: ${customerInfo.email}`);
-      } catch (emailError) {
-        console.error(
-          "Gửi email thất bại (nhưng đơn hàng đã thành công):",
-          emailError
-        );
+      } catch (e) {
+        console.error(e);
       }
 
       return newOrder;
     } catch (error) {
-      // Nếu có lỗi -> Rollback toàn bộ
       await session.abortTransaction();
       session.endSession();
       throw error;

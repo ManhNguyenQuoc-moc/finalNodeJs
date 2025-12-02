@@ -1,13 +1,16 @@
 const Address = require("../models/Address");
+
 class AddressRepository {
-  // Tạo địa chỉ mới
   async create(addressData) {
     const address = new Address(addressData);
     return await address.save();
   }
 
   async findByUser(userId) {
-    return await Address.find({ user: userId }).sort({ createdAt: -1 });
+    return await Address.find({ user: userId }).sort({
+      is_default: -1,
+      createdAt: -1,
+    });
   }
 
   async findById(id) {
