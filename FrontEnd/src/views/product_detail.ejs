@@ -1,335 +1,344 @@
 <!DOCTYPE html>
 <html dir="ltr" lang="zxx">
+  <head>
+    <style>
+      .chat-bubble {
+        background: #f6f7f9;
+        border-radius: 12px;
+        padding: 10px 12px;
+      }
 
-<head>
-  <style>
-    .chat-bubble {
-      background: #f6f7f9;
-      border-radius: 12px;
-      padding: 10px 12px;
-    }
+      .chat-meta {
+        font-size: 12px;
+        color: #6b7280;
+      }
 
-    .chat-meta {
-      font-size: 12px;
-      color: #6b7280;
-    }
+      .comment-item {
+        margin-bottom: 12px;
+      }
 
-    .comment-item {
-      margin-bottom: 12px;
-    }
+      .comment-item .children {
+        margin-left: 20px;
+        margin-top: 8px;
+      }
 
-    .comment-item .children {
-      margin-left: 20px;
-      margin-top: 8px;
-    }
+      .btn-xxs {
+        padding: 2px 8px;
+        font-size: 12px;
+        line-height: 20px;
+      }
 
-    .btn-xxs {
-      padding: 2px 8px;
-      font-size: 12px;
-      line-height: 20px;
-    }
+      .like-btn {
+        background: transparent;
+        border: 0;
+        cursor: pointer;
+      }
 
-    .like-btn {
-      background: transparent;
-      border: 0;
-      cursor: pointer;
-    }
+      .like-btn .heart {
+        font-size: 16px;
+        vertical-align: -2px;
+        margin-right: 4px;
+      }
 
-    .like-btn .heart {
-      font-size: 16px;
-      vertical-align: -2px;
-      margin-right: 4px;
-    }
+      .reply-form textarea {
+        min-height: 70px;
+      }
 
-    .reply-form textarea {
-      min-height: 70px;
-    }
+      .star,
+      .rate-star {
+        font-style: normal;
+        font-size: 18px;
+        line-height: 1;
+        color: #bbb;
+        cursor: default;
+        transition: transform 0.08s ease, color 0.12s ease;
+        user-select: none;
+      }
 
-    .star,
-    .rate-star {
-      font-style: normal;
-      font-size: 18px;
-      line-height: 1;
-      color: #bbb;
-      cursor: default;
-      transition: transform .08s ease, color .12s ease;
-      user-select: none;
-    }
+      .star.filled,
+      .rate-star.filled {
+        color: #f5a623;
+      }
 
-    .star.filled,
-    .rate-star.filled {
-      color: #f5a623;
-    }
+      .rating-box .rate-star {
+        cursor: pointer;
+        font-size: 22px;
+        margin-right: 2px;
+      }
 
-    .rating-box .rate-star {
-      cursor: pointer;
-      font-size: 22px;
-      margin-right: 2px;
-    }
+      .rating-box .rate-star:hover {
+        transform: scale(1.1);
+      }
 
-    .rating-box .rate-star:hover {
-      transform: scale(1.1);
-    }
+      .cmt-item:last-child {
+        border-bottom: 0 !important;
+      }
 
-    .cmt-item:last-child {
-      border-bottom: 0 !important;
-    }
+      .qa-card {
+        background: #fff;
+        border: 1px solid #eef2f7;
+        border-radius: 14px;
+        box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
+        padding: 18px;
+      }
 
-    .qa-card {
-      background: #fff;
-      border: 1px solid #eef2f7;
-      border-radius: 14px;
-      box-shadow: 0 1px 2px rgba(16, 24, 40, .04);
-      padding: 18px;
-    }
-
-    .qa-hero {
-      display: flex;
-      gap: 18px;
-      align-items: center;
-      background: #f7f8fb;
-      border-radius: 14px;
-      padding: 18px;
-    }
-
-    .qa-hero__img {
-      width: 110px;
-      flex: 0 0 110px;
-    }
-
-    .qa-hero__img img {
-      width: 100%;
-      height: auto;
-    }
-
-    .qa-title {
-      font-weight: 800;
-      font-size: 28px;
-      margin-bottom: 8px;
-    }
-
-    .qa-desc {
-      color: #6b7280;
-    }
-
-    .qa-input {
-      display: flex;
-      gap: 14px;
-      margin-top: 14px;
-    }
-
-    .qa-input .form-control {
-      height: 48px;
-    }
-
-    .btn-ask {
-      background: #e8071b;
-      color: #fff;
-      border: 0;
-      height: 48px;
-      border-radius: 10px;
-      padding: 0 22px;
-      font-weight: 700;
-    }
-
-    .btn-ask:hover {
-      filter: brightness(.95);
-    }
-
-    @media (max-width:768px) {
       .qa-hero {
-        flex-direction: column;
-        align-items: flex-start;
-      }
-
-      .qa-input {
-        flex-direction: column;
-      }
-
-      .btn-ask {
-        width: 100%;
+        display: flex;
+        gap: 18px;
+        align-items: center;
+        background: #f7f8fb;
+        border-radius: 14px;
+        padding: 18px;
       }
 
       .qa-hero__img {
-        width: 82px;
-        flex: 0 0 82px;
+        width: 110px;
+        flex: 0 0 110px;
       }
-    }
 
-    .pdp-subnav {
-      background: #fff;
-      z-index: 2;
-      border-bottom: 1px solid #eee;
-    }
+      .qa-hero__img img {
+        width: 100%;
+        height: auto;
+      }
 
-    .pdp-subnav__list {
-      display: flex;
-      gap: 18px;
-      padding: 10px 0;
-      margin: 0;
-      list-style: none;
-      overflow: auto;
-    }
+      .qa-title {
+        font-weight: 800;
+        font-size: 28px;
+        margin-bottom: 8px;
+      }
 
-    .pdp-subnav__list a {
-      display: inline-block;
-      padding: 8px 10px;
-      border-radius: 8px;
-      font-weight: 600;
-      color: #374151;
-      text-decoration: none;
-    }
+      .qa-desc {
+        color: #6b7280;
+      }
 
-    .pdp-subnav__list a:hover,
-    .pdp-subnav__list a.active {
-      background: #f1f5f9;
-      color: #111827;
-    }
+      .qa-input {
+        display: flex;
+        gap: 14px;
+        margin-top: 14px;
+      }
 
-    .pdp-section {
-      scroll-margin-top: 80px;
-    }
+      .qa-input .form-control {
+        height: 48px;
+      }
 
-    .section-title {
-      font-size: 20px;
-      font-weight: 700;
-    }
+      .btn-ask {
+        background: #e8071b;
+        color: #fff;
+        border: 0;
+        height: 48px;
+        border-radius: 10px;
+        padding: 0 22px;
+        font-weight: 700;
+      }
 
-    .card {
-      border: 1px solid #eef2f7;
-      border-radius: 14px;
-      box-shadow: 0 1px 2px rgba(16, 24, 40, .04);
-    }
+      .btn-ask:hover {
+        filter: brightness(0.95);
+      }
 
-    .feature-tile {
-      border: 1px dashed #e5e7eb;
-      border-radius: 12px;
-      padding: 12px;
-      background: #fafafa;
-    }
+      @media (max-width: 768px) {
+        .qa-hero {
+          flex-direction: column;
+          align-items: flex-start;
+        }
 
-    .ft-title {
-      font-weight: 600;
-      margin-bottom: 4px;
-    }
+        .qa-input {
+          flex-direction: column;
+        }
 
-    .rating-large .star {
-      font-size: 24px;
-      color: #bbb;
-    }
+        .btn-ask {
+          width: 100%;
+        }
 
-    .star.filled,
-    .rate-star.filled {
-      color: #f59e0b;
-    }
+        .qa-hero__img {
+          width: 82px;
+          flex: 0 0 82px;
+        }
+      }
 
-    .custom-swatch-container .custom-swatch-color {
-      width: 32px;
-      height: 32px;
-      border-radius: 8px;
-      border: 1px solid #e5e7eb;
-      margin-right: 8px;
-    }
+      .pdp-subnav {
+        background: #fff;
+        z-index: 2;
+        border-bottom: 1px solid #eee;
+      }
 
-    .custom-swatch-container .custom-swatch-color.swatch_active {
-      outline: 2px solid #111827;
-    }
+      .pdp-subnav__list {
+        display: flex;
+        gap: 18px;
+        padding: 10px 0;
+        margin: 0;
+        list-style: none;
+        overflow: auto;
+      }
 
-    .qty-control {
-      border: 1px solid #e5e7eb;
-      border-radius: 10px;
-      overflow: hidden;
-    }
+      .pdp-subnav__list a {
+        display: inline-block;
+        padding: 8px 10px;
+        border-radius: 8px;
+        font-weight: 600;
+        color: #374151;
+        text-decoration: none;
+      }
 
-    .qty-control__reduce,
-    .qty-control__increase {
-      width: 38px;
-      cursor: pointer;
-    }
+      .pdp-subnav__list a:hover,
+      .pdp-subnav__list a.active {
+        background: #f1f5f9;
+        color: #111827;
+      }
 
-    /* NEW: size/color swatch styling + disabled state */
-    .swatch-list .swatch {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      min-width: 36px;
-      height: 32px;
-      padding: 0 10px;
-      border-radius: 999px;
-      border: 1px solid #e5e7eb;
-      font-size: 14px;
-      font-weight: 500;
-      color: #111827;
-      margin: 0 6px 6px 0;
-      cursor: pointer;
-      transition: all .15s ease;
-    }
+      .pdp-section {
+        scroll-margin-top: 80px;
+      }
 
-    .swatch-list .swatch_active,
-    .swatch-list input[type="radio"]:checked+.swatch {
-      border-color: #111827;
-      background: #111827;
-      color: #fff;
-    }
+      .section-title {
+        font-size: 20px;
+        font-weight: 700;
+      }
 
-    .swatch-disabled {
-      opacity: .35 !important;
-      cursor: not-allowed !important;
-      position: relative;
-    }
+      .card {
+        border: 1px solid #eef2f7;
+        border-radius: 14px;
+        box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
+      }
 
-    .swatch-disabled::after {
-      content: "";
-      position: absolute;
-      left: 4px;
-      right: 4px;
-      top: 50%;
-      border-top: 1px solid #9ca3af;
-      transform: rotate(-18deg);
-    }
+      .feature-tile {
+        border: 1px dashed #e5e7eb;
+        border-radius: 12px;
+        padding: 12px;
+        background: #fafafa;
+      }
 
-    .combination-status {
-      font-size: 13px;
-      margin-top: 4px;
-    }
+      .ft-title {
+        font-weight: 600;
+        margin-bottom: 4px;
+      }
 
-    .combination-status.ok {
-      color: #16a34a;
-    }
+      .rating-large .star {
+        font-size: 24px;
+        color: #bbb;
+      }
 
-    .combination-status.error {
-      color: #dc2626;
-    }
-  </style>
+      .star.filled,
+      .rate-star.filled {
+        color: #f59e0b;
+      }
 
-  <%- include('partials/head') %>
-</head>
+      .custom-swatch-container .custom-swatch-color {
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        border: 1px solid #e5e7eb;
+        margin-right: 8px;
+      }
 
-<body>
-  <%- include('partials/header') %>
+      .custom-swatch-container .custom-swatch-color.swatch_active {
+        outline: 2px solid #111827;
+      }
 
-  <div id="notificationModal" class="notification-modal">
-    <div class="notification-modal-content">
-      <span class="close-button" id="closeModal">&times;</span>
-      <p id="modalMessage"></p>
+      .qty-control {
+        border: 1px solid #e5e7eb;
+        border-radius: 10px;
+        overflow: hidden;
+      }
+
+      .qty-control__reduce,
+      .qty-control__increase {
+        width: 38px;
+        cursor: pointer;
+      }
+
+      /* NEW: size/color swatch styling + disabled state */
+      .swatch-list .swatch {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 36px;
+        height: 32px;
+        padding: 0 10px;
+        border-radius: 999px;
+        border: 1px solid #e5e7eb;
+        font-size: 14px;
+        font-weight: 500;
+        color: #111827;
+        margin: 0 6px 6px 0;
+        cursor: pointer;
+        transition: all 0.15s ease;
+      }
+
+      .swatch-list .swatch_active,
+      .swatch-list input[type="radio"]:checked + .swatch {
+        border-color: #111827;
+        background: #111827;
+        color: #fff;
+      }
+
+      .swatch-disabled {
+        opacity: 0.35 !important;
+        cursor: not-allowed !important;
+        position: relative;
+      }
+
+      .swatch-disabled::after {
+        content: "";
+        position: absolute;
+        left: 4px;
+        right: 4px;
+        top: 50%;
+        border-top: 1px solid #9ca3af;
+        transform: rotate(-18deg);
+      }
+
+      .combination-status {
+        font-size: 13px;
+        margin-top: 4px;
+      }
+
+      .combination-status.ok {
+        color: #16a34a;
+      }
+
+      .combination-status.error {
+        color: #dc2626;
+      }
+    </style>
+
+    <%- include('partials/head') %>
+  </head>
+
+  <body>
+    <%- include('partials/header') %>
+
+    <div id="notificationModal" class="notification-modal">
+      <div class="notification-modal-content">
+        <span class="close-button" id="closeModal">&times;</span>
+        <p id="modalMessage"></p>
+      </div>
     </div>
-  </div>
 
-  <main>
-    <div class="mb-md-1 pb-md-3"></div>
+    <main>
+      <div class="mb-md-1 pb-md-3"></div>
 
-    <!-- ================= PRODUCT MAIN ================= -->
-    <section class="product-single container">
-      <div class="row">
-        <!-- IMAGES -->
-        <div class="col-lg-7">
-          <div class="product-single__media" data-media-type="vertical-thumbnail">
-            <div class="product-single__image">
-              <div class="swiper-container">
-                <div class="swiper-wrapper" id="main-image-container">
-                  <% allImages.forEach(function(imageUrl) { %>
+      <!-- ================= PRODUCT MAIN ================= -->
+      <section class="product-single container">
+        <div class="row">
+          <!-- IMAGES -->
+          <div class="col-lg-7">
+            <div
+              class="product-single__media"
+              data-media-type="vertical-thumbnail"
+            >
+              <div class="product-single__image">
+                <div class="swiper-container">
+                  <div class="swiper-wrapper" id="main-image-container">
+                    <% allImages.forEach(function(imageUrl) { %>
                     <div class="swiper-slide product-single__image-item">
-                      <img loading="lazy" class="h-auto" src="<%= imageUrl %>" width="674" height="674" alt="<%= product.name %>">
+                      <img
+                        loading="lazy"
+                        class="h-auto"
+                        src="<%= imageUrl %>"
+                        width="674"
+                        height="674"
+                        alt="<%= product.name %>"
+                      />
                       <img
                         class="category-banner__frame"
                         src="<%= product.productStatus.statusName === 'Bán chạy'
@@ -337,139 +346,169 @@
                                 : (product.productStatus.statusName === 'Trending'
                                     ? '/mixishop/images/frame_trending.png'
                                     : '/mixishop/images/frame_new.png') %>"
-                        alt="Status Frame">
+                        alt="Status Frame"
+                      />
                     </div>
-                  <% }) %>
-                </div>
-                <div class="swiper-button-prev">
-                  <svg width="7" height="11" viewBox="0 0 7 11" xmlns="http://www.w3.org/2000/svg">
-                    <use href="#icon_prev_sm" />
-                  </svg>
-                </div>
-                <div class="swiper-button-next">
-                  <svg width="7" height="11" viewBox="0 0 7 11" xmlns="http://www.w3.org/2000/svg">
-                    <use href="#icon_next_sm" />
-                  </svg>
+                    <% }) %>
+                  </div>
+                  <div class="swiper-button-prev">
+                    <svg
+                      width="7"
+                      height="11"
+                      viewBox="0 0 7 11"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <use href="#icon_prev_sm" />
+                    </svg>
+                  </div>
+                  <div class="swiper-button-next">
+                    <svg
+                      width="7"
+                      height="11"
+                      viewBox="0 0 7 11"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <use href="#icon_next_sm" />
+                    </svg>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            <div class="product-single__thumbnail">
-              <div class="swiper-container">
-                <div class="swiper-wrapper" id="thumbnail-image-container">
-                  <% allImages.forEach(function(imageUrl) { %>
+              <div class="product-single__thumbnail">
+                <div class="swiper-container">
+                  <div class="swiper-wrapper" id="thumbnail-image-container">
+                    <% allImages.forEach(function(imageUrl) { %>
                     <div class="swiper-slide product-single__image-item">
-                      <img loading="lazy" class="h-auto" src="<%= imageUrl %>" width="104" height="104" alt="<%= product.name %>">
+                      <img
+                        loading="lazy"
+                        class="h-auto"
+                        src="<%= imageUrl %>"
+                        width="104"
+                        height="104"
+                        alt="<%= product.name %>"
+                      />
                     </div>
-                  <% }) %>
+                    <% }) %>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
 
-        <!-- INFO -->
-        <div class="col-lg-5">
-          <div class="d-flex justify-content-between mb-4 pb-md-2">
-            <div class="breadcrumb mb-0 d-none d-md-block flex-grow-1">
-              <a href="/" class="menu-link menu-link_us-s text-uppercase fw-medium">Trang chủ</a>
-              <span class="breadcrumb-separator menu-link fw-medium ps-1 pe-1">/</span>
-              <a href="#" class="menu-link menu-link_us-s text-uppercase fw-medium">
-                <%= product.category?.name %>
-              </a>
+          <!-- INFO -->
+          <div class="col-lg-5">
+            <div class="d-flex justify-content-between mb-4 pb-md-2">
+              <div class="breadcrumb mb-0 d-none d-md-block flex-grow-1">
+                <a
+                  href="/"
+                  class="menu-link menu-link_us-s text-uppercase fw-medium"
+                  >Trang chủ</a
+                >
+                <span class="breadcrumb-separator menu-link fw-medium ps-1 pe-1"
+                  >/</span
+                >
+                <a
+                  href="#"
+                  class="menu-link menu-link_us-s text-uppercase fw-medium"
+                >
+                  <%= product.category?.name %>
+                </a>
+              </div>
             </div>
-          </div>
 
-          <h1 class="product-single__name"><%= product.name %></h1>
+            <h1 class="product-single__name"><%= product.name %></h1>
 
-          <div class="d-flex align-items-center flex-wrap gap-3 mb-2">
-            <div class="product-single__price mb-0">
-              <% if (product.price_min === product.price_max) { %>
+            <div class="d-flex align-items-center flex-wrap gap-3 mb-2">
+              <div class="product-single__price mb-0">
+                <% if (product.price_min === product.price_max) { %>
                 <!-- chỉ có 1 giá -->
                 <span class="current-price">
                   <%= formatPrice(product.price_min) %>
                 </span>
-              <% } else { %>
+                <% } else { %>
                 <!-- hiển thị dải giá -->
                 <span class="current-price price-range">
-                  <%= formatPrice(product.price_min) %> – <%= formatPrice(product.price_max) %>
+                  <%= formatPrice(product.price_min) %> – <%=
+                  formatPrice(product.price_max) %>
                 </span>
-              <% } %>
+                <% } %>
+              </div>
+
+              <div class="small text-muted">
+                Thương hiệu:
+                <strong><%= product.brand?.name || 'Đang cập nhật' %></strong>
+              </div>
             </div>
 
-            <div class="small text-muted">
-              Thương hiệu:
-              <strong><%= product.brand?.name || 'Đang cập nhật' %></strong>
-            </div>
-          </div>
-
-          <!-- rating summary -->
-          <div class="mb-3">
-            <% 
-              const __avg  = Number(product.avg_rating || 0);
-              const __cnt  = Number(product.rating_count || 0);
-              const __rounded = Math.round(__avg);
-            %>
-            <span class="rating-summary align-middle">
-              <% for (let i = 1; i <= 5; i++) { %>
+            <!-- rating summary -->
+            <div class="mb-3">
+              <% const __avg = Number(product.avg_rating || 0); const __cnt =
+              Number(product.rating_count || 0); const __rounded =
+              Math.round(__avg); %>
+              <span class="rating-summary align-middle">
+                <% for (let i = 1; i <= 5; i++) { %>
                 <i class="star <%= i <= __rounded ? 'filled' : '' %>">★</i>
-              <% } %>
-            </span>
-            <span class="small text-muted ms-2">
-              <%= __avg.toFixed(1) %>/5 • <%= __cnt %> lượt đánh giá
-            </span>
-          </div>
+                <% } %>
+              </span>
+              <span class="small text-muted ms-2">
+                <%= __avg.toFixed(1) %>/5 • <%= __cnt %> lượt đánh giá
+              </span>
+            </div>
 
-          <div class="product-single__short-desc">
-            <p style="white-space: pre-line;"><%= product.short_description %></p>
-          </div>
+            <div class="product-single__short-desc">
+              <p style="white-space: pre-line">
+                <%= product.short_description %>
+              </p>
+            </div>
 
-          <!-- ================= ADD TO CART ================= -->
-          <form name="addtocart-form" method="post" action="/add-to-cart">
-            <div class="product-single__swatches">
-              <!-- SIZE -->
-              <div class="product-swatch text-swatches">
-                <label class="font-weight-bold">Kích thước</label>
-                <div class="swatch-list d-flex flex-wrap">
-                  <% (productSizes || []).forEach(function(size, i) { %>
-                    <input
-                      type="radio"
-                      name="size"
-                      id="swatch-size-<%= i %>"
-                      value="<%= size.sku %>"
-                      data-size-id="<%= size.size_id %>"
-                      data-size-name="<%= size.name %>"
-                      class="d-none"
-                      <%= i === 0 ? 'checked' : '' %>
-                      onchange="updateSizeSelection(this)">
+            <!-- ================= ADD TO CART ================= -->
+            <form name="addtocart-form" method="post" action="/add-to-cart">
+              <div class="product-single__swatches">
+                <!-- SIZE -->
+                <div class="product-swatch text-swatches">
+                  <label class="font-weight-bold">Kích thước</label>
+                  <div class="swatch-list d-flex flex-wrap">
+                    <% (productSizes || []).forEach(function(size, i) { %>
+                    <input type="radio" name="size" id="swatch-size-<%= i %>"
+                    value="<%= size.sku %>" data-size-id="<%= size.size_id %>"
+                    data-size-name="<%= size.name %>" class="d-none" <%= i === 0
+                    ? 'checked' : '' %> onchange="updateSizeSelection(this)">
                     <label
                       class="swatch js-swatch"
                       for="swatch-size-<%= i %>"
                       aria-label="<%= size.name %>"
                       data-bs-toggle="tooltip"
                       data-bs-placement="top"
-                      title="<%= size.name %>">
+                      title="<%= size.name %>"
+                    >
                       <span><%= size.name %></span>
                     </label>
-                  <% }) %>
+                    <% }) %>
+                  </div>
+                  <a
+                    href="#"
+                    class="sizeguide-link mt-2"
+                    data-bs-toggle="modal"
+                    data-bs-target="#sizeGuide"
+                  >
+                    Bảng kích thước
+                  </a>
                 </div>
-                <a href="#" class="sizeguide-link mt-2" data-bs-toggle="modal" data-bs-target="#sizeGuide">
-                  Bảng kích thước
-                </a>
-              </div>
 
-              <!-- COLOR -->
-              <div class="product-swatch color-swatches">
-                <label>Màu</label>
-                <div class="swatch-list d-flex align-items-center mt-1 custom-swatch-container">
-                  <% (product.colors || []).forEach(function(productColor) { 
-                       const title = productColor.color_id?.color_name || productColor.color || 'Màu';
-                       const img0 = (productColor.imageUrls && productColor.imageUrls[0]) || '';
-                       const colorCode = productColor.color_code || '';
-                       const styleStr = img0
-                         ? `background-image:url('${img0}');background-size:cover;`
-                         : (colorCode ? `background-color:${colorCode};` : '');
-                  %>
+                <!-- COLOR -->
+                <div class="product-swatch color-swatches">
+                  <label>Màu</label>
+                  <div
+                    class="swatch-list d-flex align-items-center mt-1 custom-swatch-container"
+                  >
+                    <% (product.colors || []).forEach(function(productColor) {
+                    const title = productColor.color_id?.color_name ||
+                    productColor.color || 'Màu'; const img0 =
+                    (productColor.imageUrls && productColor.imageUrls[0]) || '';
+                    const colorCode = productColor.color_code || ''; const
+                    styleStr = img0 ?
+                    `background-image:url('${img0}');background-size:cover;` :
+                    (colorCode ? `background-color:${colorCode};` : ''); %>
                     <a
                       href="#"
                       class="swatch-color custom-swatch-color"
@@ -478,307 +517,403 @@
                       data-value="<%= title %>"
                       data-color-id="<%= productColor.color_id?._id || '' %>"
                       title="<%= title %>"
-                      onclick="updateColorSelection(this); return false;">
+                      onclick="updateColorSelection(this); return false;"
+                    >
                     </a>
-                  <% }) %>
-                </div>
-              </div>
-
-              <!-- debug visual -->
-              <div class="small text-muted mt-2" id="debugPick">
-                Đang chọn:
-                <strong>Màu</strong> <span id="dbgColor">—</span> /
-                <strong>Size</strong> <span id="dbgSize">—</span>
-                <div id="combinationStatus" class="combination-status"></div>
-              </div>
-
-              <!-- hidden fields -->
-              <input type="hidden" name="sizeName" id="sizeName" value="">
-              <input type="hidden" name="colorName" id="selectedColor" value="">
-              <input type="hidden" name="product_id" id="productId" value="<%= product._id %>">
-              <input type="hidden" name="variant_sku" id="variantSku" value="">
-              <input type="hidden" name="size_id" id="sizeId" value="">
-              <input type="hidden" name="color_id" id="colorId" value="">
-            </div>
-
-            <!-- qty + button -->
-            <div class="product-single__addtocart">
-              <div class="qty-control position-relative">
-                <input type="number" name="quantity" value="1" min="1" class="qty-control__number text-center">
-                <div class="qty-control__reduce">-</div>
-                <div class="qty-control__increase">+</div>
-              </div>
-              <button type="submit" class="btn btn-primary product-form__cart-submit" data-aside="cartDrawer">
-                Thêm vào giỏ hàng
-              </button>
-            </div>
-          </form>
-
-          <div class="product-single__addtolinks">
-            <a href="#" class="menu-link menu-link_us-s add-to-wishlist">
-              <svg width="16" height="16" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <use href="#icon_heart" />
-              </svg>
-              <span>Thêm yêu thích</span>
-            </a>
-
-            <share-button class="share-button">
-              <button class="menu-link menu-link_us-s to-share border-0 bg-transparent d-flex align-items-center">
-                <svg width="16" height="19" viewBox="0 0 16 19" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <use href="#icon_sharing" />
-                </svg>
-                <span>Chia sẻ</span>
-              </button>
-              <details id="Details-share-template__main" class="m-1 xl:m-1.5" hidden>
-                <summary class="btn-solid m-1 xl:m-1.5 pt-3.5 pb-3 px-5">+</summary>
-                <div
-                  id="Article-share-template__main"
-                  class="share-button__fallback flex items-center absolute top-full left-0 w-full px-2 py-4 bg-container shadow-theme border-t z-10">
-                  <div class="field grow mr-4">
-                    <label class="field__label sr-only" for="url">Link</label>
-                    <input
-                      type="text"
-                      class="field__input w-full"
-                      id="url"
-                      value="https://uomo-crystal.myshopify.com/blogs/news/go-to-wellness-tips-for-mental-health"
-                      placeholder="Link"
-                      onclick="this.select();"
-                      readonly>
+                    <% }) %>
                   </div>
-                  <button class="share-button__copy no-js-hidden">
-                    <svg
-                      class="icon icon-clipboard inline-block mr-1"
-                      width="11"
-                      height="13"
-                      fill="none"
-                      xmlns="http://www.w3.org/2000/svg"
-                      aria-hidden="true"
-                      focusable="false"
-                      viewBox="0 0 11 13">
-                      <path
-                        fill-rule="evenodd"
-                        clip-rule="evenodd"
-                        d="M2 1a1 1 0 011-1h7a1 1 0 011 1v9a1 1 0 01-1 1V1H2zM1 2a1 1 0 00-1 1v9a1 1 0 001 1h7a1 1 0 001-1V3a1 1 0 00-1-1H1zm0 10V3h7v9H1z"
-                        fill="currentColor" />
-                    </svg>
-                    <span class="sr-only">Copy link</span>
-                  </button>
                 </div>
-              </details>
-            </share-button>
 
-            <script src="/mixishop/js/details-disclosure.js" defer></script>
-            <script src="/mixishop/js/share.js" defer></script>
-          </div>
+                <!-- debug visual -->
+                <div class="small text-muted mt-2" id="debugPick">
+                  Đang chọn:
+                  <strong>Màu</strong> <span id="dbgColor">—</span> /
+                  <strong>Size</strong> <span id="dbgSize">—</span>
+                  <div id="combinationStatus" class="combination-status"></div>
+                </div>
 
-          <div class="product-single__meta-info">
-            <div class="meta-item">
-              <label>Sản phẩm: </label>
-              <span><%= product.category?.name %></span>
+                <!-- hidden fields -->
+                <input type="hidden" name="sizeName" id="sizeName" value="" />
+                <input
+                  type="hidden"
+                  name="colorName"
+                  id="selectedColor"
+                  value=""
+                />
+                <input
+                  type="hidden"
+                  name="product_id"
+                  id="productId"
+                  value="<%= product._id %>"
+                />
+                <input
+                  type="hidden"
+                  name="variant_sku"
+                  id="variantSku"
+                  value=""
+                />
+                <input type="hidden" name="size_id" id="sizeId" value="" />
+                <input type="hidden" name="color_id" id="colorId" value="" />
+              </div>
+
+              <!-- qty + button -->
+              <div class="product-single__addtocart">
+                <div class="qty-control position-relative">
+                  <input
+                    type="number"
+                    name="quantity"
+                    value="1"
+                    min="1"
+                    class="qty-control__number text-center"
+                  />
+                  <div class="qty-control__reduce">-</div>
+                  <div class="qty-control__increase">+</div>
+                </div>
+                <button
+                  type="submit"
+                  class="btn btn-primary product-form__cart-submit"
+                  data-aside="cartDrawer"
+                >
+                  Thêm vào giỏ hàng
+                </button>
+              </div>
+            </form>
+
+            <div class="product-single__addtolinks">
+              <a href="#" class="menu-link menu-link_us-s add-to-wishlist">
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 20 20"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <use href="#icon_heart" />
+                </svg>
+                <span>Thêm yêu thích</span>
+              </a>
+
+              <share-button class="share-button">
+                <button
+                  class="menu-link menu-link_us-s to-share border-0 bg-transparent d-flex align-items-center"
+                >
+                  <svg
+                    width="16"
+                    height="19"
+                    viewBox="0 0 16 19"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <use href="#icon_sharing" />
+                  </svg>
+                  <span>Chia sẻ</span>
+                </button>
+                <details
+                  id="Details-share-template__main"
+                  class="m-1 xl:m-1.5"
+                  hidden
+                >
+                  <summary class="btn-solid m-1 xl:m-1.5 pt-3.5 pb-3 px-5">
+                    +
+                  </summary>
+                  <div
+                    id="Article-share-template__main"
+                    class="share-button__fallback flex items-center absolute top-full left-0 w-full px-2 py-4 bg-container shadow-theme border-t z-10"
+                  >
+                    <div class="field grow mr-4">
+                      <label class="field__label sr-only" for="url">Link</label>
+                      <input
+                        type="text"
+                        class="field__input w-full"
+                        id="url"
+                        value="https://uomo-crystal.myshopify.com/blogs/news/go-to-wellness-tips-for-mental-health"
+                        placeholder="Link"
+                        onclick="this.select();"
+                        readonly
+                      />
+                    </div>
+                    <button class="share-button__copy no-js-hidden">
+                      <svg
+                        class="icon icon-clipboard inline-block mr-1"
+                        width="11"
+                        height="13"
+                        fill="none"
+                        xmlns="http://www.w3.org/2000/svg"
+                        aria-hidden="true"
+                        focusable="false"
+                        viewBox="0 0 11 13"
+                      >
+                        <path
+                          fill-rule="evenodd"
+                          clip-rule="evenodd"
+                          d="M2 1a1 1 0 011-1h7a1 1 0 011 1v9a1 1 0 01-1 1V1H2zM1 2a1 1 0 00-1 1v9a1 1 0 001 1h7a1 1 0 001-1V3a1 1 0 00-1-1H1zm0 10V3h7v9H1z"
+                          fill="currentColor"
+                        />
+                      </svg>
+                      <span class="sr-only">Copy link</span>
+                    </button>
+                  </div>
+                </details>
+              </share-button>
+
+              <script src="/mixishop/js/details-disclosure.js" defer></script>
+              <script src="/mixishop/js/share.js" defer></script>
+            </div>
+
+            <div class="product-single__meta-info">
+              <div class="meta-item">
+                <label>Sản phẩm: </label>
+                <span><%= product.category?.name %></span>
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
-      <!-- (phần tabs giữ nguyên nếu có) -->
-    </section>
+        <!-- (phần tabs giữ nguyên nếu có) -->
+      </section>
 
-    <!-- ========== ĐÁNH GIÁ & BÌNH LUẬN ========== -->
-    <section id="section-reviews" class="container pdp-section mt-4 mb-4">
-      <% 
-        const __ratingAvg    = Number((rating && rating.average) || product.avg_rating || 0);
-        const __ratingCount  = Number((rating && rating.count) || product.rating_count || 0);
-        const __ratingRounded = Math.round(__ratingAvg || 0);
-      %>
+      <!-- ========== ĐÁNH GIÁ & BÌNH LUẬN ========== -->
+      <section id="section-reviews" class="container pdp-section mt-4 mb-4">
+        <% const __ratingAvg = Number((rating && rating.average) ||
+        product.avg_rating || 0); const __ratingCount = Number((rating &&
+        rating.count) || product.rating_count || 0); const __ratingRounded =
+        Math.round(__ratingAvg || 0); %>
 
-      <div class="qa-card mb-4">
-        <div class="qa-hero">
-          <div class="qa-hero__img d-none d-md-block">
-            <img src="/mixishop/images/qa-hero.svg" alt="Q&A">
-          </div>
-          <div class="flex-grow-1">
-            <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
-              <div>
-                <div class="qa-title">Đánh giá & bình luận</div>
-                <div class="qa-desc">
-                  Hãy chia sẻ cảm nhận của bạn về sản phẩm để mọi người cùng tham khảo nhé.
-                </div>
-              </div>
-              <div class="text-end">
-                <div class="rating-large mb-1">
-                  <% for (let i = 1; i <= 5; i++) { %>
-                    <i class="star <%= i <= __ratingRounded ? 'filled' : '' %>">★</i>
-                  <% } %>
-                </div>
-                <div class="fw-bold" style="font-size: 18px;">
-                  <span id="ratingAverage"><%= __ratingAvg.toFixed(1) %></span>/5
-                </div>
-                <div id="sentimentStats" class="mt-2 small">
-                  <% if (rating && rating.sentiment) { %>
-                    <div>😊 Tích cực: <strong><%= rating.sentiment.positive %></strong></div>
-                    <div>😐 Trung tính: <strong><%= rating.sentiment.neutral %></strong></div>
-                    <div>😡 Tiêu cực: <strong><%= rating.sentiment.negative %></strong></div>
-                    <div>⚪ Không xác định: <strong><%= rating.sentiment.null %></strong></div>
-                  <% } %>
-                </div>
-                <div class="small text-muted">
-                  <span id="ratingCount"><%= __ratingCount %></span> lượt đánh giá
-                </div>
-              </div>
+        <div class="qa-card mb-4">
+          <div class="qa-hero">
+            <div class="qa-hero__img d-none d-md-block">
+              <img src="/mixishop/images/qa-hero.svg" alt="Q&A" />
             </div>
+            <div class="flex-grow-1">
+              <div
+                class="d-flex flex-wrap align-items-center justify-content-between gap-3"
+              >
+                <div>
+                  <div class="qa-title">Đánh giá & bình luận</div>
+                  <div class="qa-desc">
+                    Hãy chia sẻ cảm nhận của bạn về sản phẩm để mọi người cùng
+                    tham khảo nhé.
+                  </div>
+                </div>
+                <div class="text-end">
+                  <div class="rating-large mb-1">
+                    <% for (let i = 1; i <= 5; i++) { %>
+                    <i class="star <%= i <= __ratingRounded ? 'filled' : '' %>"
+                      >★</i
+                    >
+                    <% } %>
+                  </div>
+                  <div class="fw-bold" style="font-size: 18px">
+                    <span id="ratingAverage"><%= __ratingAvg.toFixed(1) %></span
+                    >/5
+                  </div>
+                  <div id="sentimentStats" class="mt-2 small">
+                    <% if (rating && rating.sentiment) { %>
+                    <div>
+                      😊 Tích cực:
+                      <strong><%= rating.sentiment.positive %></strong>
+                    </div>
+                    <div>
+                      😐 Trung tính:
+                      <strong><%= rating.sentiment.neutral %></strong>
+                    </div>
+                    <div>
+                      😡 Tiêu cực:
+                      <strong><%= rating.sentiment.negative %></strong>
+                    </div>
+                    <div>
+                      ⚪ Không xác định:
+                      <strong><%= rating.sentiment.null %></strong>
+                    </div>
+                    <% } %>
+                  </div>
+                  <div class="small text-muted">
+                    <span id="ratingCount"><%= __ratingCount %></span> lượt đánh
+                    giá
+                  </div>
+                </div>
+              </div>
 
-            <!-- Ô nhập nhanh bình luận -->
-            <form id="reviewForm" class="mt-3">
-              <% if (!loggedInUser) { %>
+              <!-- Ô nhập nhanh bình luận -->
+              <form id="reviewForm" class="mt-3">
+                <% if (!loggedInUser) { %>
                 <div class="row g-2 mb-2">
                   <div class="col-md-4">
-                    <input type="text" class="form-control" name="guest_name" placeholder="Tên hiển thị *" required>
+                    <input
+                      type="text"
+                      class="form-control"
+                      name="guest_name"
+                      placeholder="Tên hiển thị *"
+                      required
+                    />
                   </div>
                   <div class="col-md-4">
-                    <input type="email" class="form-control" name="guest_email" placeholder="Email (tuỳ chọn)">
+                    <input
+                      type="email"
+                      class="form-control"
+                      name="guest_email"
+                      placeholder="Email (tuỳ chọn)"
+                    />
                   </div>
-                  <div class="col-md-4 d-flex align-items-center small text-muted">
+                  <div
+                    class="col-md-4 d-flex align-items-center small text-muted"
+                  >
                     <i class="me-1 bi bi-info-circle"></i>
                     Không cần đăng nhập để bình luận.
                   </div>
                 </div>
-              <% } else { %>
+                <% } else { %>
                 <div class="mb-2 small text-muted">
                   Đang đăng nhập:
-                  <strong><%= (user && user.full_name) || 'Tài khoản của bạn' %></strong>
+                  <strong
+                    ><%= (user && user.full_name) || 'Tài khoản của bạn'
+                    %></strong
+                  >
                 </div>
-              <% } %>
+                <% } %>
 
-              <div class="mb-2">
-                <textarea
-                  class="form-control"
-                  name="comment"
-                  id="reviewComment"
-                  placeholder="Viết cảm nhận của bạn về sản phẩm..."
-                  required></textarea>
-              </div>
+                <div class="mb-2">
+                  <textarea
+                    class="form-control"
+                    name="comment"
+                    id="reviewComment"
+                    placeholder="Viết cảm nhận của bạn về sản phẩm..."
+                    required
+                  ></textarea>
+                </div>
 
-              <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
-                <div class="rating-box d-flex align-items-center">
-                  <span class="me-2 small text-muted">Đánh giá sao:</span>
+                <div
+                  class="d-flex flex-wrap align-items-center justify-content-between gap-3"
+                >
+                  <div class="rating-box d-flex align-items-center">
+                    <span class="me-2 small text-muted">Đánh giá sao:</span>
 
-                  <div id="ratingStars">
-                    <% for (let i = 1; i <= 5; i++) { %>
+                    <div id="ratingStars">
+                      <% for (let i = 1; i <= 5; i++) { %>
                       <i class="rate-star" data-value="<%= i %>">★</i>
-                    <% } %>
-                  </div>
-
-                  <% if (!loggedInUser) { %>
-                    <span class="small text-muted ms-2">
-                      (Bạn cần đăng nhập để đánh giá sao)
-                    </span>
-                  <% } %>
-
-                  <input type="hidden" id="reviewRating" name="rating" value="">
-                </div>
-
-                <button type="submit" class="btn-ask">
-                  Gửi đánh giá
-                </button>
-              </div>
-
-              <div id="reviewMessage" class="small mt-2"></div>
-            </form>
-          </div>
-        </div>
-      </div>
-
-      <!-- DANH SÁCH BÌNH LUẬN -->
-      <div class="card p-3">
-        <div class="section-title mb-3">Bình luận sản phẩm</div>
-
-        <div id="reviewsList">
-          <% if (!reviews || !reviews.length) { %>
-            <div class="text-muted small">
-              Chưa có bình luận nào. Hãy là người đầu tiên đánh giá sản phẩm này!
-            </div>
-          <% } else { %>
-            <% reviews.forEach(function (r) {
-                 const displayName  = (r.user && r.user.full_name) || r.guest_name || 'Ẩn danh';
-                 const createdLabel = r.createdAt ? new Date(r.createdAt).toLocaleString('vi-VN') : '';
-                 const rRating      = Number(r.rating || 0);
-                 const rRounded     = Math.round(rRating || 0);
-
-                 const sentiment    = r.sentiment || null;
-                 const score        = (typeof r.sentiment_score === 'number') ? r.sentiment_score : null;
-                 const aiLabel      = r.ai_label || null;
-
-                 let sentimentText  = '';
-                 let sentimentColor = '#6b7280';
-
-                 if (sentiment === 'positive') {
-                   sentimentText  = 'Tích cực';
-                   sentimentColor = '#16a34a';
-                 } else if (sentiment === 'negative') {
-                   sentimentText  = 'Tiêu cực';
-                   sentimentColor = '#dc2626';
-                 } else if (sentiment === 'neutral') {
-                   sentimentText  = 'Trung tính';
-                 }
-
-                 let aiLabelText = '';
-                 if (aiLabel === 'happy')    aiLabelText = 'Khách hài lòng';
-                 if (aiLabel === 'complain') aiLabelText = 'Khách phàn nàn';
-                 if (aiLabel === 'urgent')   aiLabelText = 'Cần hỗ trợ gấp';
-            %>
-              <div class="comment-item cmt-item border-bottom pb-3 mb-3" data-id="<%= r._id %>">
-                <div class="d-flex">
-                  <div class="me-3">
-                    <div
-                      class="avatar rounded-circle d-flex align-items-center justify-content-center"
-                      style="width:40px;height:40px;background:#e5e7eb;font-weight:600;">
-                      <%= (displayName || 'Ẩn danh').charAt(0).toUpperCase() %>
-                    </div>
-                  </div>
-                  <div class="flex-grow-1">
-                    <div class="d-flex align-items-center justify-content-between mb-1">
-                      <div>
-                        <div class="fw-semibold"><%= displayName %></div>
-                        <div class="chat-meta"><%= createdLabel %></div>
-                      </div>
-                      <% if (rRating) { %>
-                        <div class="rating-small">
-                          <% for (let i = 1; i <= 5; i++) { %>
-                            <i class="star <%= i <= rRounded ? 'filled' : '' %>">★</i>
-                          <% } %>
-                        </div>
                       <% } %>
                     </div>
 
-                    <div class="chat-bubble"><%= r.comment %></div>
-
-                    <% if (sentimentText || score !== null || aiLabelText) { %>
-                      <div class="small mt-1" style="color:<%= sentimentColor %>; font-weight:600;">
-                        Cảm xúc AI:
-                        <% if (sentimentText) { %> <%= sentimentText %> <% } %>
-                        <% if (score !== null) { %> • Điểm: <%= score.toFixed(2) %> <% } %>
-                        <% if (aiLabelText) { %> • <span><%= aiLabelText %></span> <% } %>
-                      </div>
+                    <% if (!loggedInUser) { %>
+                    <span class="small text-muted ms-2">
+                      (Bạn cần đăng nhập để đánh giá sao)
+                    </span>
                     <% } %>
+
+                    <input
+                      type="hidden"
+                      id="reviewRating"
+                      name="rating"
+                      value=""
+                    />
+                  </div>
+
+                  <button type="submit" class="btn-ask">Gửi đánh giá</button>
+                </div>
+
+                <div id="reviewMessage" class="small mt-2"></div>
+              </form>
+            </div>
+          </div>
+        </div>
+
+        <!-- DANH SÁCH BÌNH LUẬN -->
+        <div class="card p-3">
+          <div class="section-title mb-3">Bình luận sản phẩm</div>
+
+          <div id="reviewsList">
+            <% if (!reviews || !reviews.length) { %>
+            <div class="text-muted small">
+              Chưa có bình luận nào. Hãy là người đầu tiên đánh giá sản phẩm
+              này!
+            </div>
+            <% } else { %> <% reviews.forEach(function (r) { const displayName =
+            (r.user && r.user.full_name) || r.guest_name || 'Ẩn danh'; const
+            createdLabel = r.createdAt ? new
+            Date(r.createdAt).toLocaleString('vi-VN') : ''; const rRating =
+            Number(r.rating || 0); const rRounded = Math.round(rRating || 0);
+            const sentiment = r.sentiment || null; const score = (typeof
+            r.sentiment_score === 'number') ? r.sentiment_score : null; const
+            aiLabel = r.ai_label || null; let sentimentText = ''; let
+            sentimentColor = '#6b7280'; if (sentiment === 'positive') {
+            sentimentText = 'Tích cực'; sentimentColor = '#16a34a'; } else if
+            (sentiment === 'negative') { sentimentText = 'Tiêu cực';
+            sentimentColor = '#dc2626'; } else if (sentiment === 'neutral') {
+            sentimentText = 'Trung tính'; } let aiLabelText = ''; if (aiLabel
+            === 'happy') aiLabelText = 'Khách hài lòng'; if (aiLabel ===
+            'complain') aiLabelText = 'Khách phàn nàn'; if (aiLabel ===
+            'urgent') aiLabelText = 'Cần hỗ trợ gấp'; %>
+            <div
+              class="comment-item cmt-item border-bottom pb-3 mb-3"
+              data-id="<%= r._id %>"
+            >
+              <div class="d-flex">
+                <div class="me-3">
+                  <div
+                    class="avatar rounded-circle d-flex align-items-center justify-content-center"
+                    style="
+                      width: 40px;
+                      height: 40px;
+                      background: #e5e7eb;
+                      font-weight: 600;
+                    "
+                  >
+                    <%= (displayName || 'Ẩn danh').charAt(0).toUpperCase() %>
                   </div>
                 </div>
+                <div class="flex-grow-1">
+                  <div
+                    class="d-flex align-items-center justify-content-between mb-1"
+                  >
+                    <div>
+                      <div class="fw-semibold"><%= displayName %></div>
+                      <div class="chat-meta"><%= createdLabel %></div>
+                    </div>
+                    <% if (rRating) { %>
+                    <div class="rating-small">
+                      <% for (let i = 1; i <= 5; i++) { %>
+                      <i class="star <%= i <= rRounded ? 'filled' : '' %>">★</i>
+                      <% } %>
+                    </div>
+                    <% } %>
+                  </div>
+
+                  <div class="chat-bubble"><%= r.comment %></div>
+
+                  <% if (sentimentText || score !== null || aiLabelText) { %>
+                  <div
+                    class="small mt-1"
+                    style="color: <%= sentimentColor %>; font-weight: 600"
+                  >
+                    Cảm xúc AI: <% if (sentimentText) { %> <%= sentimentText %>
+                    <% } %> <% if (score !== null) { %> • Điểm: <%=
+                    score.toFixed(2) %> <% } %> <% if (aiLabelText) { %> •
+                    <span><%= aiLabelText %></span> <% } %>
+                  </div>
+                  <% } %>
+                </div>
               </div>
-            <% }) %>
-          <% } %>
+            </div>
+            <% }) %> <% } %>
+          </div>
         </div>
-      </div>
-    </section>
+      </section>
 
-    <!-- ================= RELATED ================= -->
-    <section id="section-related" class="products-carousel container" style="margin-top:10px;">
-      <h2 class="h3 mb-4 pb-xl-2 mb-xl-4">
-        Liên quan đến <span><%= product?.category?.name || 'sản phẩm này' %></span>
-      </h2>
+      <!-- ================= RELATED ================= -->
+      <section
+        id="section-related"
+        class="products-carousel container"
+        style="margin-top: 10px"
+      >
+        <h2 class="h3 mb-4 pb-xl-2 mb-xl-4">
+          Liên quan đến
+          <span><%= product?.category?.name || 'sản phẩm này' %></span>
+        </h2>
 
-      <div id="related_products" class="position-relative">
-        <div
-          class="swiper-container js-swiper-slider"
-          data-settings='{
+        <div id="related_products" class="position-relative">
+          <div
+            class="swiper-container js-swiper-slider"
+            data-settings='{
             "autoplay": false,
             "slidesPerView": 4,
             "slidesPerGroup": 4,
@@ -798,9 +933,11 @@
               "768":  { "slidesPerView": 3, "slidesPerGroup": 3, "spaceBetween": 24 },
               "992":  { "slidesPerView": 4, "slidesPerGroup": 4, "spaceBetween": 30 }
             }
-          }'>
-          <div class="swiper-wrapper">
-            <% (products || []).slice(0, Math.min((products || []).length, 10)).forEach(function(item){ %>
+          }'
+          >
+            <div class="swiper-wrapper">
+              <% (products || []).slice(0, Math.min((products || []).length,
+              10)).forEach(function(item){ %>
               <div class="swiper-slide product-card product-card_style3">
                 <div class="pc__img-wrapper position-relative">
                   <a href="/product_detail/<%= item.id || item._id %>">
@@ -810,65 +947,91 @@
                       width="258"
                       height="313"
                       alt="<%= item.name %>"
-                      class="pc__img">
+                      class="pc__img"
+                    />
                     <img
                       loading="lazy"
                       src="<%= (item.colors?.[0]?.imageUrls?.[1]) || (item.colors?.[0]?.imageUrls?.[0]) || '/images/default.png' %>"
                       width="258"
                       height="313"
                       alt="<%= item.name %>"
-                      class="pc__img pc__img-second">
+                      class="pc__img pc__img-second"
+                    />
 
-                    <% 
-                      const st = item.productStatus?.statusName;
-                      const frameSrc = st === 'Bán chạy'
-                        ? '/mixishop/images/frame_banchay.png'
-                        : st === 'Trending'
-                          ? '/mixishop/images/frame_trending.png'
-                          : '/mixishop/images/frame_new.png';
-                    %>
-                    <img class="category-banner__frame" src="<%= frameSrc %>" alt="Status Frame">
+                    <% const st = item.productStatus?.statusName; const frameSrc
+                    = st === 'Bán chạy' ? '/mixishop/images/frame_banchay.png' :
+                    st === 'Trending' ? '/mixishop/images/frame_trending.png' :
+                    '/mixishop/images/frame_new.png'; %>
+                    <img
+                      class="category-banner__frame"
+                      src="<%= frameSrc %>"
+                      alt="Status Frame"
+                    />
                   </a>
                 </div>
 
                 <!-- mini swatch chỉ để show màu -->
-                <div class="d-flex align-items-center mt-1 custom-swatch-container">
-                  <% (item.colors || []).forEach(function(productColor){ 
-                       const img0  = (productColor.imageUrls && productColor.imageUrls[0]) || '';
-                       const title = productColor.color_id?.color_name || productColor.color || 'Màu';
-                       const dataVal = productColor.color_id?.color_name || productColor.color || '';
+                <div
+                  class="d-flex align-items-center mt-1 custom-swatch-container"
+                >
+                  <% (item.colors || []).forEach(function(productColor){ const
+                  img0 = (productColor.imageUrls && productColor.imageUrls[0])
+                  || ''; const title = productColor.color_id?.color_name ||
+                  productColor.color || 'Màu'; const dataVal =
+                  productColor.color_id?.color_name || productColor.color || '';
                   %>
-                    <span
-                      class="swatch-color custom-swatch-color"
-                      style="background-image:url('<%= img0 %>'); background-size:cover;"
-                      title="<%= title %>"
-                      data-value="<%= dataVal %>">
-                    </span>
+                  <span
+                    class="swatch-color custom-swatch-color"
+                    style="
+                      background-image: url('<%= img0 %>');
+                      background-size: cover;
+                    "
+                    title="<%= title %>"
+                    data-value="<%= dataVal %>"
+                  >
+                  </span>
                   <% }) %>
                 </div>
 
-                <div class="pc__info position-relative d-flex flex-column justify-content-between">
+                <div
+                  class="pc__info position-relative d-flex flex-column justify-content-between"
+                >
                   <h1 class="pc__title">
-                    <a href="/product_detail/<%= item.id || item._id %>"><%= item.name %></a>
+                    <a href="/product_detail/<%= item.id || item._id %>"
+                      ><%= item.name %></a
+                    >
                   </h1>
 
-                  <div class="product-card__price d-flex align-items-center justify-content-between">
+                  <div
+                    class="product-card__price d-flex align-items-center justify-content-between"
+                  >
                     <span class="money price-old">
                       <%= formatPrice((Number(item.price) || 0) + 100000) %>
                     </span>
-                    <span class="money price text-secondary small-price" style="color:blue;">
+                    <span
+                      class="money price text-secondary small-price"
+                      style="color: blue"
+                    >
                       <%= formatPrice(item.price) %>
                     </span>
                   </div>
                 </div>
 
                 <div
-                  class="anim_appear-bottom position-absolute bottom-0 start-0 d-none d-sm-flex align-items-center bg-body">
+                  class="anim_appear-bottom position-absolute bottom-0 start-0 d-none d-sm-flex align-items-center bg-body"
+                >
                   <button
                     class="btn-icon btn-link btn-link_lg me-4 fw-medium js-open-aside"
                     data-aside="cartDrawer"
-                    title="Add To Cart">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                    title="Add To Cart"
+                  >
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="currentColor"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
                       <use href="#icon_cart" />
                     </svg>
                     <span class="ms-2 small-text">Thêm giỏ hàng</span>
@@ -876,8 +1039,15 @@
                   <a
                     class="btn-icon btn-link btn-link_lg me-4 fw-medium"
                     href="/product_detail/<%= item.id || item._id %>"
-                    title="Quick View">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                    title="Quick View"
+                  >
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="currentColor"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
                       <use href="#icon_view" />
                     </svg>
                     <span class="ms-2 small-text">Chi tiết</span>
@@ -885,150 +1055,190 @@
                   <button
                     class="pc__btn-wl bg-transparent border-0 js-add-wishlist"
                     title="Thêm yêu thích"
-                    data-product="<%= item.id || item._id %>">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                    data-product="<%= item.id || item._id %>"
+                  >
+                    <svg
+                      width="18"
+                      height="18"
+                      viewBox="0 0 24 24"
+                      fill="currentColor"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
                       <use href="#icon_heart" />
                     </svg>
                   </button>
                 </div>
               </div>
-            <% }) %>
+              <% }) %>
+            </div>
           </div>
+
+          <div
+            class="products-carousel__prev position-absolute top-50 d-flex align-items-center justify-content-center"
+          >
+            <svg
+              width="25"
+              height="25"
+              viewBox="0 0 25 25"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <use href="#icon_prev_md" />
+            </svg>
+          </div>
+          <div
+            class="products-carousel__next position-absolute top-50 d-flex align-items-center justify-content-center"
+          >
+            <svg
+              width="25"
+              height="25"
+              viewBox="0 0 25 25"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <use href="#icon_next_md" />
+            </svg>
+          </div>
+          <div
+            class="products-pagination mt-4 mb-5 d-flex align-items-center justify-content-center"
+          ></div>
         </div>
+      </section>
+    </main>
 
-        <div class="products-carousel__prev position-absolute top-50 d-flex align-items-center justify-content-center">
-          <svg width="25" height="25" viewBox="0 0 25 25" xmlns="http://www.w3.org/2000/svg">
-            <use href="#icon_prev_md" />
-          </svg>
-        </div>
-        <div class="products-carousel__next position-absolute top-50 d-flex align-items-center justify-content-center">
-          <svg width="25" height="25" viewBox="0 0 25 25" xmlns="http://www.w3.org/2000/svg">
-            <use href="#icon_next_md" />
-          </svg>
-        </div>
-        <div class="products-pagination mt-4 mb-5 d-flex align-items-center justify-content-center"></div>
-      </div>
-    </section>
-  </main>
+    <div class="mb-5 pb-xl-5"></div>
 
-  <div class="mb-5 pb-xl-5"></div>
+    <div class="aside-filters aside aside_right" id="shopFilter"></div>
 
-  <div class="aside-filters aside aside_right" id="shopFilter"></div>
+    <%- include('partials/footer') %> <%- include('partials/icons') %> <%-
+    include('partials/login_form') %> <%- include('partials/cart_drawer') %> <%-
+    include('partials/quick_view') %> <%- include('partials/sitemap') %>
 
-  <%- include('partials/footer') %>
-  <%- include('partials/icons') %>
-  <%- include('partials/login_form') %>
-  <%- include('partials/cart_drawer') %>
-  <%- include('partials/quick_view') %>
-  <%- include('partials/sitemap') %>
+    <div id="scrollTop" class="visually-hidden end-0"></div>
 
-  <div id="scrollTop" class="visually-hidden end-0"></div>
-
-  <!-- Sizeguide modal -->
-  <div class="modal fade" id="sizeGuide" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog size-guide">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title">Bảng kích thước</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body">
-          <div class="size-guide__wrapper">
-            <div class="size-guide__image">
-              <img loading="lazy" src="/mixishop/images/checksize.png" alt="">
+    <!-- Sizeguide modal -->
+    <div class="modal fade" id="sizeGuide" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog size-guide">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Bảng kích thước</h5>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
+          </div>
+          <div class="modal-body">
+            <div class="size-guide__wrapper">
+              <div class="size-guide__image">
+                <img
+                  loading="lazy"
+                  src="/mixishop/images/checksize.png"
+                  alt=""
+                />
+              </div>
             </div>
           </div>
         </div>
       </div>
     </div>
-  </div>
 
-  <div class="page-overlay"></div>
+    <div class="page-overlay"></div>
 
-  <!-- libs -->
-  <script src="/mixishop/js/plugins/jquery.min.js"></script>
-  <script src="/mixishop/js/plugins/bootstrap.bundle.min.js"></script>
-  <script src="/mixishop/js/plugins/bootstrap-slider.min.js"></script>
-  <script src="/mixishop/js/plugins/swiper.min.js"></script>
-  <script src="/mixishop/js/plugins/countdown.js"></script>
-  <script src="/mixishop/js/plugins/jquery.fancybox.js"></script>
-  <script src="/mixishop/js/theme.js"></script>
-  <script src="/socket.io/socket.io.js"></script>
+    <!-- libs -->
+    <script src="/mixishop/js/plugins/jquery.min.js"></script>
+    <script src="/mixishop/js/plugins/bootstrap.bundle.min.js"></script>
+    <script src="/mixishop/js/plugins/bootstrap-slider.min.js"></script>
+    <script src="/mixishop/js/plugins/swiper.min.js"></script>
+    <script src="/mixishop/js/plugins/countdown.js"></script>
+    <script src="/mixishop/js/plugins/jquery.fancybox.js"></script>
+    <script src="/mixishop/js/theme.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
 
-  <!-- expose variants cho FE -->
-  <script>
-    // Matrix "<sizeId>:<colorId>" -> sku
-    window.__VAR_MATRIX = <%- JSON.stringify(
-      typeof variantMatrix !== 'undefined' ? variantMatrix : {}
-    ) %>;
+    <!-- expose variants cho FE -->
+    <script>
+      // Matrix "<sizeId>:<colorId>" -> sku
+      window.__VAR_MATRIX = <%- JSON.stringify(
+        typeof variantMatrix !== 'undefined' ? variantMatrix : {}
+      ) %>;
 
-    // Danh sách variant đơn giản: { size, color, sku }
-    window.__VARIANTS = <%- JSON.stringify(
-      (typeof variants !== 'undefined' ? variants : []).map(v => ({
-        size:  v.size  && v.size._id  ? String(v.size._id)  : String(v.size),
-        color: v.color && v.color._id ? String(v.color._id) : String(v.color),
-        sku:   v.sku || '',
-        price: v.price || 0,
-        stock_quantity: v.stock_quantity || 0
-      }))
-    ) %>;
-  </script>
+      // Danh sách variant đơn giản: { size, color, sku }
+      window.__VARIANTS = <%- JSON.stringify(
+        (typeof variants !== 'undefined' ? variants : []).map(v => ({
+          size:  v.size  && v.size._id  ? String(v.size._id)  : String(v.size),
+          color: v.color && v.color._id ? String(v.color._id) : String(v.color),
+          sku:   v.sku || '',
+          price: v.price || 0,
+          stock_quantity: v.stock_quantity || 0
+        }))
+      ) %>;
+    </script>
 
-  <script>
-    // ========= COMMON UTILS =========
-    const AppUtils = {
-      qs(sel, ctx)  { return (ctx || document).querySelector(sel); },
-      qsa(sel, ctx) { return Array.from((ctx || document).querySelectorAll(sel)); },
-      escapeHtml(s) {
-        return (s || '').replace(/[&<>"']/g, m => ({
-          '&': '&amp;',
-          '<': '&lt;',
-          '>': '&gt;',
-          '"': '&quot;',
-          "'": '&#039;'
-        }[m]));
+    <script>
+      // ========= COMMON UTILS =========
+      const AppUtils = {
+        qs(sel, ctx) {
+          return (ctx || document).querySelector(sel);
+        },
+        qsa(sel, ctx) {
+          return Array.from((ctx || document).querySelectorAll(sel));
+        },
+        escapeHtml(s) {
+          return (s || "").replace(
+            /[&<>"']/g,
+            (m) =>
+              ({
+                "&": "&amp;",
+                "<": "&lt;",
+                ">": "&gt;",
+                '"': "&quot;",
+                "'": "&#039;",
+              }[m])
+          );
+        },
+      };
+
+      function _paintDebug() {
+        const dbgColor = document.getElementById("dbgColor");
+        const dbgSize = document.getElementById("dbgSize");
+        const colorVal = document.getElementById("selectedColor")?.value || "";
+        const sizeVal = document.getElementById("sizeName")?.value || "";
+        if (dbgColor) dbgColor.textContent = colorVal || "—";
+        if (dbgSize) dbgSize.textContent = sizeVal || "—";
       }
-    };
 
-    function _paintDebug() {
-      const dbgColor = document.getElementById('dbgColor');
-      const dbgSize  = document.getElementById('dbgSize');
-      const colorVal = document.getElementById('selectedColor')?.value || '';
-      const sizeVal  = document.getElementById('sizeName')?.value || '';
-      if (dbgColor) dbgColor.textContent = colorVal || '—';
-      if (dbgSize)  dbgSize.textContent  = sizeVal  || '—';
-    }
+      const GLOBAL_SOCKET = window.io ? io() : null;
 
-    const GLOBAL_SOCKET = window.io ? io() : null;
+      // ========= RENDER CART DRAWER TỪ JSON CARTS =========
+      function renderCartDrawerFromCarts(carts, total, formattedTotal) {
+        const listEl = document.querySelector("#cartDrawer .js-mini-cart-list");
+        if (!listEl) return;
 
-    // ========= RENDER CART DRAWER TỪ JSON CARTS =========
-    function renderCartDrawerFromCarts(carts, total, formattedTotal) {
-      const listEl = document.querySelector('#cartDrawer .js-mini-cart-list');
-      if (!listEl) return;
+        const fmt = (n) => Number(n || 0).toLocaleString("vi-VN") + "đ";
 
-      const fmt = (n) => (Number(n || 0)).toLocaleString('vi-VN') + 'đ';
-
-      if (!Array.isArray(carts) || !carts.length) {
-        listEl.innerHTML = `
+        if (!Array.isArray(carts) || !carts.length) {
+          listEl.innerHTML = `
           <div class="empty">
             <div class="mb-2" style="font-size:40px; line-height:1;">🛍️</div>
             <div class="fw-semibold mb-1">Giỏ hàng trống</div>
             <div class="small">Tiếp tục mua sắm để tìm món bạn thích nhé!</div>
           </div>
         `;
-      } else {
-        listEl.innerHTML = carts.map((it, idx) => {
-          const name  = AppUtils.escapeHtml(it.name_snapshot || 'Sản phẩm');
-          const color = AppUtils.escapeHtml(it.color_name_snapshot || '—');
-          const size  = AppUtils.escapeHtml(it.size_name_snapshot || '—');
-          const img   = AppUtils.escapeHtml(it.img_snapshot || '/images/default.png');
-          const qty   = Number(it.quantity || 1);
-          const unit  = Number(it.price_at_time || 0);
-          const line  = unit * qty;
-          const pid   = it.product_id || it.productId || '';
-          const url   = pid ? `/product_detail/${pid}` : '#';
+        } else {
+          listEl.innerHTML = carts
+            .map((it, idx) => {
+              const name = AppUtils.escapeHtml(it.name_snapshot || "Sản phẩm");
+              const color = AppUtils.escapeHtml(it.color_name_snapshot || "—");
+              const size = AppUtils.escapeHtml(it.size_name_snapshot || "—");
+              const img = AppUtils.escapeHtml(
+                it.img_snapshot || "/images/default.png"
+              );
+              const qty = Number(it.quantity || 1);
+              const unit = Number(it.price_at_time || 0);
+              const line = unit * qty;
+              const pid = it.product_id || it.productId || "";
+              const url = pid ? `/product_detail/${pid}` : "#";
 
-          return `
+              return `
             <div class="cdi position-relative" id="cdr-item-${idx}">
               <a class="cdi-thumb" href="${url}" aria-label="${name}">
                 <img loading="lazy" src="${img}" alt="${name}">
@@ -1065,555 +1275,587 @@
                 data-idx="${idx}">&times;</button>
             </div>
           `;
-        }).join('');
-      }
-
-      // Cập nhật tổng giá ở footer drawer
-      const subtotalEl = document.getElementById('cdr-subtotal');
-      if (subtotalEl) {
-        subtotalEl.textContent = formattedTotal || fmt(total || 0);
-      }
-
-      // Badge số lượng trong header drawer
-      const badgeDrawer = document.querySelector('#cartDrawer .js-cart-items-count');
-      if (badgeDrawer) {
-        badgeDrawer.textContent = Array.isArray(carts) ? carts.length : 0;
-      }
-    }
-  </script>
-
-  <!-- ========== COLOR / SIZE / SKU + CART & UI ========== -->
-  <script>
-    (function () {
-      const VARIANTS  = window.__VARIANTS || [];
-      const productId = '<%= product._id %>';
-      const socket    = GLOBAL_SOCKET;
-
-      function resolveVariant(sizeId, colorId) {
-        if (!sizeId || !colorId) return null;
-        return VARIANTS.find(v => v.size === sizeId && v.color === colorId) || null;
-      }
-
-      function formatCurrencyVND(value) {
-        if (!value && value !== 0) return '';
-        return value.toLocaleString('vi-VN') + '₫';
-      }
-
-      function changeColorImage(swatch) {
-        const dataImages = swatch.getAttribute('data-images');
-        const images = dataImages ? dataImages.split(',') : [];
-        if (!images.length) return;
-
-        const mainSwiper  = document.querySelector('.product-single__image .swiper-container')?.swiper;
-        const thumbSwiper = document.querySelector('.product-single__thumbnail .swiper-container')?.swiper;
-        const firstImage  = images[0];
-
-        const slides = document.querySelectorAll('.product-single__image-item img');
-        const targetIndex = Array.from(slides).findIndex(slide => slide.getAttribute('src') === firstImage);
-
-        if (targetIndex !== -1 && mainSwiper && thumbSwiper) {
-          mainSwiper.slideTo(targetIndex);
-          thumbSwiper.slideTo(targetIndex);
-        }
-      }
-
-      // public handler: chọn size
-      window.updateSizeSelection = function (radio) {
-        const sizeId   = radio.getAttribute('data-size-id')   || '';
-        const sizeName = radio.getAttribute('data-size-name') || '';
-
-        document.getElementById('sizeId').value   = sizeId;
-        document.getElementById('sizeName').value = sizeName;
-
-        recomputeSku();
-        _paintDebug();
-      };
-
-      // public handler: chọn màu
-      window.updateColorSelection = function (colorElement) {
-        const colorName = colorElement.getAttribute('data-value')    || '';
-        const colorId   = colorElement.getAttribute('data-color-id') || '';
-
-        document.getElementById('selectedColor').value = colorName;
-        document.getElementById('colorId').value       = colorId;
-
-        document.querySelectorAll('.swatch-color').forEach(c => c.classList.remove('swatch_active'));
-        colorElement.classList.add('swatch_active');
-
-        changeColorImage(colorElement);
-        recomputeSku();
-        _paintDebug();
-      };
-
-      function recomputeSku() {
-        const sizeId  = document.getElementById('sizeId')?.value || '';
-        const colorId = document.getElementById('colorId')?.value || '';
-
-        const skuEl    = document.getElementById('variantSku');
-        const statusEl = document.getElementById('combinationStatus');
-        const addBtn   = document.querySelector('.btn.btn-primary[data-aside="cartDrawer"]');
-        const priceEl  = document.querySelector('.product-single__price .current-price');
-
-        const variant = resolveVariant(sizeId, colorId);
-
-        if (skuEl) {
-          skuEl.value = variant ? (variant.sku || '') : '';
+            })
+            .join("");
         }
 
-        if (statusEl) statusEl.classList.remove('ok', 'error');
+        // Cập nhật tổng giá ở footer drawer
+        const subtotalEl = document.getElementById("cdr-subtotal");
+        if (subtotalEl) {
+          subtotalEl.textContent = formattedTotal || fmt(total || 0);
+        }
 
-        // cập nhật giá
-        if (priceEl) {
-          if (variant && typeof variant.price === 'number') {
-            priceEl.textContent = formatCurrencyVND(variant.price);
-          } else {
-            const baseText = priceEl.getAttribute('data-base-price-text');
-            if (baseText) priceEl.textContent = baseText;
+        // Badge số lượng trong header drawer
+        const badgeDrawer = document.querySelector(
+          "#cartDrawer .js-cart-items-count"
+        );
+        if (badgeDrawer) {
+          badgeDrawer.textContent = Array.isArray(carts) ? carts.length : 0;
+        }
+      }
+    </script>
+
+    <!-- ========== COLOR / SIZE / SKU + CART & UI ========== -->
+    <script>
+      (function () {
+        const VARIANTS = window.__VARIANTS || [];
+        const productId = "<%= product._id %>";
+        const socket = GLOBAL_SOCKET;
+
+        function resolveVariant(sizeId, colorId) {
+          if (!sizeId || !colorId) return null;
+          return (
+            VARIANTS.find((v) => v.size === sizeId && v.color === colorId) ||
+            null
+          );
+        }
+
+        function formatCurrencyVND(value) {
+          if (!value && value !== 0) return "";
+          return value.toLocaleString("vi-VN") + "₫";
+        }
+
+        function changeColorImage(swatch) {
+          const dataImages = swatch.getAttribute("data-images");
+          const images = dataImages ? dataImages.split(",") : [];
+          if (!images.length) return;
+
+          const mainSwiper = document.querySelector(
+            ".product-single__image .swiper-container"
+          )?.swiper;
+          const thumbSwiper = document.querySelector(
+            ".product-single__thumbnail .swiper-container"
+          )?.swiper;
+          const firstImage = images[0];
+
+          const slides = document.querySelectorAll(
+            ".product-single__image-item img"
+          );
+          const targetIndex = Array.from(slides).findIndex(
+            (slide) => slide.getAttribute("src") === firstImage
+          );
+
+          if (targetIndex !== -1 && mainSwiper && thumbSwiper) {
+            mainSwiper.slideTo(targetIndex);
+            thumbSwiper.slideTo(targetIndex);
           }
         }
 
-        if (addBtn) {
-          addBtn.disabled = true;
-          addBtn.textContent = 'Hết hàng';
-        }
+        // public handler: chọn size
+        window.updateSizeSelection = function (radio) {
+          const sizeId = radio.getAttribute("data-size-id") || "";
+          const sizeName = radio.getAttribute("data-size-name") || "";
 
-        if (!sizeId || !colorId) {
-          if (statusEl) statusEl.textContent = '';
+          document.getElementById("sizeId").value = sizeId;
+          document.getElementById("sizeName").value = sizeName;
+
+          recomputeSku();
+          _paintDebug();
+        };
+
+        // public handler: chọn màu
+        window.updateColorSelection = function (colorElement) {
+          const colorName = colorElement.getAttribute("data-value") || "";
+          const colorId = colorElement.getAttribute("data-color-id") || "";
+
+          document.getElementById("selectedColor").value = colorName;
+          document.getElementById("colorId").value = colorId;
+
+          document
+            .querySelectorAll(".swatch-color")
+            .forEach((c) => c.classList.remove("swatch_active"));
+          colorElement.classList.add("swatch_active");
+
+          changeColorImage(colorElement);
+          recomputeSku();
+          _paintDebug();
+        };
+
+        function recomputeSku() {
+          const sizeId = document.getElementById("sizeId")?.value || "";
+          const colorId = document.getElementById("colorId")?.value || "";
+
+          const skuEl = document.getElementById("variantSku");
+          const statusEl = document.getElementById("combinationStatus");
+          const addBtn = document.querySelector(
+            '.btn.btn-primary[data-aside="cartDrawer"]'
+          );
+          const priceEl = document.querySelector(
+            ".product-single__price .current-price"
+          );
+
+          const variant = resolveVariant(sizeId, colorId);
+
+          if (skuEl) {
+            skuEl.value = variant ? variant.sku || "" : "";
+          }
+
+          if (statusEl) statusEl.classList.remove("ok", "error");
+
+          // cập nhật giá
+          if (priceEl) {
+            if (variant && typeof variant.price === "number") {
+              priceEl.textContent = formatCurrencyVND(variant.price);
+            } else {
+              const baseText = priceEl.getAttribute("data-base-price-text");
+              if (baseText) priceEl.textContent = baseText;
+            }
+          }
+
           if (addBtn) {
             addBtn.disabled = true;
-            addBtn.textContent = 'Chọn tùy chọn';
-          }
-          return;
-        }
-
-        if (!variant) {
-          if (statusEl) {
-            statusEl.textContent = 'Phiên bản này không tồn tại.';
-            statusEl.classList.add('error');
-          }
-          if (addBtn) {
-            addBtn.disabled = true;
-            addBtn.textContent = 'Không khả dụng';
-          }
-          return;
-        }
-
-        const stockQty = Number(variant.stock_quantity || 0);
-
-        if (stockQty > 0) {
-          if (statusEl) {
-            statusEl.textContent = `Phiên bản này đang còn hàng (${stockQty} sản phẩm).`;
-            statusEl.classList.add('ok');
-          }
-          if (addBtn) {
-            addBtn.disabled = false;
-            addBtn.textContent = 'Thêm vào giỏ';
-          }
-        } else {
-          if (statusEl) {
-            statusEl.textContent = 'Phiên bản này hiện đã hết hàng.';
-            statusEl.classList.add('error');
-          }
-          if (addBtn) {
-            addBtn.disabled = true;
-            addBtn.textContent = 'Hết hàng';
-          }
-        }
-      }
-
-      document.addEventListener('DOMContentLoaded', () => {
-        // reset chọn ban đầu
-        document.getElementById('sizeId').value       = '';
-        document.getElementById('sizeName').value     = '';
-        document.getElementById('colorId').value      = '';
-        document.getElementById('selectedColor').value = '';
-        _paintDebug();
-
-        // ===== ADD TO CART (AJAX) =====
-        const form =
-          document.forms['addtocart-form'] ||
-          document.querySelector('form[name="addtocart-form"]');
-
-        if (form) {
-          form.addEventListener('submit', async (e) => {
-            e.preventDefault();
-
-            const sizeId    = document.getElementById('sizeId')?.value;
-            const colorId   = document.getElementById('colorId')?.value;
-            const variantSku = document.getElementById('variantSku')?.value;
-
-            if (!sizeId || !colorId) {
-              alert('Vui lòng chọn đủ Size và Màu.');
-              return;
-            }
-            if (!variantSku) {
-              alert('Không tìm thấy phiên bản tương ứng Size/Màu. Vui lòng chọn lại.');
-              return;
-            }
-
-            try {
-              const fd   = new FormData(form);
-              const body = new URLSearchParams();
-              for (const [k, v] of fd.entries()) body.append(k, v);
-
-              const res = await fetch(form.action, {
-                method: 'POST',
-                body: body.toString(),
-                headers: {
-                  'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
-                  'X-Requested-With': 'XMLHttpRequest'
-                }
-              });
-
-              const data = await res.json().catch(() => ({}));
-              if (!res.ok || !data.ok) {
-                alert(data.message || 'Thêm vào giỏ hàng thất bại, vui lòng thử lại.');
-                return;
-              }
-
-              // cập nhật badge icon cart (trên header)
-              if (typeof data.cartCount !== 'undefined') {
-                const cartCountEl = document.querySelector('.js-cart-count');
-                if (cartCountEl) cartCountEl.textContent = data.cartCount;
-              }
-
-              // cập nhật cart drawer
-              if (Array.isArray(data.carts)) {
-                renderCartDrawerFromCarts(data.carts, data.total, data.formattedTotal);
-              }
-
-              // mở cart drawer
-              const trigger = document.querySelector('[data-aside="cartDrawer"]');
-              if (trigger) trigger.click();
-            } catch (err) {
-              console.error(err);
-              alert('Có lỗi kết nối, vui lòng thử lại.');
-            }
-          });
-        }
-
-        // qty +/- ở PDP
-        (function () {
-          const decBtn  = document.querySelector('.qty-control__reduce');
-          const incBtn  = document.querySelector('.qty-control__increase');
-          const qtyInput = document.querySelector('.qty-control__number');
-          if (!decBtn || !incBtn || !qtyInput) return;
-
-          decBtn.addEventListener('click', () => {
-            const v = parseInt(qtyInput.value || '1', 10);
-            if (v > 1) qtyInput.value = v - 1;
-          });
-
-          incBtn.addEventListener('click', () => {
-            const v = parseInt(qtyInput.value || '1', 10);
-            qtyInput.value = v + 1;
-          });
-        })();
-      });
-    })();
-  </script>
-
-  <script>
-    (function () {
-      const socket      = GLOBAL_SOCKET || null;
-      const productId   = '<%= product._id %>';
-      const isLoggedIn  = <%= loggedInUser ? 'true' : 'false' %>;
-      const apiUrl      = '/api/product/<%= product._id %>/reviews';
-
-      const reviewListEl   = document.getElementById('reviewsList');
-      const ratingAvgEl    = document.getElementById('ratingAverage');
-      const ratingCountEl  = document.getElementById('ratingCount');
-      const ratingMessage  = document.getElementById('reviewMessage');
-
-      // vẽ lại sao trung bình
-      function repaintAverageStars(avg) {
-        const container = document.querySelector('.rating-large');
-        if (!container) return;
-        const rounded = Math.round(avg || 0);
-        container.innerHTML = '';
-        for (let i = 1; i <= 5; i++) {
-          const iEl = document.createElement('i');
-          iEl.className = 'star' + (i <= rounded ? ' filled' : '');
-          iEl.textContent = '★';
-          container.appendChild(iEl);
-        }
-      }
-
-      // render 1 item review -> HTML string
-      function buildReviewHtml(r) {
-        const displayName  = (r.user && r.user.full_name) || r.guest_name || 'Ẩn danh';
-        const createdLabel = r.createdAt ? new Date(r.createdAt).toLocaleString('vi-VN') : '';
-        const rRating      = Number(r.rating || 0);
-        const rRounded     = Math.round(rRating || 0);
-
-        const sentiment    = r.sentiment || null;
-        const score        = (typeof r.sentiment_score === 'number') ? r.sentiment_score : null;
-        const aiLabel      = r.ai_label || null;
-
-        const safeName    = AppUtils.escapeHtml(displayName);
-        const safeComment = AppUtils.escapeHtml(r.comment || '');
-
-        let starsHtml = '';
-        if (rRating) {
-          for (let i = 1; i <= 5; i++) {
-            starsHtml += `<i class="star ${i <= rRounded ? 'filled' : ''}">★</i>`;
-          }
-        }
-
-        let sentimentText  = '';
-        let sentimentColor = '#6b7280';
-
-        if (sentiment === 'positive') {
-          sentimentText  = 'Tích cực';
-          sentimentColor = '#16a34a';
-        } else if (sentiment === 'negative') {
-          sentimentText  = 'Tiêu cực';
-          sentimentColor = '#dc2626';
-        } else if (sentiment === 'neutral') {
-          sentimentText = 'Trung tính';
-        }
-
-        let aiLabelText = '';
-        if (aiLabel === 'happy')    aiLabelText = 'Khách hài lòng';
-        if (aiLabel === 'complain') aiLabelText = 'Khách phàn nàn';
-        if (aiLabel === 'urgent')   aiLabelText = 'Cần hỗ trợ gấp';
-
-        const sentimentParts = [];
-        if (sentimentText)        sentimentParts.push(sentimentText);
-        if (score !== null)       sentimentParts.push(`Điểm: ${score.toFixed(2)}`);
-        if (aiLabelText)          sentimentParts.push(aiLabelText);
-
-        const sentimentLine = sentimentParts.length
-          ? `<div class="small" style="color:${sentimentColor}; font-weight:600;">
-               Cảm xúc AI: ${sentimentParts.join(' • ')}
-             </div>`
-          : '';
-
-        return `
-          <div class="comment-item cmt-item border-bottom pb-3 mb-3" data-id="${r._id || ''}">
-            <div class="d-flex">
-              <div class="me-3">
-                <div class="avatar rounded-circle d-flex align-items-center justify-content-center"
-                     style="width:40px;height:40px;background:#e5e7eb;font-weight:600;">
-                  ${safeName.charAt(0).toUpperCase()}
-                </div>
-              </div>
-
-              <div class="flex-grow-1">
-                <div class="d-flex align-items-center justify-content-between mb-1">
-                  <div>
-                    <div class="fw-semibold">${safeName}</div>
-                    <div class="chat-meta">${AppUtils.escapeHtml(createdLabel)}</div>
-                  </div>
-                  ${rRating ? `<div class="rating-small">${starsHtml}</div>` : ''}
-                </div>
-
-                <div class="chat-bubble mb-1">${safeComment}</div>
-                ${sentimentLine}
-              </div>
-            </div>
-          </div>
-        `;
-      }
-
-      function prependReview(r) {
-        if (!reviewListEl || !r) return;
-        const html = buildReviewHtml(r);
-
-        // nếu danh sách đang là "chưa có bình luận" thì clear
-        if (reviewListEl.children.length === 1 &&
-            reviewListEl.textContent.includes('Chưa có bình luận')) {
-          reviewListEl.innerHTML = '';
-        }
-
-        const tmp  = document.createElement('div');
-        tmp.innerHTML = html.trim();
-        const node = tmp.firstChild;
-        reviewListEl.insertBefore(node, reviewListEl.firstChild);
-      }
-
-      // ===== RATING UI (chọn sao) =====
-      function initRatingStars() {
-        const stars = AppUtils.qsa('#ratingStars .rate-star');
-        if (!stars.length) return;
-
-        if (!isLoggedIn) {
-          // guest click sao -> báo đăng nhập
-          stars.forEach(st => {
-            st.addEventListener('click', (e) => {
-              e.preventDefault();
-              alert('Bạn cần đăng nhập để đánh giá sao.');
-            });
-          });
-          return;
-        }
-
-        const hiddenInput = document.getElementById('reviewRating');
-        let current = 0;
-
-        function paint(v) {
-          stars.forEach((st, idx) => {
-            st.classList.toggle('filled', idx < v);
-          });
-        }
-
-        stars.forEach(st => {
-          const val = Number(st.dataset.value || 0);
-
-          st.addEventListener('mouseenter', () => {
-            paint(val);
-          });
-          st.addEventListener('mouseleave', () => {
-            paint(current);
-          });
-          st.addEventListener('click', (e) => {
-            e.preventDefault();
-            current = val;
-            if (hiddenInput) hiddenInput.value = String(val);
-            paint(current);
-          });
-        });
-      }
-
-      // ===== SUBMIT FORM REVIEW =====
-      function initReviewForm() {
-        const form = document.getElementById('reviewForm');
-        if (!form) return;
-
-        form.addEventListener('submit', async (e) => {
-          e.preventDefault();
-          if (ratingMessage) {
-            ratingMessage.textContent = '';
-            ratingMessage.style.color = '';
+            addBtn.textContent = "Hết hàng";
           }
 
-          const formData = new FormData(form);
-          const payload = {
-            comment: (formData.get('comment') || '').toString().trim()
-          };
-
-          if (!payload.comment) {
-            if (ratingMessage) {
-              ratingMessage.textContent = 'Vui lòng nhập nội dung bình luận.';
-              ratingMessage.style.color = '#dc2626';
+          if (!sizeId || !colorId) {
+            if (statusEl) statusEl.textContent = "";
+            if (addBtn) {
+              addBtn.disabled = true;
+              addBtn.textContent = "Chọn tùy chọn";
             }
             return;
           }
 
-          if (!isLoggedIn) {
-            payload.guest_name  = (formData.get('guest_name')  || '').toString().trim();
-            payload.guest_email = (formData.get('guest_email') || '').toString().trim();
-            if (!payload.guest_name) {
-              if (ratingMessage) {
-                ratingMessage.textContent = 'Vui lòng nhập tên hiển thị.';
-                ratingMessage.style.color = '#dc2626';
-              }
-              return;
+          if (!variant) {
+            if (statusEl) {
+              statusEl.textContent = "Phiên bản này không tồn tại.";
+              statusEl.classList.add("error");
+            }
+            if (addBtn) {
+              addBtn.disabled = true;
+              addBtn.textContent = "Không khả dụng";
+            }
+            return;
+          }
+
+          const stockQty = Number(variant.stock_quantity || 0);
+
+          if (stockQty > 0) {
+            if (statusEl) {
+              statusEl.textContent = `Phiên bản này đang còn hàng (${stockQty} sản phẩm).`;
+              statusEl.classList.add("ok");
+            }
+            if (addBtn) {
+              addBtn.disabled = false;
+              addBtn.textContent = "Thêm vào giỏ";
             }
           } else {
-            const ratingVal = Number(formData.get('rating') || 0);
-            if (ratingVal) {
-              payload.rating = ratingVal;
+            if (statusEl) {
+              statusEl.textContent = "Phiên bản này hiện đã hết hàng.";
+              statusEl.classList.add("error");
+            }
+            if (addBtn) {
+              addBtn.disabled = true;
+              addBtn.textContent = "Hết hàng";
+            }
+          }
+        }
+
+        document.addEventListener("DOMContentLoaded", () => {
+          // reset chọn ban đầu
+          document.getElementById("sizeId").value = "";
+          document.getElementById("sizeName").value = "";
+          document.getElementById("colorId").value = "";
+          document.getElementById("selectedColor").value = "";
+          _paintDebug();
+
+          // ===== ADD TO CART (AJAX) =====
+          const form =
+            document.forms["addtocart-form"] ||
+            document.querySelector('form[name="addtocart-form"]');
+
+          if (form) {
+            form.addEventListener("submit", async (e) => {
+              e.preventDefault();
+
+              const sizeId = document.getElementById("sizeId")?.value;
+              const colorId = document.getElementById("colorId")?.value;
+              const variantSku = document.getElementById("variantSku")?.value;
+
+              if (!sizeId || !colorId) {
+                alert("Vui lòng chọn đủ Size và Màu.");
+                return;
+              }
+              if (!variantSku) {
+                alert(
+                  "Không tìm thấy phiên bản tương ứng Size/Màu. Vui lòng chọn lại."
+                );
+                return;
+              }
+
+              const submitBtn = form.querySelector('button[type="submit"]');
+              const oldText = submitBtn.innerHTML;
+              submitBtn.innerHTML =
+                '<span class="spinner-border spinner-border-sm"></span> Đang thêm...';
+              submitBtn.disabled = true;
+
+              try {
+                const fd = new FormData(form);
+                const body = new URLSearchParams();
+                for (const [k, v] of fd.entries()) body.append(k, v);
+
+                const res = await fetch(form.action, {
+                  method: "POST",
+                  body: body.toString(),
+                  headers: {
+                    "Content-Type":
+                      "application/x-www-form-urlencoded;charset=UTF-8",
+                    "X-Requested-With": "XMLHttpRequest",
+                  },
+                });
+
+                const data = await res.json().catch(() => ({}));
+                if (!res.ok || !data.ok) {
+                  alert(
+                    data.message ||
+                      "Thêm vào giỏ hàng thất bại, vui lòng thử lại."
+                  );
+                  return;
+                }
+
+                if (typeof window.refreshCartDrawer === "function") {
+                  await window.refreshCartDrawer();
+
+                  // Mở drawer (thêm class active hoặc click nút trigger)
+                  const drawerEl = document.getElementById("cartDrawer");
+                  if (drawerEl) {
+                    drawerEl.classList.add("aside_visible");
+                    document.body.classList.add("overflow-hidden");
+                  }
+                } else {
+                  // Fallback nếu hàm chưa load kịp -> Reload trang
+                  window.location.reload();
+                }
+              } catch (err) {
+                console.error(err);
+                alert("Có lỗi kết nối, vui lòng thử lại.");
+              } finally {
+                submitBtn.innerHTML = oldText;
+                submitBtn.disabled = false;
+              }
+            });
+          }
+
+          // qty +/- ở PDP
+          (function () {
+            const decBtn = document.querySelector(".qty-control__reduce");
+            const incBtn = document.querySelector(".qty-control__increase");
+            const qtyInput = document.querySelector(".qty-control__number");
+            if (!decBtn || !incBtn || !qtyInput) return;
+
+            decBtn.addEventListener("click", () => {
+              const v = parseInt(qtyInput.value || "1", 10);
+              if (v > 1) qtyInput.value = v - 1;
+            });
+
+            incBtn.addEventListener("click", () => {
+              const v = parseInt(qtyInput.value || "1", 10);
+              qtyInput.value = v + 1;
+            });
+          })();
+        });
+      })();
+    </script>
+
+    <script>
+      (function () {
+        const socket      = GLOBAL_SOCKET || null;
+        const productId   = '<%= product._id %>';
+        const isLoggedIn  = <%= loggedInUser ? 'true' : 'false' %>;
+        const apiUrl      = '/api/product/<%= product._id %>/reviews';
+
+        const reviewListEl   = document.getElementById('reviewsList');
+        const ratingAvgEl    = document.getElementById('ratingAverage');
+        const ratingCountEl  = document.getElementById('ratingCount');
+        const ratingMessage  = document.getElementById('reviewMessage');
+
+        // vẽ lại sao trung bình
+        function repaintAverageStars(avg) {
+          const container = document.querySelector('.rating-large');
+          if (!container) return;
+          const rounded = Math.round(avg || 0);
+          container.innerHTML = '';
+          for (let i = 1; i <= 5; i++) {
+            const iEl = document.createElement('i');
+            iEl.className = 'star' + (i <= rounded ? ' filled' : '');
+            iEl.textContent = '★';
+            container.appendChild(iEl);
+          }
+        }
+
+        // render 1 item review -> HTML string
+        function buildReviewHtml(r) {
+          const displayName  = (r.user && r.user.full_name) || r.guest_name || 'Ẩn danh';
+          const createdLabel = r.createdAt ? new Date(r.createdAt).toLocaleString('vi-VN') : '';
+          const rRating      = Number(r.rating || 0);
+          const rRounded     = Math.round(rRating || 0);
+
+          const sentiment    = r.sentiment || null;
+          const score        = (typeof r.sentiment_score === 'number') ? r.sentiment_score : null;
+          const aiLabel      = r.ai_label || null;
+
+          const safeName    = AppUtils.escapeHtml(displayName);
+          const safeComment = AppUtils.escapeHtml(r.comment || '');
+
+          let starsHtml = '';
+          if (rRating) {
+            for (let i = 1; i <= 5; i++) {
+              starsHtml += `<i class="star ${i <= rRounded ? 'filled' : ''}">★</i>`;
             }
           }
 
-          try {
-            const res = await fetch(apiUrl, {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json'
-                // 'Authorization': 'Bearer ' + (localStorage.getItem('token') || '')
-              },
-              body: JSON.stringify(payload)
+          let sentimentText  = '';
+          let sentimentColor = '#6b7280';
+
+          if (sentiment === 'positive') {
+            sentimentText  = 'Tích cực';
+            sentimentColor = '#16a34a';
+          } else if (sentiment === 'negative') {
+            sentimentText  = 'Tiêu cực';
+            sentimentColor = '#dc2626';
+          } else if (sentiment === 'neutral') {
+            sentimentText = 'Trung tính';
+          }
+
+          let aiLabelText = '';
+          if (aiLabel === 'happy')    aiLabelText = 'Khách hài lòng';
+          if (aiLabel === 'complain') aiLabelText = 'Khách phàn nàn';
+          if (aiLabel === 'urgent')   aiLabelText = 'Cần hỗ trợ gấp';
+
+          const sentimentParts = [];
+          if (sentimentText)        sentimentParts.push(sentimentText);
+          if (score !== null)       sentimentParts.push(`Điểm: ${score.toFixed(2)}`);
+          if (aiLabelText)          sentimentParts.push(aiLabelText);
+
+          const sentimentLine = sentimentParts.length
+            ? `<div class="small" style="color:${sentimentColor}; font-weight:600;">
+                 Cảm xúc AI: ${sentimentParts.join(' • ')}
+               </div>`
+            : '';
+
+          return `
+            <div class="comment-item cmt-item border-bottom pb-3 mb-3" data-id="${r._id || ''}">
+              <div class="d-flex">
+                <div class="me-3">
+                  <div class="avatar rounded-circle d-flex align-items-center justify-content-center"
+                       style="width:40px;height:40px;background:#e5e7eb;font-weight:600;">
+                    ${safeName.charAt(0).toUpperCase()}
+                  </div>
+                </div>
+
+                <div class="flex-grow-1">
+                  <div class="d-flex align-items-center justify-content-between mb-1">
+                    <div>
+                      <div class="fw-semibold">${safeName}</div>
+                      <div class="chat-meta">${AppUtils.escapeHtml(createdLabel)}</div>
+                    </div>
+                    ${rRating ? `<div class="rating-small">${starsHtml}</div>` : ''}
+                  </div>
+
+                  <div class="chat-bubble mb-1">${safeComment}</div>
+                  ${sentimentLine}
+                </div>
+              </div>
+            </div>
+          `;
+        }
+
+        function prependReview(r) {
+          if (!reviewListEl || !r) return;
+          const html = buildReviewHtml(r);
+
+          // nếu danh sách đang là "chưa có bình luận" thì clear
+          if (reviewListEl.children.length === 1 &&
+              reviewListEl.textContent.includes('Chưa có bình luận')) {
+            reviewListEl.innerHTML = '';
+          }
+
+          const tmp  = document.createElement('div');
+          tmp.innerHTML = html.trim();
+          const node = tmp.firstChild;
+          reviewListEl.insertBefore(node, reviewListEl.firstChild);
+        }
+
+        // ===== RATING UI (chọn sao) =====
+        function initRatingStars() {
+          const stars = AppUtils.qsa('#ratingStars .rate-star');
+          if (!stars.length) return;
+
+          if (!isLoggedIn) {
+            // guest click sao -> báo đăng nhập
+            stars.forEach(st => {
+              st.addEventListener('click', (e) => {
+                e.preventDefault();
+                alert('Bạn cần đăng nhập để đánh giá sao.');
+              });
             });
+            return;
+          }
 
-            const data = await res.json().catch(() => null);
+          const hiddenInput = document.getElementById('reviewRating');
+          let current = 0;
 
-            if (!res.ok || !data || !data.ok) {
-              const msg = (data && data.message) || 'Gửi đánh giá thất bại, vui lòng thử lại.';
+          function paint(v) {
+            stars.forEach((st, idx) => {
+              st.classList.toggle('filled', idx < v);
+            });
+          }
+
+          stars.forEach(st => {
+            const val = Number(st.dataset.value || 0);
+
+            st.addEventListener('mouseenter', () => {
+              paint(val);
+            });
+            st.addEventListener('mouseleave', () => {
+              paint(current);
+            });
+            st.addEventListener('click', (e) => {
+              e.preventDefault();
+              current = val;
+              if (hiddenInput) hiddenInput.value = String(val);
+              paint(current);
+            });
+          });
+        }
+
+        // ===== SUBMIT FORM REVIEW =====
+        function initReviewForm() {
+          const form = document.getElementById('reviewForm');
+          if (!form) return;
+
+          form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (ratingMessage) {
+              ratingMessage.textContent = '';
+              ratingMessage.style.color = '';
+            }
+
+            const formData = new FormData(form);
+            const payload = {
+              comment: (formData.get('comment') || '').toString().trim()
+            };
+
+            if (!payload.comment) {
               if (ratingMessage) {
-                ratingMessage.textContent = msg;
+                ratingMessage.textContent = 'Vui lòng nhập nội dung bình luận.';
                 ratingMessage.style.color = '#dc2626';
               }
               return;
             }
 
-            // Thêm review mới (nếu socket đã emit thì vẫn OK, nhưng ta thêm luôn để chắc)
-            if (data.review) {
-              prependReview(data.review);
-            }
-
-            // Cập nhật lại rating trung bình + count + sao
-            if (data.rating) {
-              const avg = Number(data.rating.average || 0);
-              const cnt = Number(data.rating.count || 0);
-
-              if (ratingAvgEl)   ratingAvgEl.textContent   = avg.toFixed(1);
-              if (ratingCountEl) ratingCountEl.textContent = cnt;
-              repaintAverageStars(avg);
-
-              // Cập nhật bảng thống kê sentiment (nếu có)
-              if (data.rating.sentiment) {
-                const s = data.rating.sentiment;
-                const statsEl = document.getElementById('sentimentStats');
-                if (statsEl) {
-                  statsEl.innerHTML = `
-                    <div>😊 Tích cực: <strong>${s.positive}</strong></div>
-                    <div>😐 Trung tính: <strong>${s.neutral}</strong></div>
-                    <div>😡 Tiêu cực: <strong>${s.negative}</strong></div>
-                    <div>⚪ Không xác định: <strong>${s.null}</strong></div>
-                  `;
+            if (!isLoggedIn) {
+              payload.guest_name  = (formData.get('guest_name')  || '').toString().trim();
+              payload.guest_email = (formData.get('guest_email') || '').toString().trim();
+              if (!payload.guest_name) {
+                if (ratingMessage) {
+                  ratingMessage.textContent = 'Vui lòng nhập tên hiển thị.';
+                  ratingMessage.style.color = '#dc2626';
                 }
+                return;
+              }
+            } else {
+              const ratingVal = Number(formData.get('rating') || 0);
+              if (ratingVal) {
+                payload.rating = ratingVal;
               }
             }
 
-            // Reset form + sao
-            form.reset();
-            const hiddenRating = document.getElementById('reviewRating');
-            if (hiddenRating) hiddenRating.value = '';
-            const stars = AppUtils.qsa('#ratingStars .rate-star');
-            stars.forEach(st => st.classList.remove('filled'));
+            try {
+              const res = await fetch(apiUrl, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json'
+                  // 'Authorization': 'Bearer ' + (localStorage.getItem('token') || '')
+                },
+                body: JSON.stringify(payload)
+              });
 
-            if (ratingMessage) {
-              ratingMessage.textContent = 'Gửi đánh giá thành công!';
-              ratingMessage.style.color = '#16a34a';
+              const data = await res.json().catch(() => null);
+
+              if (!res.ok || !data || !data.ok) {
+                const msg = (data && data.message) || 'Gửi đánh giá thất bại, vui lòng thử lại.';
+                if (ratingMessage) {
+                  ratingMessage.textContent = msg;
+                  ratingMessage.style.color = '#dc2626';
+                }
+                return;
+              }
+
+              // Thêm review mới (nếu socket đã emit thì vẫn OK, nhưng ta thêm luôn để chắc)
+              if (data.review) {
+                prependReview(data.review);
+              }
+
+              // Cập nhật lại rating trung bình + count + sao
+              if (data.rating) {
+                const avg = Number(data.rating.average || 0);
+                const cnt = Number(data.rating.count || 0);
+
+                if (ratingAvgEl)   ratingAvgEl.textContent   = avg.toFixed(1);
+                if (ratingCountEl) ratingCountEl.textContent = cnt;
+                repaintAverageStars(avg);
+
+                // Cập nhật bảng thống kê sentiment (nếu có)
+                if (data.rating.sentiment) {
+                  const s = data.rating.sentiment;
+                  const statsEl = document.getElementById('sentimentStats');
+                  if (statsEl) {
+                    statsEl.innerHTML = `
+                      <div>😊 Tích cực: <strong>${s.positive}</strong></div>
+                      <div>😐 Trung tính: <strong>${s.neutral}</strong></div>
+                      <div>😡 Tiêu cực: <strong>${s.negative}</strong></div>
+                      <div>⚪ Không xác định: <strong>${s.null}</strong></div>
+                    `;
+                  }
+                }
+              }
+
+              // Reset form + sao
+              form.reset();
+              const hiddenRating = document.getElementById('reviewRating');
+              if (hiddenRating) hiddenRating.value = '';
+              const stars = AppUtils.qsa('#ratingStars .rate-star');
+              stars.forEach(st => st.classList.remove('filled'));
+
+              if (ratingMessage) {
+                ratingMessage.textContent = 'Gửi đánh giá thành công!';
+                ratingMessage.style.color = '#16a34a';
+              }
+
+            } catch (err) {
+              console.error('Submit review error:', err);
+              if (ratingMessage) {
+                ratingMessage.textContent = 'Có lỗi kết nối, vui lòng thử lại.';
+                ratingMessage.style.color = '#dc2626';
+              }
             }
-
-          } catch (err) {
-            console.error('Submit review error:', err);
-            if (ratingMessage) {
-              ratingMessage.textContent = 'Có lỗi kết nối, vui lòng thử lại.';
-              ratingMessage.style.color = '#dc2626';
-            }
-          }
-        });
-      }
-
-      // ===== SOCKET.IO: join room & lắng nghe review mới =====
-      function initSocketReviews() {
-        if (!socket || !productId) return;
-        try {
-          // backend: socket.join(`product:${productId}`)
-          socket.emit('join-product-room', productId);
-
-          socket.on('review:new', (review) => {
-            if (!review || !review._id) return;
-            prependReview(review);
-            // nếu backend gửi kèm rating mới thì ở đây có thể update thêm
           });
-        } catch (e) {
-          console.error('Socket review error:', e);
         }
-      }
 
-      document.addEventListener('DOMContentLoaded', () => {
-        initRatingStars();
-        initReviewForm();
-        initSocketReviews();
-      });
-    })();
-  </script>
+        // ===== SOCKET.IO: join room & lắng nghe review mới =====
+        function initSocketReviews() {
+          if (!socket || !productId) return;
+          try {
+            // backend: socket.join(`product:${productId}`)
+            socket.emit('join-product-room', productId);
 
-</body>
+            socket.on('review:new', (review) => {
+              if (!review || !review._id) return;
+              prependReview(review);
+              // nếu backend gửi kèm rating mới thì ở đây có thể update thêm
+            });
+          } catch (e) {
+            console.error('Socket review error:', e);
+          }
+        }
 
+        document.addEventListener('DOMContentLoaded', () => {
+          initRatingStars();
+          initReviewForm();
+          initSocketReviews();
+        });
+      })();
+    </script>
+  </body>
 </html>

@@ -3,6 +3,8 @@ const express = require("express");
 const controller = require("../controllers/discountCodeController.js");
 
 const router = express.Router();
+// GET /api/discount-codes/available
+router.get("/available", controller.getAvailable);
 
 // GET /api/discount-codes?code=ABCDE&is_active=true
 router.get("/", controller.list);

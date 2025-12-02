@@ -4,7 +4,7 @@ class AddressController {
   // GET /api/address
   async getList(req, res) {
     try {
-      const userId = req.currentUser._id;
+      const userId = req.currentUser._id || req.currentUser.id;
       const addresses = await addressService.getList(userId);
       res.json({ ok: true, addresses });
     } catch (e) {
@@ -18,13 +18,11 @@ class AddressController {
       const userId = req.currentUser._id;
       // Body cần: city, district, ward, detail, is_default (optional)
       const newAddr = await addressService.addAddress(userId, req.body);
-      res
-        .status(201)
-        .json({
-          ok: true,
-          address: newAddr,
-          message: "Thêm địa chỉ thành công",
-        });
+      res.status(201).json({
+        ok: true,
+        address: newAddr,
+        message: "Thêm địa chỉ thành công",
+      });
     } catch (e) {
       res.status(400).json({ ok: false, message: e.message });
     }

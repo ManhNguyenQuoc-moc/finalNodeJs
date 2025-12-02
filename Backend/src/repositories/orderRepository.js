@@ -132,13 +132,52 @@ class orderRepository {
 
     return rows;
   }
+
+  // --- HÀM MỚI CHO ADMIN QUẢN LÝ ĐƠN HÀNG ---
+
+  // 1. Lấy danh sách đơn hàng (Phân trang + Lọc trạng thái)
+  async getAdminOrders({ page = 1, limit = 10, status }) {
+    const skip = (page - 1) * limit;
+    const filter = {};
+
+    // Nếu có lọc theo trạng thái (pending, shipping...)
+    if (status && status !== "all") {
+      filter.current_status = status;
+    }
+
+    // Chạy song song: Lấy dữ liệu + Đếm tổng số
+    const [orders, total] = await Promise.all([
+      Order.find(filter)
+        .populate("user", "full_name email") // Lấy tên khách
+        .populate("discount_code", "code") // Lấy mã giảm giá
+        .sort({ createdAt: -1 }) // Mới nhất lên đầu
+        .skip(skip)
+        .limit(Number(limit))
+        .lean(), // Dùng lean() để query nhanh hơn
+      Order.countDocuments(filter),
+    ]);
+
+    return { orders, total };
+  }
+
+  // 2. Lấy chi tiết đơn hàng (Full options)
+  async getAdminOrderDetail(id) {
+    return await Order.findById(id)
+      .populate("user", "full_name email phone")
+      .populate("address")
+      .populate("discount_code")
+      // Nếu items của bạn lưu snapshot rồi thì không cần populate product sâu
+      // Nhưng nếu cần ảnh mới nhất thì populate:
+      //.populate({ path: "items.product", select: "name images slug" })
+      .lean();
+  }
   // ================== THÊM MỚI TỪ ĐÂY TRỞ XUỐNG ==================
 
   /**
    * Doanh thu & lợi nhuận theo thời gian để vẽ chart
    * params: { startDate: "YYYY-MM-DD", endDate: "YYYY-MM-DD", granularity: "year"|"month"|"week"|"custom" }
    */
- async getRevenueAndProfitOverTime({ startDate, endDate, granularity }) {
+  async getRevenueAndProfitOverTime({ startDate, endDate, granularity }) {
     const start = new Date(startDate);
     const end = new Date(endDate + "T23:59:59.999Z");
 
@@ -183,7 +222,10 @@ class orderRepository {
                     { $ifNull: ["$total_amount", false] },
                     "$total_amount",
                     {
-                      $multiply: ["$items.quantity", "$items.price_at_purchase"],
+                      $multiply: [
+                        "$items.quantity",
+                        "$items.price_at_purchase",
+                      ],
                     },
                   ],
                 },

@@ -1,11 +1,10 @@
-<!-- views/partials/cart_drawer.ejs -->
 <style>
-  /* ===== Cart Drawer (scoped by #cartDrawer) ===== */
+  /* ===== Cart Drawer Styles ===== */
   #cartDrawer {
     max-width: 440px;
     background: #fff;
     border-left: 1px solid #eef2f7;
-    box-shadow: -8px 0 24px rgba(16, 24, 40, .08);
+    box-shadow: -8px 0 24px rgba(16, 24, 40, 0.08);
   }
 
   #cartDrawer .aside-header {
@@ -33,8 +32,8 @@
 
   #cartDrawer .cart-drawer-items {
     padding: 12px 16px 188px;
-    /* chừa chỗ cho footer */
     overflow: auto;
+    max-height: calc(100vh - 56px - 188px);
   }
 
   #cartDrawer .empty {
@@ -46,7 +45,7 @@
     background: #fafafa;
   }
 
-  /* Item */
+  /* Item Styles */
   .cdi {
     display: flex;
     gap: 12px;
@@ -54,10 +53,10 @@
     border: 1px solid #eef2f7;
     border-radius: 14px;
     background: #fff;
-    box-shadow: 0 1px 2px rgba(16, 24, 40, .04);
+    box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
   }
 
-  .cdi+.cdi {
+  .cdi + .cdi {
     margin-top: 12px;
   }
 
@@ -91,10 +90,6 @@
     text-decoration: none;
   }
 
-  .cdi-ttl a:hover {
-    text-decoration: underline;
-  }
-
   .cdi-meta {
     display: flex;
     flex-wrap: wrap;
@@ -108,7 +103,6 @@
     font-weight: 700;
   }
 
-  /* Hàng điều khiển số lượng + đơn giá (đơn giá đặt bên phải qty) */
   .cdi-row {
     margin-top: 10px;
     display: flex;
@@ -149,7 +143,6 @@
     white-space: nowrap;
   }
 
-  /* === Tổng giá (đẹp hơn) === */
   .cdi-total {
     margin-top: 10px;
     padding: 10px 12px;
@@ -160,13 +153,13 @@
     align-items: center;
     justify-content: space-between;
     gap: 12px;
-    box-shadow: 0 1px 2px rgba(16, 24, 40, .04);
+    box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
   }
 
   .cdi-total .label {
     font-size: 12px;
     color: #6b7280;
-    letter-spacing: .2px;
+    letter-spacing: 0.2px;
   }
 
   .cdi-total .price {
@@ -195,44 +188,150 @@
     background: #f9fafb;
   }
 
-  /* Footer */
+  /* --- FOOTER STYLES --- */
   .cdr-footer {
     background: #fff;
     border-top: 1px solid #eef2f7;
-    padding: 14px 16px 16px;
-    box-shadow: 0 -6px 16px rgba(16, 24, 40, .06);
+    padding: 16px;
+    box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.05);
   }
 
-  .cdr-coupon {
-    display: flex;
-    gap: 8px;
+  .coupon-box {
+    position: relative;
     margin-bottom: 10px;
   }
 
-  .cdr-coupon input {
-    flex: 1;
-    height: 42px;
-    border-radius: 10px;
-    border: 1px solid #e5e7eb;
-    padding: 0 12px;
+  .coupon-input-group {
+    display: flex;
+    gap: 8px;
   }
 
-  .cdr-coupon .btn-apply {
+  .coupon-input-group input {
+    flex: 1;
+    height: 42px;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    padding: 0 12px;
+    font-size: 14px;
+  }
+
+  /* Nút Áp dụng chuẩn Border */
+  .btn-coupon {
     height: 42px;
     border-radius: 10px;
     font-weight: 700;
-    padding: 0 14px;
+    padding: 0 16px;
     background: #111827;
     color: #fff;
     border: 1px solid #111827;
+    cursor: pointer;
+    transition: all 0.2s;
   }
 
-  .cdr-row {
+  .btn-coupon:hover {
+    background: #000;
+  }
+
+  .btn-coupon:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+  }
+
+  /* Dropdown Gợi ý Mã */
+  .coupon-dropdown {
+    position: absolute;
+    bottom: 100%;
+    left: 0;
+    width: 100%;
+    max-height: 220px;
+    overflow-y: auto;
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    z-index: 100;
+    margin-bottom: 8px;
+    display: none;
+  }
+
+  .coupon-item {
+    padding: 10px 12px;
+    border-bottom: 1px solid #f3f4f6;
+    cursor: pointer;
     display: flex;
-    align-items: center;
     justify-content: space-between;
+    align-items: center;
+    font-size: 13px;
+  }
+
+  .coupon-item:hover {
+    background-color: #f9fafb;
+  }
+
+  .coupon-code-badge {
+    font-family: monospace;
+    font-weight: 700;
+    background: #f3f4f6;
+    padding: 4px 8px;
+    border-radius: 6px;
+    color: #111827;
+    border: 1px solid #e5e7eb;
+  }
+
+  .coupon-desc {
+    font-size: 12px;
+    color: #10b981;
+    font-weight: 600;
+  }
+
+  /* Loyalty Points */
+  .points-box {
+    background-color: #fffbeb;
+    border: 1px solid #fef3c7;
+    border-radius: 10px;
+    padding: 10px 12px;
+    margin-bottom: 15px;
+  }
+  .form-switch .form-check-input {
+    width: 2.5em;
+    height: 1.25em;
+    cursor: pointer;
+  }
+  .form-switch .form-check-input:checked {
+    background-color: #d97706;
+    border-color: #d97706;
+  }
+
+  /* Hiển thị Tiền */
+  .price-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+    font-size: 14px;
     font-weight: 700;
     color: #111827;
+  }
+
+  .price-row .label {
+    color: #6b7280;
+    font-weight: 500;
+  }
+
+  .text-success {
+    color: #10b981 !important;
+  }
+  .text-warning {
+    color: #d97706 !important;
+  }
+
+  .price-total {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid #eef2f7;
+    font-size: 18px;
+    font-weight: 800;
+    color: #dc2626;
   }
 
   .cdr-actions .btn {
@@ -240,308 +339,543 @@
     border-radius: 12px;
     font-weight: 700;
     width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
   }
 
   .cdr-actions .btn-outline {
-    background: #f3f4f6;
-    border-color: #e5e7eb;
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
     color: #111827;
   }
 
   .cdr-actions .btn-primary {
     background: #111827;
-    border-color: #111827;
+    border: 1px solid #111827;
     color: #fff;
   }
 
-  .cdr-actions .btn+.btn {
-    margin-top: 8px;
-  }
-
-  @media (max-width: 480px) {
-    #cartDrawer {
-      max-width: 100vw;
-    }
-
-    #cartDrawer .cart-drawer-items {
-      padding-bottom: 210px;
-    }
-
-    .cdi-total {
-      padding: 8px 10px;
-    }
-
-    .cdi-total .price {
-      font-size: 16px;
-    }
-  }
-
-  /* === ONLY ADD: đảm bảo vùng items cuộn được theo chiều cao màn hình ===
-     Không chỉnh sửa rule cũ nào; chỉ bổ sung max-height cho .cart-drawer-items */
-  #cartDrawer .cart-drawer-items {
-    /* 56px ~ chiều cao header, 188px ~ khoảng chừa footer bạn đang dùng */
-    max-height: calc(100vh - 56px - 188px);
-  }
-
-  /* Tuỳ chọn: scrollbar gọn gàng hơn cho vùng items (cũng chỉ áp vào items) */
-  #cartDrawer .cart-drawer-items::-webkit-scrollbar {
-    width: 8px;
-  }
-
-  #cartDrawer .cart-drawer-items::-webkit-scrollbar-thumb {
-    background: #e5e7eb;
-    border-radius: 999px;
+  .d-none {
+    display: none !important;
   }
 </style>
 
-<%
-  // ===== Normalize cart lines for drawer (support both middleware & getRenderData shapes) =====
-  // Ở pages middleware mình luôn set res.locals.carts = [] nên carts luôn tồn tại
-  const raw = Array.isArray(carts) ? carts : [];
-  const normalized = raw.map((c, idx) => {
-    const fromA = c && c.productColor && c.productColor.product;
+<% const raw = Array.isArray(carts) ? carts : []; const normalized = raw.map((c,
+idx) => { const fromA = c && c.productColor && c.productColor.product; const
+idIdx = (typeof c.id !== 'undefined') ? c.id : idx; const pid = fromA ?
+(c.productColor.product.id || c.productColor.product._id) : (c.productId ||
+c.product_id || ''); const name = fromA ? c.productColor.product.name :
+(c.productName || c.name_snapshot || 'Sản phẩm'); const brand =
+c.brand_name_snapshot || c.brand || ''; const typ = c.category_name_snapshot ||
+c.type || ''; const color = fromA ? (c.productColor.color || '—') :
+(c.color_name_snapshot || '—'); const size = fromA ? ((c.productSize &&
+(c.productSize.size || c.productSize.name)) || '—') : (c.size_name_snapshot ||
+'—'); const img = fromA ? ((c.productColor.imageUrls &&
+c.productColor.imageUrls[0]) || '/images/default.png') : (c.img_snapshot ||
+'/images/default.png'); const qty = Number(c.quantity || c.qty || 1); const unit
+= Number(fromA ? (c.productColor.product.price) : (c.unitPrice ||
+c.price_at_time || 0)); const line = unit * qty; return { idx: idIdx, pid, name,
+brand, typ, color, size, qty, unit, line, img, url: pid ?
+`/product_detail/${pid}` : '#' }; }); const drawerCount = normalized.length;
+const drawerTotal = normalized.reduce((s, it) => s + it.line, 0); function
+vnd(n) { try { return Number(n || 0).toLocaleString('vi-VN') + 'đ'; } catch (e)
+{ return (n || 0) + 'đ'; } } %>
 
-    const idIdx = (typeof c.id !== 'undefined') ? c.id : idx;
-    const pid   = fromA
-      ? (c.productColor.product.id || c.productColor.product._id)
-      : (c.productId || c.product_id || '');
-    const name  = fromA
-      ? c.productColor.product.name
-      : (c.productName || c.name_snapshot || 'Sản phẩm');
-    const brand = c.brand_name_snapshot || c.brand || '';
-    const typ   = c.category_name_snapshot || c.type  || '';
-    const color = fromA ? (c.productColor.color || '—') : (c.color_name_snapshot || '—');
-    const size  = fromA
-      ? ((c.productSize && (c.productSize.size || c.productSize.name)) || '—')
-      : (c.size_name_snapshot || '—');
-    const img   = fromA
-      ? ((c.productColor.imageUrls && c.productColor.imageUrls[0]) || '/images/default.png')
-      : (c.img_snapshot || '/images/default.png');
+<div
+  class="aside aside_right overflow-hidden cart-drawer"
+  id="cartDrawer"
+  role="dialog"
+  aria-label="Giỏ hàng"
+>
+  <div class="aside-header d-flex align-items-center">
+    <h3 class="text-uppercase fs-6 mb-0 d-flex align-items-center gap-2">
+      <svg class="me-1" width="20" height="20">
+        <use href="/images/sprite.svg#icon_cart"></use>
+      </svg>
+      GIỎ HÀNG
+      <span class="cdr-badge js-cart-items-count"><%= drawerCount %></span>
+    </h3>
+    <button
+      class="btn-close-lg js-close-aside btn-close-aside ms-auto"
+      aria-label="Đóng giỏ hàng"
+    ></button>
+  </div>
 
-    const qty  = Number(c.quantity || c.qty || 1);
-    const unit = Number(fromA ? (c.productColor.product.price)
-                              : (c.unitPrice || c.price_at_time || 0));
-    const line = unit * qty;
-
-    return {
-      idx: idIdx,
-      pid, name, brand, typ, color, size, qty, unit, line,
-      img,
-      url: pid ? `/product_detail/${pid}` : '#'
-    };
-  });
-
-  const drawerCount = normalized.length;
-  const drawerTotal = normalized.reduce((s, it) => s + it.line, 0);
-
-  function vnd(n) {
-    try {
-      return Number(n || 0).toLocaleString('vi-VN') + 'đ';
-    } catch (e) {
-      return (n || 0) + 'đ';
-    }
-  }
-%>
-
-
-  <div class="aside aside_right overflow-hidden cart-drawer" id="cartDrawer" role="dialog" aria-label="Giỏ hàng">
-    <!-- Header -->
-    <div class="aside-header d-flex align-items-center">
-      <h3 class="text-uppercase fs-6 mb-0 d-flex align-items-center gap-2">
-        <svg class="me-1" width="20" height="20" aria-hidden="true">
-          <use href="/images/sprite.svg#icon_cart"></use>
-        </svg>
-        GIỎ HÀNG
-        <span class="cdr-badge js-cart-items-count">
-          <%= drawerCount %>
-        </span>
-      </h3>
-      <button class="btn-close-lg js-close-aside btn-close-aside ms-auto" aria-label="Đóng giỏ hàng"></button>
+  <div class="cart-drawer-items js-mini-cart-list">
+    <% if (!drawerCount) { %>
+    <div class="empty">
+      <div class="mb-2" style="font-size: 40px; line-height: 1">🛍️</div>
+      <div class="fw-semibold mb-1">Giỏ hàng trống</div>
+      <div class="small">Tiếp tục mua sắm để tìm món bạn thích nhé!</div>
     </div>
+    <% } %> <% normalized.forEach(function(it){ %>
+    <div class="cdi position-relative" id="cdr-item-<%= it.idx %>">
+      <a class="cdi-thumb" href="<%= it.url %>" aria-label="<%= it.name %>">
+        <img loading="lazy" src="<%= it.img %>" alt="<%= it.name %>" />
+      </a>
 
-    <!-- Items -->
-    <div class="cart-drawer-items js-mini-cart-list">
-      <% if (!drawerCount) { %>
-        <div class="empty">
-          <div class="mb-2" style="font-size:40px; line-height:1;">🛍️</div>
-          <div class="fw-semibold mb-1">Giỏ hàng trống</div>
-          <div class="small">Tiếp tục mua sắm để tìm món bạn thích nhé!</div>
+      <div class="flex-grow-1">
+        <h6 class="cdi-ttl"><a href="<%= it.url %>"> <%= it.name %> </a></h6>
+
+        <div class="cdi-meta">
+          <% if (it.brand) { %><span>Brand: <b> <%= it.brand %> </b></span>
+          <% } %>
+          <span>Màu: <b> <%= it.color %> </b></span>
+          <span>Size: <b> <%= it.size %> </b></span>
         </div>
-        <% } %>
 
-          <% normalized.forEach(function(it){ %>
-            <div class="cdi position-relative" id="cdr-item-<%= it.idx %>">
-              <a class="cdi-thumb" href="<%= it.url %>" aria-label="<%= it.name %>">
-                <img loading="lazy" src="<%= it.img %>" alt="<%= it.name %>">
-              </a>
+        <div class="cdi-row">
+          <div class="cdi-qty">
+            <button type="button" class="js-cdr-dec" data-idx="<%= it.idx %>">
+              −
+            </button>
+            <input
+              id="cdr-qty-<%= it.idx %>"
+              type="number"
+              min="1"
+              value="<%= it.qty %>"
+            />
+            <button type="button" class="js-cdr-inc" data-idx="<%= it.idx %>">
+              +
+            </button>
+          </div>
 
-              <div class="flex-grow-1">
-                <h6 class="cdi-ttl"><a href="<%= it.url %>">
-                    <%= it.name %>
-                  </a></h6>
+          <div class="cdi-unit">Đơn giá: <b> <%= vnd(it.unit) %> </b></div>
+        </div>
 
-                <div class="cdi-meta">
-                  <% if (it.brand) { %><span>Thương hiệu: <b>
-                        <%= it.brand %>
-                      </b></span>
-                    <% } %>
-                      <% if (it.typ) { %><span>Loại: <b>
-                            <%= it.typ %>
-                          </b></span>
-                        <% } %>
-                          <span>Màu: <b>
-                              <%= it.color %>
-                            </b></span>
-                          <span>Size: <b>
-                              <%= it.size %>
-                            </b></span>
-                </div>
+        <div class="cdi-total">
+          <span class="label">Tổng giá</span>
+          <div class="price" id="cdr-line-<%= it.idx %>">
+            <%= vnd(it.line) %>
+          </div>
+        </div>
+      </div>
 
-                <!-- Hàng: Qty + Đơn giá (đơn giá ở bên phải) -->
-                <div class="cdi-row">
-                  <div class="cdi-qty">
-                    <button type="button" class="js-cdr-dec" data-idx="<%= it.idx %>">−</button>
-                    <input id="cdr-qty-<%= it.idx %>" type="number" min="1" value="<%= it.qty %>">
-                    <button type="button" class="js-cdr-inc" data-idx="<%= it.idx %>">+</button>
-                  </div>
+      <button
+        class="cdi-remove js-cdr-remove"
+        title="Xoá sản phẩm này"
+        aria-label="Xoá"
+        data-idx="<%= it.idx %>"
+      >
+        &times;
+      </button>
+    </div>
+    <% }) %>
+  </div>
 
-                  <div class="cdi-unit">Đơn giá: <b>
-                      <%= vnd(it.unit) %>
-                    </b></div>
-                </div>
+  <div class="cdr-footer position-absolute start-0 bottom-0 w-100">
+    <div class="coupon-box">
+      <div id="coupon-dropdown" class="coupon-dropdown">
+        <div id="coupon-list" class="p-0"></div>
+        <div
+          id="coupon-loading"
+          class="p-2 text-center text-muted small"
+          style="display: none"
+        >
+          Đang tải...
+        </div>
+      </div>
 
-                <!-- Thanh Tổng giá -->
-                <div class="cdi-total">
-                  <span class="label">Tổng giá</span>
-                  <div class="price" id="cdr-line-<%= it.idx %>">
-                    <%= vnd(it.line) %>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Remove -->
-              <button class="cdi-remove js-cdr-remove" title="Xoá sản phẩm này" aria-label="Xoá"
-                data-idx="<%= it.idx %>">&times;</button>
-            </div>
-            <% }) %>
+      <div class="coupon-input-group">
+        <input
+          type="text"
+          id="couponInput"
+          placeholder="Nhập mã giảm giá"
+          value="<%= typeof appliedCoupon !== 'undefined' ? appliedCoupon : '' %>"
+          autocomplete="off"
+        />
+        <button type="button" class="btn-coupon" id="btnApplyCoupon">
+          Áp dụng
+        </button>
+      </div>
+      <div id="coupon-msg" class="small mt-1 fw-bold"></div>
     </div>
 
-    <!-- Footer / Actions -->
-    <div class="cdr-footer position-absolute start-0 bottom-0 w-100">
-      <!-- Coupon -->
-      <form class="cdr-coupon" method="post" action="/cart/apply-coupon">
-        <input type="text" name="coupon" placeholder="Nhập mã giảm giá (VD: MIXI10)" autocomplete="off">
-        <button type="submit" class="btn-apply">Áp dụng</button>
-      </form>
+    <% if (typeof user !== 'undefined' && user && user.loyalty_points > 0) { %>
+    <div class="points-box">
+      <div
+        class="form-check form-switch d-flex justify-content-between align-items-center ps-0 mb-0"
+      >
+        <label
+          class="form-check-label"
+          for="usePointsCheckDrawer"
+          style="cursor: pointer; flex: 1"
+        >
+          <div class="fw-bold text-warning" style="color: #b45309">
+            <i class="fas fa-coins me-1"></i> Sử dụng Xu
+          </div>
+          <div class="small text-muted">
+            Có <b><%= user.loyalty_points %></b> xu (-<%= (user.loyalty_points *
+            1000).toLocaleString('vi-VN') %>đ)
+          </div>
+        </label>
+        <input class="form-check-input ms-2 mt-0 shadow-none" type="checkbox"
+        role="switch" id="usePointsCheckDrawer" <%= (typeof pointsUsed !==
+        'undefined' && pointsUsed > 0) ? 'checked' : '' %>>
+      </div>
+    </div>
+    <% } %>
 
-      <!-- Totals -->
-      <div class="cdr-row mb-2">
-        <span>Tổng giá</span>
-        <span id="cdr-subtotal">
+    <div>
+      <div class="price-row">
+        <span class="label">Tạm tính</span>
+        <span id="subtotalDisplay" class="fw-bold">
           <%= vnd(drawerTotal) %>
         </span>
       </div>
 
-      <!-- Actions -->
-      <div class="cdr-actions">
-        <a href="/shop-cart" class="btn btn-outline">Xem giỏ hàng</a>
-        <a href="/shop-cart/checkout" class="btn btn-primary">Thanh toán</a>
+      <% const hasDiscount = (typeof discountAmount !== 'undefined' &&
+      discountAmount > 0); const discVal = (typeof formattedDiscount !==
+      'undefined') ? formattedDiscount : '0đ'; const hasPoints = (typeof
+      pointsUsed !== 'undefined' && pointsUsed > 0); const pointVal = (typeof
+      formattedPointDiscount !== 'undefined') ? formattedPointDiscount : '0đ';
+      const finalVal = (typeof formattedFinalTotal !== 'undefined') ?
+      formattedFinalTotal : vnd(drawerTotal); %>
+
+      <div
+        class="price-row text-success <%= hasDiscount ? '' : 'd-none' %>"
+        id="discountRow"
+      >
+        <span>Giảm giá</span>
+        <span id="discountDisplay" class="fw-bold">-<%= discVal %></span>
+      </div>
+
+      <div
+        class="price-row text-warning <%= hasPoints ? '' : 'd-none' %>"
+        id="pointRow"
+        style="color: #d97706 !important"
+      >
+        <span>Dùng xu</span>
+        <span id="pointDisplay" class="fw-bold">-<%= pointVal %></span>
+      </div>
+
+      <div class="price-row price-total">
+        <span>Tổng cộng</span>
+        <span id="totalDisplay"> <%= finalVal %> </span>
       </div>
     </div>
+
+    <div class="cdr-actions mt-3">
+      <a href="/shop-cart" class="btn btn-outline mb-2">Xem giỏ hàng</a>
+      <a href="/shop-cart/checkout" class="btn btn-primary">Thanh toán</a>
+    </div>
   </div>
+</div>
 
-  <script>
-    (function CartDrawer() {
-      const fmt = (n) => (Number(n || 0)).toLocaleString('vi-VN') + 'đ';
-      const $subtotal = document.getElementById('cdr-subtotal');
+<script>
+  (function () {
+    // Cache các Element thường dùng
+    const els = {
+      list: document.querySelector(".cart-drawer-items"),
+      badge: document.querySelector(".js-cart-items-count"),
+      subtotal: document.getElementById("subtotalDisplay"),
+      total: document.getElementById("totalDisplay"),
 
-      async function updateQty(idx, qty) {
+      // Coupon UI
+      couponInput: document.getElementById("couponInput"),
+      couponMsg: document.getElementById("coupon-msg"),
+      discRow: document.getElementById("discountRow"),
+      discVal: document.getElementById("discountDisplay"),
+
+      // Points UI
+      pointRow: document.getElementById("pointRow"),
+      pointVal: document.getElementById("pointDisplay"),
+      pointCheck: document.getElementById("usePointsCheckDrawer"),
+
+      // Dropdown UI
+      dropdown: document.getElementById("coupon-dropdown"),
+      dropList: document.getElementById("coupon-list"),
+      loading: document.getElementById("coupon-loading"),
+    };
+
+    const fmt = (n) => Number(n || 0).toLocaleString("vi-VN") + "đ";
+
+    // ============================================================
+    // CORE: HÀM LÀM MỚI GIỎ HÀNG (KHÔNG RELOAD)
+    // ============================================================
+    async function refreshCart() {
+      try {
+        // 1. Lấy dữ liệu mới nhất từ Server
+        const res = await fetch("/api/page/minicart");
+        const data = await res.json();
+
+        if (!data.ok) return;
+
+        // 2. Cập nhật số lượng Badge
+        if (els.badge) els.badge.textContent = data.cartCount || 0;
+
+        // 3. Cập nhật danh sách sản phẩm (Vẽ lại HTML)
+        renderCartItems(data.carts);
+
+        // 4. Cập nhật giá tiền
+        if (els.subtotal) els.subtotal.textContent = data.formattedTotal;
+        if (els.total) els.total.textContent = data.formattedFinalTotal;
+
+        // 5. Cập nhật trạng thái Mã giảm giá
+        if (data.discount_amount > 0) {
+          els.discRow.classList.remove("d-none");
+          els.discVal.textContent = "-" + data.formattedDiscount;
+
+          els.couponInput.value = data.applied_coupon || "";
+          els.couponMsg.className = "small mt-1 fw-bold text-success";
+          els.couponMsg.textContent = "Đang dùng: " + data.applied_coupon;
+        } else {
+          els.discRow.classList.add("d-none");
+          els.couponMsg.textContent = "";
+          // Giữ nguyên input nếu user đang gõ, chỉ xóa nếu rỗng từ server
+          if (!data.applied_coupon && els.couponInput.value === "") {
+            els.couponInput.value = "";
+          }
+        }
+
+        // 6. Cập nhật trạng thái Điểm thưởng
+        if (els.pointCheck) {
+          // Đồng bộ checkbox với dữ liệu server
+          els.pointCheck.checked = data.points_used > 0;
+
+          if (data.point_discount > 0) {
+            els.pointRow.classList.remove("d-none");
+            els.pointVal.textContent = "-" + data.formattedPointDiscount;
+          } else {
+            els.pointRow.classList.add("d-none");
+          }
+        }
+      } catch (e) {
+        console.error("Refresh Cart Error:", e);
+      }
+    }
+
+    // Helper: Vẽ lại HTML danh sách items
+    function renderCartItems(items) {
+      if (!items || items.length === 0) {
+        els.list.innerHTML = `
+                <div class="empty">
+                    <div class="mb-2" style="font-size: 40px; line-height: 1">🛍️</div>
+                    <div class="fw-semibold mb-1">Giỏ hàng trống</div>
+                    <div class="small">Tiếp tục mua sắm để tìm món bạn thích nhé!</div>
+                </div>`;
+        return;
+      }
+
+      const html = items
+        .map((it, idx) => {
+          const name = it.name_snapshot || "Sản phẩm";
+          const img = it.img_snapshot || "/images/default.png";
+          const url = it.product_id ? `/product_detail/${it.product_id}` : "#";
+          const price = fmt(it.price_at_time * it.quantity); // Tổng dòng
+          const unit = fmt(it.price_at_time); // Đơn giá
+          const color = it.color_name_snapshot || "—";
+          const size = it.size_name_snapshot || "—";
+
+          return `
+            <div class="cdi position-relative" id="cdr-item-${idx}">
+                <a class="cdi-thumb" href="${url}">
+                    <img loading="lazy" src="${img}" alt="${name}">
+                </a>
+                <div class="flex-grow-1">
+                    <h6 class="cdi-ttl"><a href="${url}">${name}</a></h6>
+                    <div class="cdi-meta">
+                        <span>Màu: <b>${color}</b></span>
+                        <span>Size: <b>${size}</b></span>
+                    </div>
+                    <div class="cdi-row">
+                        <div class="cdi-qty">
+                            <button type="button" class="js-cdr-dec" data-idx="${idx}">−</button>
+                            <input id="cdr-qty-${idx}" type="number" min="1" value="${it.quantity}">
+                            <button type="button" class="js-cdr-inc" data-idx="${idx}">+</button>
+                        </div>
+                        <div class="cdi-unit">Đơn giá: <b>${unit}</b></div>
+                    </div>
+                    <div class="cdi-total">
+                        <span class="label">Tổng giá</span>
+                        <div class="price" id="cdr-line-${idx}">${price}</div>
+                    </div>
+                </div>
+                <button class="cdi-remove js-cdr-remove" data-idx="${idx}" title="Xoá">&times;</button>
+            </div>`;
+        })
+        .join("");
+
+      els.list.innerHTML = html;
+    }
+
+    // ============================================================
+    // LOGIC XỬ LÝ SỰ KIỆN (ACTIONS)
+    // ============================================================
+
+    // 1. Tăng/Giảm/Xóa Số lượng
+    async function updateQty(idx, qty) {
+      try {
+        if (qty < 1) qty = 1;
+        await fetch(`/cart/update/${idx}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ quantity: qty }),
+        });
+        // Thay vì reload -> Gọi hàm làm mới
+        await refreshCart();
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    async function removeLine(idx) {
+      try {
+        await fetch(`/cart/remove/${idx}`, { method: "POST" });
+        // Thay vì reload -> Gọi hàm làm mới
+        await refreshCart();
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    // Event Delegation cho các nút trong danh sách items
+    document.addEventListener("click", (e) => {
+      const dec = e.target.closest(".js-cdr-dec");
+      if (dec) {
+        const idx = dec.dataset.idx;
+        const input = document.getElementById(`cdr-qty-${idx}`);
+        return updateQty(idx, parseInt(input.value) - 1);
+      }
+
+      const inc = e.target.closest(".js-cdr-inc");
+      if (inc) {
+        const idx = inc.dataset.idx;
+        const input = document.getElementById(`cdr-qty-${idx}`);
+        return updateQty(idx, parseInt(input.value) + 1);
+      }
+
+      const rm = e.target.closest(".js-cdr-remove");
+      if (rm) return removeLine(rm.dataset.idx);
+    });
+
+    // Xử lý input change thủ công
+    document.addEventListener("change", (e) => {
+      if (e.target && e.target.id && e.target.id.startsWith("cdr-qty-")) {
+        const idx = e.target.id.replace("cdr-qty-", "");
+        updateQty(idx, parseInt(e.target.value));
+      }
+    });
+
+    // 2. Toggle Điểm Thưởng
+    if (els.pointCheck) {
+      els.pointCheck.addEventListener("change", async function () {
+        const usePoints = this.checked;
+        this.disabled = true;
         try {
-          if (qty < 1) qty = 1;
-          const res = await fetch(`/cart/update/${idx}`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ quantity: qty })
+          const res = await fetch("/cart/toggle-points", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ usePoints }),
           });
           const data = await res.json();
-          if (!data?.ok) throw new Error(data?.message || 'Cập nhật thất bại');
-
-          // set UI
-          const ip = document.getElementById(`cdr-qty-${idx}`);
-          if (ip) ip.value = qty;
-          const line = document.getElementById(`cdr-line-${idx}`);
-          if (line) line.textContent = fmt(data.lineTotal);
-          if ($subtotal) $subtotal.textContent = fmt(data.totals?.total || 0);
-
-          // also update header badge if exists
-          const badge = document.querySelector('#cartDrawer .js-cart-items-count');
-          if (badge) {
-            const count = document.querySelectorAll('#cartDrawer .cdi').length;
-            badge.textContent = count;
+          if (data.ok) {
+            await refreshCart(); // Làm mới không reload
+          } else {
+            alert(data.message);
+            this.checked = !usePoints;
           }
-        } catch (err) {
-          console.error(err);
-          alert('Không cập nhật được số lượng. Vui lòng thử lại!');
+        } catch (e) {
+          console.error(e);
+          this.checked = !usePoints;
+        } finally {
+          this.disabled = false;
         }
-      }
+      });
+    }
 
-      async function removeLine(idx) {
+    // 3. Áp dụng Coupon
+    const $btnApply = document.getElementById("btnApplyCoupon");
+    if ($btnApply) {
+      $btnApply.addEventListener("click", async () => {
+        const code = els.couponInput.value.trim();
+
+        // Loading UI
+        const oldText = $btnApply.innerText;
+        $btnApply.innerText = "...";
+        $btnApply.disabled = true;
+        els.couponMsg.innerText = "";
+
         try {
-          const res = await fetch(`/cart/remove/${idx}`, { method: 'POST' });
+          const res = await fetch("/cart/apply-coupon", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ code }),
+          });
           const data = await res.json();
-          if (!data?.ok) throw new Error(data?.message || 'Xoá thất bại');
 
-          const row = document.getElementById(`cdr-item-${idx}`);
-          if (row) row.remove();
+          if (data.ok) {
+            // Thành công -> Làm mới
+            await refreshCart();
+          } else {
+            els.couponMsg.className = "small mt-1 fw-bold text-danger";
+            els.couponMsg.innerText = data.message;
 
-          if ($subtotal) $subtotal.textContent = fmt(data.totals?.total || 0);
-
-          const badge = document.querySelector('#cartDrawer .js-cart-items-count');
-          if (badge) {
-            const count = document.querySelectorAll('#cartDrawer .cdi').length;
-            badge.textContent = count;
+            // Nếu lỗi (ví dụ mã sai), reset lại giá về ban đầu
+            await refreshCart();
           }
+        } catch (e) {
+          els.couponMsg.className = "small mt-1 fw-bold text-danger";
+          els.couponMsg.innerText = "Lỗi kết nối";
+        } finally {
+          $btnApply.innerText = oldText;
+          $btnApply.disabled = false;
+        }
+      });
+    }
 
-          if (document.querySelectorAll('#cartDrawer .cdi').length === 0) {
-            const list = document.querySelector('#cartDrawer .cart-drawer-items');
-            const empty = document.createElement('div');
-            empty.className = 'empty';
-            empty.innerHTML = '<div class="mb-2" style="font-size:40px;line-height:1;">🛍️</div><div class="fw-semibold mb-1">Giỏ hàng trống</div><div class="small">Tiếp tục mua sắm để tìm món bạn thích nhé!</div>';
-            list.appendChild(empty);
+    // 4. Gợi ý Coupon (Dropdown)
+    let couponsLoaded = false;
+    if (els.couponInput) {
+      els.couponInput.addEventListener("click", async () => {
+        els.dropdown.style.display = "block";
+
+        if (!couponsLoaded) {
+          els.loading.style.display = "block";
+          try {
+            const res = await fetch("/api/discount-code/available");
+            const data = await res.json();
+            els.loading.style.display = "none";
+            els.dropList.innerHTML = "";
+
+            if (data.success && data.items.length > 0) {
+              data.items.forEach((c) => {
+                const item = document.createElement("div");
+                item.className = "coupon-item";
+                item.innerHTML = `
+                  <span class="coupon-code-badge">${c.code}</span>
+                  <span class="coupon-desc">${c.description}</span>
+                `;
+                item.onclick = () => {
+                  els.couponInput.value = c.code;
+                  els.dropdown.style.display = "none";
+                  $btnApply.click(); // Tự động bấm áp dụng
+                };
+                els.dropList.appendChild(item);
+              });
+            } else {
+              els.dropList.innerHTML =
+                '<div class="p-2 text-center small text-muted">Không có mã khả dụng</div>';
+            }
+            couponsLoaded = true;
+          } catch (e) {
+            els.dropList.innerHTML =
+              '<div class="p-2 text-center small text-danger">Lỗi tải mã</div>';
           }
-        } catch (err) {
-          console.error(err);
-          alert('Không xoá được sản phẩm. Vui lòng thử lại!');
-        }
-      }
-
-      document.addEventListener('click', (e) => {
-        const dec = e.target.closest('.js-cdr-dec');
-        if (dec) {
-          const idx = dec.dataset.idx;
-          const ip = document.getElementById(`cdr-qty-${idx}`);
-          updateQty(idx, parseInt(ip.value || '1', 10) - 1);
-          return;
-        }
-        const inc = e.target.closest('.js-cdr-inc');
-        if (inc) {
-          const idx = inc.dataset.idx;
-          const ip = document.getElementById(`cdr-qty-${idx}`);
-          updateQty(idx, parseInt(ip.value || '1', 10) + 1);
-          return;
-        }
-        const rm = e.target.closest('.js-cdr-remove');
-        if (rm) {
-          const idx = rm.dataset.idx;
-          removeLine(idx);
         }
       });
 
-      document.querySelectorAll('[id^="cdr-qty-"]').forEach(ip => {
-        ip.addEventListener('change', () => {
-          const idx = ip.id.replace('cdr-qty-', '');
-          updateQty(idx, parseInt(ip.value || '1', 10));
-        });
+      // Click outside -> close dropdown
+      document.addEventListener("click", (e) => {
+        if (!e.target.closest(".coupon-box")) {
+          els.dropdown.style.display = "none";
+        }
       });
-    })();
-  </script>
+    }
+
+    // Expose function global nếu cần gọi từ nơi khác (ví dụ sau khi Add to Cart)
+    window.refreshCartDrawer = refreshCart;
+  })();
+</script>

@@ -1,6 +1,12 @@
 // src/controllers/page.controller.js
 const { money } = require("../utils/format");
-const { Brand, Category, Product, ProductVariant, Review } = require("../models");
+const {
+  Brand,
+  Category,
+  Product,
+  ProductVariant,
+  Review,
+} = require("../models");
 const { normalizeProductsColors } = require("../services/productService");
 
 exports.health = (_req, res) => res.send("API is running...");
@@ -11,28 +17,119 @@ exports.categories = async (_req, res) => {
 };
 
 exports.minicart = async (req, res) => {
-  const user = req.currentUser;
-  const where = user ? { user_id: user._id } : { session_id: req.cookies.sid };
-  const cart = await require("../models").Cart.findOne(where).lean().catch(() => null);
+  const currentUser = req.currentUser;
+  const where = currentUser
+    ? { user_id: currentUser.id || currentUser._id }
+    : { session_id: req.cookies.sid };
+
+  // Import User để lấy điểm
+  const { Cart, DiscountCode, User } = require("../models");
+
+  const cart = await Cart.findOne(where)
+    .lean()
+    .catch(() => null);
 
   const items = cart?.items || [];
   const cartCount = items.reduce((s, it) => s + (it.quantity || 0), 0);
-  const total = items.reduce((s, it) => s + (it.price_at_time * it.quantity), 0);
+
+  // 1. Tính tổng tiền gốc
+  const total = items.reduce((s, it) => s + it.price_at_time * it.quantity, 0);
+
+  // --- LẤY THÔNG TIN USER MỚI NHẤT (ĐỂ CÓ ĐIỂM THƯỞNG) ---
+  let userPointData = null;
+  let currentPoints = 0;
+
+  if (currentUser) {
+    const dbUser = await User.findById(
+      currentUser.id || currentUser._id
+    ).lean();
+    if (dbUser) {
+      userPointData = {
+        id: dbUser._id,
+        email: dbUser.email,
+        full_name: dbUser.full_name,
+        loyalty_points: dbUser.loyalty_points || 0, // <--- QUAN TRỌNG
+      };
+      currentPoints = dbUser.loyalty_points || 0;
+    }
+  }
+
+  // 2. Tính giảm giá Coupon
+  let discountAmount = 0;
+  let appliedCoupon = null;
+
+  if (cart && cart.applied_coupon) {
+    const discount = await DiscountCode.findOne({
+      code: cart.applied_coupon,
+      is_active: true,
+    });
+
+    if (
+      discount &&
+      (!discount.usage_limit || discount.usage_count < discount.usage_limit)
+    ) {
+      discountAmount = Math.floor((total * discount.discount_value) / 100);
+      appliedCoupon = cart.applied_coupon;
+    }
+  }
+
+  let tempTotal = total - discountAmount;
+  if (tempTotal < 0) tempTotal = 0;
+
+  // 3. Tính giảm giá Điểm thưởng
+  let pointDiscount = 0;
+  let pointsUsed = 0;
+
+  if (cart && cart.used_points > 0 && currentPoints > 0) {
+    // Điểm tối đa cần dùng để trả hết số tiền còn lại
+    const maxPointsAllowed = Math.ceil(tempTotal / 1000);
+
+    // Dùng số nhỏ hơn giữa: Điểm user có và Điểm cần thiết
+    pointsUsed = Math.min(currentPoints, maxPointsAllowed);
+    pointDiscount = pointsUsed * 1000;
+  }
+
+  const finalTotal = tempTotal - pointDiscount;
 
   res.json({
     ok: true,
     carts: items,
     cartCount,
     total,
+
+    applied_coupon: appliedCoupon,
+    discount_amount: discountAmount,
+
+    points_used: pointsUsed,
+    point_discount: pointDiscount,
+
+    final_total: finalTotal < 0 ? 0 : finalTotal,
+
     formattedTotal: money(total),
-    user: user ? { id: user._id, email: user.email, full_name: user.full_name } : null,
+    formattedDiscount: money(discountAmount),
+    formattedPointDiscount: money(pointDiscount),
+    formattedFinalTotal: money(finalTotal < 0 ? 0 : finalTotal),
+
+    // Trả về user có loyalty_points
+    user: userPointData,
   });
 };
 
 exports.home = async (_req, res) => {
-  const latestRaw = await Product.find().sort({ createdAt: -1 }).limit(8).lean();
-  const trendingRaw = await Product.find({ "productStatus.statusName": "Trending" }).limit(8).lean();
-  const popularRaw = await Product.find({ "productStatus.statusName": "Bán chạy" }).limit(8).lean();
+  const latestRaw = await Product.find()
+    .sort({ createdAt: -1 })
+    .limit(8)
+    .lean();
+  const trendingRaw = await Product.find({
+    "productStatus.statusName": "Trending",
+  })
+    .limit(8)
+    .lean();
+  const popularRaw = await Product.find({
+    "productStatus.statusName": "Bán chạy",
+  })
+    .limit(8)
+    .lean();
 
   const [latest, trending, popular] = await Promise.all([
     normalizeProductsColors(latestRaw),
@@ -56,12 +153,19 @@ exports.categoryAll = async (req, res) => {
   let query = Product.find(filter).populate("brand category");
 
   if (sort === "price_asc" || sort === "price_desc") {
-    const pv = await ProductVariant.aggregate([{ $group: { _id: "$product", minPrice: { $min: "$price" } } }]);
-    const priceMap = new Map(pv.map(x => [x._id.toString(), x.minPrice]));
+    const pv = await ProductVariant.aggregate([
+      { $group: { _id: "$product", minPrice: { $min: "$price" } } },
+    ]);
+    const priceMap = new Map(pv.map((x) => [x._id.toString(), x.minPrice]));
     const productsRaw = await query.lean();
-    const withMin = productsRaw.map(p => ({ p, price: priceMap.get(p._id.toString()) ?? 0 }));
-    withMin.sort((a, b) => sort === "price_asc" ? (a.price - b.price) : (b.price - a.price));
-    const products = await normalizeProductsColors(withMin.map(x => x.p));
+    const withMin = productsRaw.map((p) => ({
+      p,
+      price: priceMap.get(p._id.toString()) ?? 0,
+    }));
+    withMin.sort((a, b) =>
+      sort === "price_asc" ? a.price - b.price : b.price - a.price
+    );
+    const products = await normalizeProductsColors(withMin.map((x) => x.p));
     return res.json({ ok: true, products });
   }
 
@@ -72,9 +176,12 @@ exports.categoryAll = async (req, res) => {
 
 exports.categoryById = async (req, res) => {
   const cat = await Category.findById(req.params.id).lean();
-  if (!cat) return res.status(400).json({ ok: false, redirect: "/category/alls" });
+  if (!cat)
+    return res.status(400).json({ ok: false, redirect: "/category/alls" });
 
-  const productsRaw = await Product.find({ category: cat._id }).populate("brand category").lean();
+  const productsRaw = await Product.find({ category: cat._id })
+    .populate("brand category")
+    .lean();
   const products = await normalizeProductsColors(productsRaw);
   res.json({ ok: true, category: cat, products });
 };
@@ -89,7 +196,9 @@ exports.search = async (req, res) => {
       { slug: { $regex: q, $options: "i" } },
       { short_description: { $regex: q, $options: "i" } },
     ],
-  }).populate("brand category").lean();
+  })
+    .populate("brand category")
+    .lean();
 
   const products = await normalizeProductsColors(productsRaw);
   res.json({ ok: true, products, q });
@@ -113,13 +222,16 @@ exports.productDetail = async (req, res) => {
   for (const v of variants) {
     if (Array.isArray(v.images)) {
       for (const im of v.images) {
-        imgs.push(typeof im === "string" ? im : (im?.url || null));
+        imgs.push(typeof im === "string" ? im : im?.url || null);
       }
     }
   }
   const allImagesRaw = Array.from(new Set(imgs.filter(Boolean)));
-  const allImages = allImagesRaw.length ? allImagesRaw : ["/images/default.png"];
-  while (allImages.length > 0 && allImages.length < 3) allImages.push(allImages[0]);
+  const allImages = allImagesRaw.length
+    ? allImagesRaw
+    : ["/images/default.png"];
+  while (allImages.length > 0 && allImages.length < 3)
+    allImages.push(allImages[0]);
   const thumbImages = allImages.slice(0, Math.min(6, allImages.length));
 
   // ========= SIZE MAP =========
@@ -154,20 +266,20 @@ exports.productDetail = async (req, res) => {
       });
     }
     const urls = (v.images || [])
-      .map(im => (typeof im === "string" ? im : (im?.url || null)))
+      .map((im) => (typeof im === "string" ? im : im?.url || null))
       .filter(Boolean);
     colorMap.get(key).imageUrls.push(...urls);
   }
 
-  const productColors = Array.from(colorMap.values()).map(c => ({
+  const productColors = Array.from(colorMap.values()).map((c) => ({
     ...c,
     imageUrls: Array.from(new Set(c.imageUrls)),
   }));
 
   // ========= TÍNH price_min / price_max / stock_total =========
   const prices = variants
-    .map(v => Number(v.price))
-    .filter(n => Number.isFinite(n) && n >= 0);
+    .map((v) => Number(v.price))
+    .filter((n) => Number.isFinite(n) && n >= 0);
 
   let price_min = null;
   let price_max = null;
@@ -186,12 +298,14 @@ exports.productDetail = async (req, res) => {
   const reviews = await Review.find({ product: p._id })
     .sort({ createdAt: -1 })
     .populate("user", "full_name email")
-    .select("comment rating user guest_name guest_email sentiment sentiment_score ai_label createdAt")
+    .select(
+      "comment rating user guest_name guest_email sentiment sentiment_score ai_label createdAt"
+    )
     .lean();
 
   const ratingNumbers = reviews
-    .map(r => Number(r.rating))
-    .filter(n => Number.isFinite(n));
+    .map((r) => Number(r.rating))
+    .filter((n) => Number.isFinite(n));
 
   const ratingCount = ratingNumbers.length;
   const ratingAvg = ratingCount
@@ -209,8 +323,8 @@ exports.productDetail = async (req, res) => {
       $group: {
         _id: { $ifNull: ["$sentiment", null] },
         count: { $sum: 1 },
-      }
-    }
+      },
+    },
   ]);
 
   const sentimentScoreAgg = await Review.aggregate([
@@ -219,8 +333,8 @@ exports.productDetail = async (req, res) => {
       $group: {
         _id: null,
         avgScore: { $avg: "$sentiment_score" },
-      }
-    }
+      },
+    },
   ]);
 
   const sentimentStats = { positive: 0, neutral: 0, negative: 0, null: 0 };
@@ -239,9 +353,9 @@ exports.productDetail = async (req, res) => {
   // ========= GỘP THÀNH OBJECT product HOÀN CHỈNH =========
   const product = {
     ...p,
-    colors: (productColors.length
+    colors: productColors.length
       ? productColors
-      : [{ color_id: null, color_code: "", imageUrls: allImages }]),
+      : [{ color_id: null, color_code: "", imageUrls: allImages }],
     price_min,
     price_max,
     stock_total,
@@ -274,8 +388,12 @@ exports.productDetail = async (req, res) => {
 // --- ACCOUNT PAGES JSON ---
 exports.accountProfile = async (req, res) => {
   if (!req.currentUser) return res.json({ redirectToLogin: true });
-  const { _id, email, full_name, role, loyalty_points, createdAt } = req.currentUser;
-  res.json({ ok: true, user: { id: _id, email, full_name, role, loyalty_points, createdAt } });
+  const { _id, email, full_name, role, loyalty_points, createdAt } =
+    req.currentUser;
+  res.json({
+    ok: true,
+    user: { id: _id, email, full_name, role, loyalty_points, createdAt },
+  });
 };
 exports.accountAddresses = async (req, res) => {
   if (!req.currentUser) return res.json({ redirectToLogin: true });
@@ -287,7 +405,9 @@ exports.accountAddresses = async (req, res) => {
 exports.accountOrders = async (req, res) => {
   if (!req.currentUser) return res.json({ redirectToLogin: true });
   const { Order } = require("../models");
-  const orders = await Order.find({ user: req.currentUser._id }).sort({ createdAt: -1 }).lean();
+  const orders = await Order.find({ user: req.currentUser._id })
+    .sort({ createdAt: -1 })
+    .lean();
   res.json({ ok: true, orders });
 };
 
@@ -304,7 +424,10 @@ exports.accountOrdersFilter = async (req, res) => {
 exports.orderDetails = async (req, res) => {
   if (!req.currentUser) return res.json({ redirectToLogin: true });
   const { Order } = require("../models");
-  const order = await Order.findOne({ _id: req.params.id, user: req.currentUser._id }).lean();
+  const order = await Order.findOne({
+    _id: req.params.id,
+    user: req.currentUser._id,
+  }).lean();
   if (!order) return res.status(404).json({ ok: false });
   res.json({ ok: true, order });
 };
@@ -312,13 +435,67 @@ exports.orderDetails = async (req, res) => {
 exports.accountVouchers = async (req, res) => {
   if (!req.currentUser) return res.json({ redirectToLogin: true });
   const { DiscountCode } = require("../models");
-  const vouchers = await DiscountCode.find({ is_active: true }).lean().catch(() => []);
+  const vouchers = await DiscountCode.find({ is_active: true })
+    .lean()
+    .catch(() => []);
   res.json({ ok: true, vouchers: vouchers || [] });
 };
 
 exports.accountPoints = async (req, res) => {
+  // 1. Check login
   if (!req.currentUser) return res.json({ redirectToLogin: true });
-  const points = req.currentUser.loyalty_points || 0;
-  res.json({ ok: true, points });
-};
 
+  const { Order } = require("../models");
+
+  try {
+    // 2. Lấy tổng điểm hiện có
+    const points_balance = req.currentUser.loyalty_points || 0;
+
+    // 3. Tạo lịch sử biến động từ Đơn hàng
+    // Tìm các đơn hàng của user, sắp xếp mới nhất
+    const orders = await Order.find({
+      user: req.currentUser._id,
+    })
+      .sort({ createdAt: -1 })
+      .lean();
+
+    // Map dữ liệu đơn hàng thành danh sách lịch sử điểm
+    let points_history = [];
+
+    orders.forEach((o) => {
+      // Ghi nhận điểm cộng (Tích lũy)
+      if (o.loyalty_points_earned > 0) {
+        points_history.push({
+          note: `Tích điểm từ đơn hàng #${o._id}`,
+          createdAt: o.createdAt,
+          amount: o.loyalty_points_earned,
+          type: "plus", // Dùng để tô màu xanh
+        });
+      }
+      // Ghi nhận điểm trừ (Đã dùng)
+      if (o.loyalty_points_used > 0) {
+        points_history.push({
+          note: `Sử dụng điểm cho đơn hàng #${o._id}`,
+          createdAt: o.createdAt,
+          amount: -o.loyalty_points_used,
+          type: "minus", // Dùng để tô màu đỏ
+        });
+      }
+    });
+
+    // Sắp xếp lại lịch sử theo thời gian mới nhất
+    points_history.sort(
+      (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+    );
+
+    // 4. Trả về JSON đúng cấu trúc EJS cần
+    res.json({
+      ok: true,
+      points_balance,
+      points_history,
+    });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ ok: false, message: "Lỗi lấy dữ liệu điểm" });
+  }
+};
