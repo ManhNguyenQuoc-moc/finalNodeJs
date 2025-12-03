@@ -34,4 +34,6 @@ const userRouter = require("./users"); //import
 router.use("/user", userRouter);
 const importRoutes = require("./importRoutes");
 router.use("/import", importRoutes);
+const adminOrderRouter = require("./adminOrder");
+router.use("/admin/orders", adminOrderRouter);
 module.exports = router; //export

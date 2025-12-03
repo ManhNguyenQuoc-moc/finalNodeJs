@@ -4,10 +4,10 @@ const fillAddressLine = require("../middleware/addressPopulate"); // đường d
 const addressSchema = new mongoose.Schema(
   {
     user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
-    city: { type: String, required: true },
-    district: { type: String, required: true },
-    ward: { type: String, required: true },
-    detail: { type: String, required: true },
+    city: { type: String, required: false },
+    district: { type: String, required: false },
+    ward: { type: String, required: false },
+    detail: { type: String, required: false },
     address_line: { type: String },
     is_default: { type: Boolean, default: false },
   },
