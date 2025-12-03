@@ -84,6 +84,50 @@
     border-color:#111;
     transform:scale(1.05);
   }
+
+  /* Reset All Filters Button */
+  .btn-reset-all {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 10px 16px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #666;
+    background: #f8f9fa;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+    text-decoration: none;
+  }
+
+  .btn-reset-all:hover {
+    background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
+    border-color: #ff6b6b;
+    color: #fff;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(255, 107, 107, 0.25);
+  }
+
+  .btn-reset-all:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 6px rgba(255, 107, 107, 0.2);
+  }
+
+  .btn-reset-all svg {
+    transition: transform 0.3s ease;
+  }
+
+  .btn-reset-all:hover svg {
+    transform: rotate(-15deg) scale(1.1);
+  }
+
+  .btn-reset-all span {
+    letter-spacing: 0.3px;
+  }
 </style>
 
 <%
@@ -202,6 +246,18 @@ const currentColorLabel = (() => {
         <div class="aside-header d-flex d-lg-none align-items-center">
           <h3 class="text-uppercase fs-6 mb-0">Lọc theo</h3>
           <button class="btn-close-lg js-close-aside btn-close-aside ms-auto"></button>
+        </div>
+
+        <!-- Reset All Filters Button -->
+        <div class="mb-4 pb-3 border-bottom">
+          <button type="button" class="btn-reset-all js-reset-all-filters" id="resetAllFilters">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+              <line x1="10" y1="11" x2="10" y2="17"></line>
+              <line x1="14" y1="11" x2="14" y2="17"></line>
+            </svg>
+            <span>Xóa tất cả bộ lọc</span>
+          </button>
         </div>
 
         <!-- CATEGORIES -->
@@ -563,6 +619,7 @@ const currentColorLabel = (() => {
         colorGrid: document.getElementById('colorGrid'),
         colorExtras: Array.from(document.querySelectorAll('.color-swatch[data-extra="true"]')),
         quickPriceBoxes: Array.from(document.querySelectorAll('.js-quick-price')),
+        resetAllFilters: document.getElementById('resetAllFilters'),
       };
       const colorMetaEl = document.getElementById('color-meta-json');
       let colorFoldLimitClient = 10;
@@ -1282,6 +1339,56 @@ const currentColorLabel = (() => {
           const isAll = !box.dataset.min && !box.dataset.max;
           box.checked = isAll;
         });
+        state.page = 1;
+        renderProducts();
+      });
+
+      // Reset All Filters Handler
+      dom.resetAllFilters?.addEventListener('click', () => {
+        // Reset search
+        if (dom.searchInput) dom.searchInput.value = '';
+        state.search = '';
+
+        // Reset sort
+        if (dom.sortSelect) dom.sortSelect.value = '';
+        state.sort = '';
+
+        // Reset brands
+        dom.brandCheckboxes.forEach((checkbox) => {
+          checkbox.checked = false;
+        });
+        state.brands.clear();
+        syncBrandChipState();
+        updateBrandDisplay();
+
+        // Reset color
+        const allColorRadio = dom.colorRadios.find((r) => r.value === '');
+        if (allColorRadio) allColorRadio.checked = true;
+        state.color = '';
+        syncColorSwatchState();
+        updateColorDisplay();
+        ensureColorVisibility();
+
+        // Reset rating
+        dom.ratingRadios.forEach((radio) => {
+          radio.checked = false;
+        });
+        state.rating = '';
+
+        // Reset price
+        if (dom.minPrice) dom.minPrice.value = '';
+        if (dom.maxPrice) dom.maxPrice.value = '';
+        state.minPrice = '';
+        state.maxPrice = '';
+        dom.quickPriceBoxes.forEach((box) => {
+          const isAll = !box.dataset.min && !box.dataset.max;
+          box.checked = isAll;
+        });
+
+        // Refresh colors for all products
+        refreshColorFilters(products);
+
+        // Reset page and render
         state.page = 1;
         renderProducts();
       });
