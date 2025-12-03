@@ -1,3 +1,12 @@
+Các thành viên trong nhóm 
+
+52200085_Nguyễn Quốc Mạnh
+52200077_Nguyễn Minh Luân
+52200026_Huỳnh Tấn Nhã
+
+Link git dự án của nhóm: https://github.com/ManhNguyenQuoc-moc/finalNodeJs
+Link video demo của nhóm: https://drive.google.com/file/d/1RpFo7M14adNywzTBFpVs-W9xo1gcK9kf/view?usp=sharing
+
 Hướng dẫn cài đặt & chạy bằng Docker
 Dự án gồm 3 dịch vụ chính (mongo, backend, frontend) và công cụ quản trị mongo-express. Tất cả chạy bằng Docker Compose*(version: `"3.9"`).
 
@@ -101,23 +110,23 @@ Phân tích cảm xúc comment của khách hàng bằng AI
 
 9) Tính năng của dự án
 
-1. User (khách hàng)
+9.1. User (khách hàng)
 Đăng ký / đăng nhập / JWT
 Xem sản phẩm, tìm kiếm, lọc
 Giỏ hàng / thanh toán
 Xem lịch sử đơn hàng
 
-2. Admin
+9.2. Admin
 Quản lý sản phẩm, danh mục, thương hiệu
 Quản lý tồn kho theo biến thể (color/size/variant)
 Quản lý đơn hàng & trạng thái đơn
 Quản trị người dung
 
-3. Dashboard cơ bản
+9.3. Dashboard cơ bản
 Tổng quan doanh thu, lợi nhuận, số đơn, user mới
 Top sản phẩm
 
-4. Dashboard nâng cao (Bonus)
+9.4. Dashboard nâng cao (Bonus)
 So sánh doanh thu / lợi nhuận / số đơn theo:
 Năm / Quý / Tháng / Tuần / Ngày
 Thống kê khách hàng:
@@ -125,8 +134,10 @@ LTV, khách mới vs quay lại, phân khúc chi tiêu
 Phân bổ sản phẩm theo SKU
 Biểu đồ phân loại trạng thái đơn hang
 
-5. Mã giảm giá (Bonus)
+9.5. Mã giảm giá (Bonus)
 Tạo / cập nhật / xoá
 Hạn sử dụng, giới hạn lượt dùng
 
+10) Link git chứa repo của dự án bao gồm dự án và các thể hiện làm việt nhóm thông qua git
 
+https://github.com/ManhNguyenQuoc-moc/finalNodeJs
