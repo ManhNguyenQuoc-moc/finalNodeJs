@@ -19,6 +19,8 @@ const adminDashboard = require("./adminDashboard");
 router.use("/admin-dashboard", adminDashboard);
 const aiRouter = require("./aiRouter");
 router.use("/ai", aiRouter);
+const cartRouter = require("./cart.routes"); //import
+router.use("/cart", cartRouter);
 // const pageRouter = require("./page.routes");
 // router.use("/", pageRouter);
 const authRouter = require("./auth"); //import
@@ -28,9 +30,8 @@ router.use("/auth", authRouter);
 const orderRouter = require("./order.route"); //import
 router.use("/order", orderRouter);
 module.exports = router; //export
-const userRouter = require("./users");//import
+const userRouter = require("./users"); //import
 router.use("/user", userRouter);
 const importRoutes = require("./importRoutes");
 router.use("/import", importRoutes);
-module.exports = router;//export
-
+module.exports = router; //export

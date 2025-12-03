@@ -35,6 +35,8 @@ const cartSchema = new mongoose.Schema(
     user_id: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
     session_id: { type: String },
     items: { type: [cartItemSchema], default: [] },
+    applied_coupon: { type: String, default: null, trim: true },
+    used_points: { type: Number, default: 0 },
   },
   { timestamps: { createdAt: true, updatedAt: "updated_at" } }
 );

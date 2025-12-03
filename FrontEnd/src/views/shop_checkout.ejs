@@ -37,6 +37,45 @@
       .select2-container--bootstrap-5 .select2-selection {
         border-radius: 0.375rem;
       }
+      .d-none {
+        display: none !important;
+      }
+      /* make discount / final total clearly visible */
+      .checkout-discount-row {
+        color: #16a34a; /* green-600 */
+        font-weight: 700;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .checkout-discount-amount {
+        color: #16a34a; /* same green */
+        font-weight: 800;
+        text-align: right;
+      }
+
+      /* final total */
+      .checkout-final-label {
+        color: #111827; /* dark text */
+        font-weight: 700;
+        margin-right: 12px;
+      }
+
+      .checkout-final-amount {
+        color: #dc2626; /* red-600 */
+        font-weight: 800;
+        font-size: 1.25rem; /* slightly bigger */
+        letter-spacing: 0.2px;
+      }
+
+      /* transition for a subtle highlight when updated */
+      .price-highlight {
+        transition: color 180ms ease, transform 140ms ease;
+        transform-origin: right center;
+      }
+      .price-highlight.burst {
+        transform: scale(1.02);
+      }
     </style>
 
     <link
@@ -63,7 +102,8 @@
               <h3 class="mb-0">Thông tin giao hàng</h3>
               <% if (!user) { %>
               <p class="mb-0">
-                Bạn đã có tài khoản? <a href="/login-register">Đăng nhập</a>
+                Bạn đã có tài khoản?
+                <a href="/login-register">Đăng nhập</a>
               </p>
               <% } %>
             </div>
@@ -175,52 +215,112 @@
                   src="<%= cart.img_snapshot %>"
                   width="64"
                   class="me-3"
-                  style="object-fit: cover"
+                  style="object-fit: cover; border-radius: 8px"
                 />
                 <div class="flex-grow-1">
-                  <div><%= cart.name_snapshot %></div>
+                  <div class="fw-bold"><%= cart.name_snapshot %></div>
                   <small class="text-muted">
                     <%= cart.color_name_snapshot %> / <%=
                     cart.size_name_snapshot %>
+                    <br />x<%= cart.quantity %>
                   </small>
                 </div>
-                <div>
+                <div class="fw-bold">
                   <%= (cart.price_at_time *
                   cart.quantity).toLocaleString('vi-VN') %>₫
                 </div>
               </div>
               <% }) %> <% } else { %>
-              <p>Giỏ hàng trống</p>
+              <p class="text-center">Giỏ hàng trống</p>
               <% } %>
 
+              <hr class="my-3" />
+
               <div class="mb-3">
-                <input
-                  type="text"
-                  id="discountCodeInput"
-                  class="form-control"
-                  placeholder="Mã giảm giá"
-                />
+                <label class="form-label fw-bold small text-muted"
+                  >Mã giảm giá</label
+                >
+                <div class="input-group">
+                  <input
+                    type="text"
+                    id="checkoutCouponInput"
+                    class="form-control"
+                    placeholder="Nhập mã voucher"
+                    value="<%= typeof appliedCoupon !== 'undefined' ? appliedCoupon : '' %>"
+                  />
+                  <button
+                    class="btn btn-dark"
+                    type="button"
+                    id="btnApplyCheckout"
+                  >
+                    Áp dụng
+                  </button>
+                </div>
+                <div id="checkout-coupon-msg" class="small mt-1 fw-bold"></div>
               </div>
 
               <div class="d-flex justify-content-between mb-2">
-                <span>Tạm tính</span>
-                <span><%= formattedTotal %></span>
+                <span class="text-muted">Tạm tính</span>
+                <span class="fw-bold" id="checkoutSubtotal"
+                  ><%= formattedTotal %></span
+                >
               </div>
+
+              <% const hasDiscount = (typeof discountAmount !== 'undefined' &&
+              discountAmount > 0); %>
+              <div
+                class="d-flex justify-content-between mb-2 <%= hasDiscount ? '' : 'd-none' %> checkout-discount-row"
+                id="checkoutDiscountRow"
+                role="status"
+                aria-live="polite"
+              >
+                <span>
+                  <i class="fas fa-ticket-alt me-1" aria-hidden="true"></i>
+                  Giảm giá
+                </span>
+                <span
+                  class="fw-bold checkout-discount-amount"
+                  id="checkoutDiscountAmount"
+                >
+                  -<%= formattedDiscount %>
+                </span>
+              </div>
+
+              <% const hasPoints = (typeof pointsUsed !== 'undefined' &&
+              pointsUsed > 0); %>
+              <div
+                class="d-flex justify-content-between mb-2 text-warning <%= hasPoints ? '' : 'd-none' %>"
+                style="color: #d97706 !important"
+              >
+                <span><i class="fas fa-coins me-1"></i> Dùng xu</span>
+                <span class="fw-bold"
+                  >-<%= typeof formattedPointDiscount !== 'undefined' ?
+                  formattedPointDiscount : '0đ' %></span
+                >
+              </div>
+
               <div class="d-flex justify-content-between mb-2">
-                <span>Phí vận chuyển</span>
+                <span class="text-muted">Phí vận chuyển</span>
                 <span>0₫</span>
               </div>
+
               <div
-                class="d-flex justify-content-between fw-bold fs-5 border-top pt-2"
+                class="d-flex justify-content-between align-items-center border-top pt-3 mt-2"
               >
-                <span>Tổng cộng</span>
-                <span><%= formattedTotal %></span>
+                <span class="fs-5 fw-bold checkout-final-label">Tổng cộng</span>
+                <span
+                  class="fs-4 fw-bold checkout-final-amount price-highlight"
+                  id="checkoutFinalTotal"
+                  aria-live="polite"
+                >
+                  <%= formattedFinalTotal %>
+                </span>
               </div>
 
               <button
                 type="button"
                 id="btnPlaceOrder"
-                class="btn btn-danger w-100 mt-4"
+                class="btn btn-dark w-100 mt-4 py-3 fw-bold text-uppercase"
               >
                 ĐẶT HÀNG
               </button>
@@ -238,17 +338,23 @@
     <script src="/mixishop/js/plugins/jquery.min.js"></script>
     <script src="/mixishop/js/plugins/bootstrap.bundle.min.js"></script>
     <script src="/mixishop/js/theme.js"></script>
-
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
-    <script>
-      // Nhận biến latestAddress từ pages.js truyền xuống
-      // Sử dụng '|| null' để phòng trường hợp biến này bị undefined
-      const rawAddress = "<%- JSON.stringify(latestAddress || null) %>";
-      const userAddress = JSON.parse(rawAddress);
-      console.log("👉 Dữ liệu Địa chỉ nhận được từ Server:", userAddress);
+    <script id="address-data" type="application/json">
+      <%- JSON.stringify(typeof latestAddress !== 'undefined' ? latestAddress : null) %>
     </script>
+
     <script>
+      // === PHẦN 1: AUTO-FILL ĐỊA CHỈ ===
+      // Lấy dữ liệu an toàn từ thẻ trên
+      const rawData = document.getElementById("address-data").textContent;
+      let userAddress = null;
+      try {
+        userAddress = JSON.parse(rawData);
+      } catch (e) {}
+
+      console.log("👉 Data Auto-fill:", userAddress);
+
       const host = "https://provinces.open-api.vn/api/";
 
       $(document).ready(function () {
@@ -259,13 +365,13 @@
           placeholder: "Vui lòng chọn...",
         });
 
-        // Gọi Auto-fill nếu có địa chỉ
+        // Gọi Auto-fill nếu có dữ liệu
         if (userAddress) {
           autoFillAddress();
         }
       });
 
-      // --- LOGIC AUTO FILL ---
+      // Hàm Auto-fill thông minh (có await API)
       async function autoFillAddress() {
         if (userAddress.detail) $("#address").val(userAddress.detail);
 
@@ -274,40 +380,42 @@
         const targetWard = userAddress.ward || "";
 
         if (targetCity) {
-          // Chờ API Tỉnh load xong rồi mới chọn
+          // 1. Chờ API Tỉnh load xong
           await waitForElement(
             "#province option[data-name='" + targetCity + "']"
           );
 
-          // Tìm option trùng tên
           let cityOption = $("#province option").filter(function () {
             return $(this).data("name") === targetCity;
           });
 
           if (cityOption.length > 0) {
-            // Chọn Tỉnh -> Kích hoạt load Huyện
-            $("#province").val(cityOption.val()).trigger("change");
+            let cityCode = cityOption.val();
+            // Chọn Tỉnh
+            $("#province").val(cityCode).trigger("change");
+
+            // 🔥 Gọi API load Huyện thủ công và chờ nó xong
+            await callApiDistrict(host + "p/" + cityCode + "?depth=2");
 
             if (targetDistrict) {
-              await waitForElement(
-                "#district option[data-name='" + targetDistrict + "']"
-              );
               let distOption = $("#district option").filter(function () {
                 return $(this).data("name") === targetDistrict;
               });
 
               if (distOption.length > 0) {
-                // Chọn Huyện -> Kích hoạt load Xã
-                $("#district").val(distOption.val()).trigger("change");
+                let distCode = distOption.val();
+                // Chọn Huyện
+                $("#district").val(distCode).trigger("change");
+
+                // 🔥 Gọi API load Xã thủ công và chờ nó xong
+                await callApiWard(host + "d/" + distCode + "?depth=2");
 
                 if (targetWard) {
-                  await waitForElement(
-                    "#ward option[data-name='" + targetWard + "']"
-                  );
                   let wardOption = $("#ward option").filter(function () {
                     return $(this).data("name") === targetWard;
                   });
                   if (wardOption.length > 0) {
+                    // Chọn Xã
                     $("#ward").val(wardOption.val()).trigger("change");
                   }
                 }
@@ -317,7 +425,6 @@
         }
       }
 
-      // Hàm chờ element xuất hiện (cho API)
       function waitForElement(selector) {
         return new Promise((resolve) => {
           if (document.querySelector(selector))
@@ -332,7 +439,7 @@
         });
       }
 
-      // --- LOGIC API API TỈNH THÀNH ---
+      // --- CÁC HÀM GỌI API HÀNH CHÍNH ---
       var callAPI = (api) => {
         return axios.get(api).then((response) => {
           renderData(response.data, "province");
@@ -361,7 +468,7 @@
           .trigger("change");
       };
 
-      // Sự kiện Change
+      // Sự kiện Select2 Change
       $("#province").on("select2:select", function (e) {
         let selectedCode = $(this).val();
         let selectedName = $(this).find(":selected").data("name");
@@ -401,7 +508,82 @@
         $("#ward_name").val(selectedName);
       });
 
-      // --- SUBMIT ---
+      // === PHẦN 2: LOGIC MÃ GIẢM GIÁ TẠI CHECKOUT ===
+      document
+        .getElementById("btnApplyCheckout")
+        .addEventListener("click", async function () {
+          const btn = this;
+          const input = document.getElementById("checkoutCouponInput");
+          const msg = document.getElementById("checkout-coupon-msg");
+          const discountRow = document.getElementById("checkoutDiscountRow");
+          const discountVal = document.getElementById("checkoutDiscountAmount");
+          const finalTotal = document.getElementById("checkoutFinalTotal");
+          const subtotal = document.getElementById("checkoutSubtotal"); // Giá gốc (Tạm tính)
+
+          const code = input.value.trim();
+
+          // UI Loading
+          const oldText = btn.innerText;
+          btn.innerText = "...";
+          btn.disabled = true;
+          msg.innerText = "";
+
+          try {
+            // Gọi API chung với Giỏ hàng (đã tạo ở controller/cart)
+            const res = await fetch("/cart/apply-coupon", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ code }), // Code rỗng = Hủy mã
+            });
+            const data = await res.json();
+
+            if (data.ok) {
+              // Định dạng tiền
+              const fmt = (n) => Number(n || 0).toLocaleString("vi-VN") + " ₫";
+
+              if (data.discountAmount > 0) {
+                // Thành công: Có giảm giá
+                msg.className = "small mt-1 fw-bold text-success";
+                msg.innerText = data.message;
+
+                discountRow.classList.remove("d-none");
+                discountRow.classList.add("d-flex");
+                discountVal.innerText = "-" + fmt(data.discountAmount);
+                finalTotal.innerText = fmt(data.finalTotal);
+              } else {
+                // Thành công: Nhưng là Hủy mã (hoặc giảm 0đ)
+                if (code === "") msg.innerText = "";
+                else {
+                  msg.className = "small mt-1 fw-bold text-warning";
+                  msg.innerText = data.message;
+                }
+                // Reset về giá gốc
+                discountRow.classList.add("d-none");
+                discountRow.classList.remove("d-flex");
+                finalTotal.innerText = subtotal.innerText;
+              }
+            } else {
+              // Lỗi (Mã sai/Hết hạn)
+              msg.className = "small mt-1 fw-bold text-danger";
+              msg.innerText = data.message;
+
+              // Reset về giá gốc
+              discountRow.classList.add("d-none");
+              discountRow.classList.remove("d-flex");
+              finalTotal.innerText = subtotal.innerText;
+              input.value = ""; // Xóa mã sai
+            }
+          } catch (e) {
+            console.error(e);
+            msg.className = "small mt-1 fw-bold text-danger";
+            msg.innerText = "Lỗi kết nối";
+          } finally {
+            btn.innerText = oldText;
+            btn.disabled = false;
+          }
+        });
+
+      // === PHẦN 3: LOGIC ĐẶT HÀNG ===
       $("#btnPlaceOrder").click(async function () {
         if (
           !$("#name").val() ||
@@ -413,7 +595,6 @@
           alert("Vui lòng điền đầy đủ thông tin giao hàng!");
           return;
         }
-
         const btn = $(this);
         btn.prop("disabled", true).text("Đang xử lý...");
 
@@ -425,8 +606,16 @@
           province: $("#province_name").val(),
           district: $("#district_name").val(),
           ward: $("#ward_name").val(),
-          discountCode: $("#discountCodeInput").val(),
+          // KHÔNG CẦN GỬI discountCode nữa vì Backend tự lấy từ Cart
         };
+
+        // Fallback lấy dữ liệu nếu input hidden chưa cập nhật
+        if (!payload.province)
+          payload.province = $("#province option:selected").data("name");
+        if (!payload.district)
+          payload.district = $("#district option:selected").data("name");
+        if (!payload.ward)
+          payload.ward = $("#ward option:selected").data("name");
 
         try {
           const res = await axios.post("/checkout/submit", payload);

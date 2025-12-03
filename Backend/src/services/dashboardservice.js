@@ -14,7 +14,7 @@ const ProductVariant = require("../models/ProductVariant");
 const ProductImport = require("../models/ProductImport");
 
 /* =======================================
- * Helper: khoảng thời gian mặc định
+ * Helpers chung
  * =======================================
  */
 
@@ -30,106 +30,132 @@ function getCurrentMonthRange() {
 }
 
 /**
+ * ISO week helper dùng chung (thay cho nhiều getWeekInfo rời rạc)
+ * @param {Date} date
+ * @returns {{year:number, week:number}}
+ */
+function getISOWeekInfo(date) {
+  // ISO week (Thứ 2 là ngày đầu tuần)
+  const tmp = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+  const dayNum = tmp.getUTCDay() || 7; // 1..7, T2=1
+  tmp.setUTCDate(tmp.getUTCDate() + 4 - dayNum);
+  const yearStart = new Date(Date.UTC(tmp.getUTCFullYear(), 0, 1));
+  const weekNo = Math.ceil(((tmp - yearStart) / 86400000 + 1) / 7);
+  return { year: tmp.getUTCFullYear(), week: weekNo };
+}
+
+/**
  * Helper: resolve khoảng thời gian dựa trên params từ controller
  * granularity: 'year' | 'quarter' | 'month' | 'week' | 'custom'
+ *
+ * Quan trọng:
+ * - 'month'  : range = cả tháng
+ * - 'week'   : range = cả tháng nhưng group theo tuần (ISO week)
+ * - nếu có startDate/endDate thì ưu tiên dùng range đó
  */
 function resolveDateRangeFromParams(params = {}) {
   const granularity = params.granularity || "month";
-
-  // custom: đã truyền sẵn startDate, endDate
-  if (granularity === "custom" && params.startDate && params.endDate) {
-    return {
-      granularity,
-      startDate: params.startDate,
-      endDate: params.endDate,
-    };
-  }
-
   const now = dayjs();
-  const year = params.year || now.year();
 
-  if (granularity === "year") {
-    const startDate = dayjs(`${year}-01-01`)
-      .startOf("year")
-      .format("YYYY-MM-DD");
-    const endDate = dayjs(`${year}-12-31`).endOf("year").format("YYYY-MM-DD");
-    return { granularity, startDate, endDate, year };
-  }
+  // ===== CASE 1: ĐÃ CHỌN RANGE NGÀY (ƯU TIÊN CAO NHẤT) =====
+  if (params.startDate && params.endDate) {
+    const start = dayjs(params.startDate);
+    const end = dayjs(params.endDate);
 
-  if (granularity === "quarter") {
-    const q = params.quarter || 1; // 1-4
-    const quarterStartMonth = (q - 1) * 3 + 1; // 1,4,7,10
-    const startDate = dayjs(`${year}-${quarterStartMonth}-01`)
-      .startOf("month")
-      .format("YYYY-MM-DD");
-    const endDate = dayjs(startDate)
-      .add(3, "month")
-      .subtract(1, "day")
-      .format("YYYY-MM-DD");
-    return { granularity, startDate, endDate, year, quarter: q };
-  }
-
-  if (granularity === "month") {
-    const month = params.month || now.month() + 1; // dayjs month 0-11
-    const startDate = dayjs(`${year}-${String(month).padStart(2, "0")}-01`)
-      .startOf("month")
-      .format("YYYY-MM-DD");
-    const endDate = dayjs(startDate).endOf("month").format("YYYY-MM-DD");
-    return { granularity, startDate, endDate, year, month };
-  }
-
-  if (granularity === "week") {
-    /**
-     * Tuần: mình dùng theo hướng:
-     * - Nếu FE truyền startDate & endDate -> tôn trọng luôn (không override).
-     * - Nếu chỉ truyền year + month -> lấy cả tháng đó (để phía FE/controller tự chia 4 tuần).
-     * - Nếu không truyền gì -> lấy cả tháng hiện tại.
-     */
-
-    // Trường hợp 1: đã có startDate & endDate trong query
-    if (params.startDate && params.endDate) {
-      return {
-        granularity,
-        startDate: params.startDate,
-        endDate: params.endDate,
-        year,
-        month: params.month,
-        week: params.week,
-      };
-    }
-
-    // Trường hợp 2: có year + month => lấy full month
-    if (params.month) {
-      const month = params.month;
-      const startDate = dayjs(`${year}-${String(month).padStart(2, "0")}-01`)
-        .startOf("month")
-        .format("YYYY-MM-DD");
-      const endDate = dayjs(startDate).endOf("month").format("YYYY-MM-DD");
-      return { granularity, startDate, endDate, year, month, week: params.week };
-    }
-
-    // Trường hợp 3: không có gì -> dùng tháng hiện tại
-    const startDate = now.startOf("month").format("YYYY-MM-DD");
-    const endDate = now.endOf("month").format("YYYY-MM-DD");
     return {
       granularity,
-      startDate,
-      endDate,
-      year: now.year(),
-      month: now.month() + 1,
+      startDate: start.startOf("day").format("YYYY-MM-DD"),
+      endDate: end.endOf("day").format("YYYY-MM-DD"),
+      year: params.year,
+      quarter: params.quarter,
+      month: params.month,
       week: params.week,
     };
   }
 
-  // fallback: tháng hiện tại
-  const { startDate, endDate } = getCurrentMonthRange();
-  return {
-    granularity: "month",
-    startDate,
-    endDate,
-    year: now.year(),
-    month: now.month() + 1,
-  };
+  // ===== CASE 2: KHÔNG CÓ RANGE -> MẶC ĐỊNH THEO GRANULARITY =====
+  const year = params.year || now.year();
+
+  // Năm
+  if (granularity === "year") {
+    const startDate = dayjs(`${year}-01-01`).startOf("year");
+    const endDate = dayjs(`${year}-12-31`).endOf("year");
+    return {
+      granularity,
+      startDate: startDate.format("YYYY-MM-DD"),
+      endDate: endDate.format("YYYY-MM-DD"),
+      year,
+    };
+  }
+
+  // Quý (3 tháng / quý)
+  if (granularity === "quarter") {
+    const q = params.quarter || (Math.floor(now.month() / 3) + 1); // 1-4
+    const quarterStartMonth = (q - 1) * 3 + 1; // 1,4,7,10
+
+    const startDate = dayjs(
+      `${year}-${String(quarterStartMonth).padStart(2, "0")}-01`
+    ).startOf("month");
+    const endDate = startDate.add(3, "month").subtract(1, "day");
+
+    return {
+      granularity,
+      startDate: startDate.format("YYYY-MM-DD"),
+      endDate: endDate.format("YYYY-MM-DD"),
+      year,
+      quarter: q,
+    };
+  }
+
+  // Tháng
+  if (granularity === "month") {
+    const month = params.month || now.month() + 1; // 1-12
+    const startDate = dayjs(
+      `${year}-${String(month).padStart(2, "0")}-01`
+    ).startOf("month");
+    const endDate = startDate.endOf("month");
+
+    return {
+      granularity,
+      startDate: startDate.format("YYYY-MM-DD"),
+      endDate: endDate.format("YYYY-MM-DD"),
+      year,
+      month,
+    };
+  }
+
+  // Tuần (CHI TIẾT THEO TUẦN TRONG 1 THÁNG)
+  // -> range = cả tháng (giống month), sau đó FE/BE group theo ISO week
+  if (granularity === "week") {
+    const month = params.month || now.month() + 1; // 1-12
+    const startDate = dayjs(
+      `${year}-${String(month).padStart(2, "0")}-01`
+    ).startOf("month");
+    const endDate = startDate.endOf("month");
+
+    return {
+      granularity,
+      startDate: startDate.format("YYYY-MM-DD"),
+      endDate: endDate.format("YYYY-MM-DD"),
+      year,
+      month,
+    };
+  }
+
+  // Ngày (hoặc các giá trị khác rơi vào đây)
+  {
+    const base = params.startDate ? dayjs(params.startDate) : now;
+    const startDate = base.startOf("day");
+    const endDate = base.endOf("day");
+
+    return {
+      granularity: "day",
+      startDate: startDate.format("YYYY-MM-DD"),
+      endDate: endDate.format("YYYY-MM-DD"),
+      year: base.year(),
+      month: base.month() + 1,
+    };
+  }
 }
 
 /* =======================================
@@ -380,13 +406,32 @@ exports.getRevenueAndProfitOverTime = async (params = {}) => {
         const key = `${y}`;
         return { key, label: key };
       }
+
+      case "quarter": {
+        const quarter = Math.floor(date.getMonth() / 3) + 1; // 1-4
+        const key = `${y}-Q${quarter}`;
+        const label = `Q${quarter}/${y}`;
+        return { key, label };
+      }
+
       case "month": {
         const key = `${y}-${m}`;
-        return { key, label: key }; // "2025-11"
+        const label = `${m}/${y}`;
+        return { key, label };
       }
+
+      case "week": {
+        const { year: wy, week } = getISOWeekInfo(date);
+        const key = `${wy}-W${String(week).padStart(2, "0")}`;
+        const label = `Tuần ${week}/${wy}`;
+        return { key, label };
+      }
+
+      // mặc định: theo ngày
       default: {
         const key = `${y}-${m}-${d}`;
-        return { key, label: key }; // "2025-11-29"
+        const label = `${d}/${m}`;
+        return { key, label };
       }
     }
   }
@@ -495,14 +540,24 @@ function getBucketKeyAndLabelForAdvanced(date, granularity, params = {}) {
     case "quarter": {
       const yearFilter = params.year ? Number(params.year) : y;
       if (y !== yearFilter) return null;
-      const quarter = Math.floor((m - 1) / 3) + 1; // 1-4
+      const quarter = Math.floor((m - 1) / 3) + 1;
       const key = `${yearFilter}-Q${quarter}`;
       const label = `Q${quarter} ${yearFilter}`;
       return { key, label };
     }
 
+    case "week": {
+      const { year: wy, week } = getISOWeekInfo(date);
+      const yearFilter = params.year ? Number(params.year) : null;
+      if (yearFilter && wy !== yearFilter) return null;
+
+      const key = `${wy}-W${String(week).padStart(2, "0")}`;
+      const label = `Tuần ${week}/${wy}`;
+      return { key, label };
+    }
+
+    // default: theo ngày (dùng cho granularity = 'day')
     default: {
-      // day-level (dùng cho granularity = 'week' để controller bó lại 4 tuần)
       const mm = String(m).padStart(2, "0");
       const dd = String(d).padStart(2, "0");
       const key = `${y}-${mm}-${dd}`;
@@ -518,11 +573,12 @@ function getBucketKeyAndLabelForAdvanced(date, granularity, params = {}) {
  */
 exports.getAdvancedSummary = async (params = {}) => {
   const granularity = params.granularity || "year";
-
   let orders = [];
 
-  // Nếu thống kê theo năm và không truyền start/end -> lấy tất cả đơn
-  if (granularity === "year" && !params.startDate && !params.endDate) {
+  const hasExplicitRange = params.startDate && params.endDate;
+
+  if (granularity === "year" && !hasExplicitRange) {
+    // như cũ: lấy toàn bộ đơn (hoặc tuỳ bạn)
     if (typeof orderRepository.getAllOrders === "function") {
       orders = await orderRepository.getAllOrders();
     } else {
@@ -530,6 +586,7 @@ exports.getAdvancedSummary = async (params = {}) => {
       orders = await orderRepository.getOrdersInRange(startDate, endDate);
     }
   } else {
+    // các trường hợp còn lại dựa trên resolveDateRangeFromParams
     const range = resolveDateRangeFromParams(params);
     const { startDate, endDate } =
       range.startDate && range.endDate ? range : getCurrentMonthRange();
@@ -537,14 +594,9 @@ exports.getAdvancedSummary = async (params = {}) => {
   }
 
   const buckets = new Map();
-
   for (const order of orders) {
     const createdAt = new Date(order.createdAt);
-    const info = getBucketKeyAndLabelForAdvanced(
-      createdAt,
-      granularity,
-      params
-    );
+    const info = getBucketKeyAndLabelForAdvanced(createdAt, granularity, params);
     if (!info) continue;
 
     const { key, label } = info;
@@ -573,10 +625,7 @@ exports.getAdvancedSummary = async (params = {}) => {
     a.timeKey.localeCompare(b.timeKey)
   );
 
-  return {
-    granularity,
-    data,
-  };
+  return { granularity, data };
 };
 
 /* =======================================
