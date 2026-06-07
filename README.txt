@@ -28,23 +28,7 @@ Cổng rảnh: 3000, 5000, 27017, 8081 có thể đổi trong (`docker-compose.y
 3) Biến môi trường (.env)
 file `.env` trong `Backend/`. Compose đã đọc file `Backend/.env` qua `env_file`.
 3.1 Backend/.env (thêm file này để có biến môi trường để chạy dự án)
-PORT=5000
-MONGO_URI=mongodb+srv://manhnguyen61120042003_db_user:pass@ecommerce.xmo5ayl.mongodb.net/ecommerce_db?retryWrites=true&w=majority&appName=Ecommerce
-# MONGO_URI=mongodb://shop-mongodb:27017/shop?replicaSet=rs0
-CLOUDINARY_CLOUD_NAME=djsp2cxfl
-CLOUDINARY_API_KEY=523695858461134
-CLOUDINARY_API_SECRET=-aS8sI_dTzXFQCcL3DMwvUpdSyY
-JWT_SECRET=supersecret123
-GOOGLE_CLIENT_ID=885064049777-nldk321tl2ft0g9fbq6puobhu4dtjbrc.apps.googleusercontent.com
-GOOGLE_CLIENT_SECRET=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
-GOOGLE_REDIRECT_URI=http://localhost:5000/api/auth/google/login
-FACEBOOK_CLIENT_ID=1331764434997972 
-FACEBOOK_CLIENT_SECRET=0a6dd1f859c6b37b418dfa6ab82ceeaf
-FACEBOOK_REDIRECT_URI=http://localhost:5000/api/auth/facebook/login
-EMAIL_USER=huynhtannha54@gmail.com
-EMAIL_PASS=pwkxdiitrzixmfdi
-GEMINI_API_KEY=AIzaSyCYxJfSjCtbkIT4kum99Ik6FJoEw9lFQC4
-FRONTEND_URL = http://localhost:3000
+
 
 Lưu ý về bảo mật: Vì để cho Giảng viên chấm bài và chạy dự án dễ dàng hơn nên nhóm mới public các thông tin này. Nhóm luôn tuân thủ các nguyên tắc bảo mật về file env này.
 
